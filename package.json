@@ -16,7 +16,7 @@
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"gen": "wrangler types",
-		"db:start": "docker compose up",
+		"db:start": "podman compose up",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
