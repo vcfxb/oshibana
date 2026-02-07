@@ -19,7 +19,8 @@
 		"db:start": "podman compose up",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
+		"db:migrate:local": "wrangler d1 migrations apply oshibana-db --local",
+		"db:migrate:prod": "wrangler d1 migrations apply oshibana-db --remote",
 		"db:studio": "drizzle-kit studio",
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types ./src/worker-configuration.d.ts"
@@ -64,8 +65,8 @@
 		"wrangler": "^4.61.1"
 	},
 	"dependencies": {
+		"better-sqlite3": "^12.6.2",
 		"lucide-svelte": "^0.563.0",
-		"mode-watcher": "^1.1.0",
-		"postgres": "^3.4.7"
+		"mode-watcher": "^1.1.0"
 	}
 }

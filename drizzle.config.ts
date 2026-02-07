@@ -1,11 +1,15 @@
 import { defineConfig } from 'drizzle-kit';
 
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-
 export default defineConfig({
 	schema: './src/lib/server/db/schema.ts',
-	dialect: 'postgresql',
-	dbCredentials: { url: process.env.DATABASE_URL },
+	out: './drizzle',
+	dialect: 'sqlite',
+	driver: 'd1-http',
+	dbCredentials: {
+		accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
+		databaseId: 'dfe60f6d-7a92-4de7-b6fd-f9a48274f426',
+		token: process.env.CLOUDFLARE_D1_TOKEN!
+	},
 	verbose: true,
 	strict: true
 });
