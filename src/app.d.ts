@@ -8,6 +8,10 @@ declare global {
 			caches: CacheStorage;
 			cf?: IncomingRequestCfProperties;
 		}
+		interface Locals {
+			user: import('./lib/server/db/schema').users.$inferSelect | null;
+			session: import('./lib/server/db/schema').sessions.$inferSelect | null;
+		}
 	}
 }
 
