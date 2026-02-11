@@ -13,6 +13,7 @@ declare global {
 			session: import('./lib/server/db/schema').sessions.$inferSelect | null;
 		}
 	}
+	const __APP_VERSION__: string;
 }
 
 export {};

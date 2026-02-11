@@ -17,8 +17,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="iconography/favicon-dark.svg" media="(prefers-color-scheme: light)" />
-	<link rel="icon" href="iconography/favicon-light.svg" media="(prefers-color-scheme: dark)" />
+	<link rel="icon" href="/iconography/favicon-dark.svg" media="(prefers-color-scheme: light)" />
+	<link rel="icon" href="/iconography/favicon-light.svg" media="(prefers-color-scheme: dark)" />
 </svelte:head>
 
 <ModeWatcher track={false} defaultMode={'dark'} />
