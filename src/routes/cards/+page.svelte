@@ -5,24 +5,48 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	let searchInput: HTMLInputElement | null = $state(null);
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (
+			event.key.toLowerCase() === 's' &&
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement).tagName)
+		) {
+			event.preventDefault();
+			searchInput?.focus();
+		}
+	}
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div class="container mx-auto px-4 py-8">
-	<h1 class="mb-8 text-3xl font-bold">Search Cards</h1>
+	<h1 class="mb-8 text-center text-3xl font-bold">Search Cards</h1>
 
 	<form
 		method="GET"
-		class="mb-8 flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-2"
+		class="mx-auto mb-8 flex max-w-2xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-2"
 	>
 		<div class="relative flex-1">
 			<Search class="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
 			<input
+				bind:this={searchInput}
 				type="text"
 				name="q"
 				value={data.q}
 				placeholder="Search by name, type, text, etc..."
-				class="w-full rounded-full border bg-background py-3 pr-4 pl-10 text-lg shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
+				class="w-full rounded-full border bg-background py-3 pr-12 pl-10 text-lg shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
 			/>
+			<div class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">
+				<kbd
+					class="hidden rounded border bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block"
+				>
+					S
+				</kbd>
+			</div>
 		</div>
 		<Button
 			type="submit"
@@ -34,7 +58,7 @@
 
 	{#if data.error}
 		<div
-			class="mb-8 rounded-md border border-destructive/20 bg-destructive/10 p-4 text-destructive"
+			class="mx-auto mb-8 max-w-2xl rounded-md border border-destructive/20 bg-destructive/10 p-4 text-center text-destructive"
 		>
 			{data.error}
 		</div>

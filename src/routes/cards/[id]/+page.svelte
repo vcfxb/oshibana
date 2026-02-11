@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import ManaCost from '$lib/components/ManaCost.svelte';
+	import { enhance } from '$app/forms';
+	import { Badge } from '$lib/components/ui/badge';
+	import { getLocationTypeLabel } from '$lib/collection';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -51,16 +54,16 @@
 			</div>
 
 			<div class="flex flex-col gap-6">
-				<div>
+				<div class="rounded-md bg-muted p-4">
 					<div class="flex items-start justify-between gap-4">
-						<h1 class="text-4xl font-bold">{data.card.name}</h1>
+						<h1 class="text-3xl font-bold">{data.card.name}</h1>
 						{#if data.card.mana_cost}
-							<div class="mt-2 text-2xl">
+							<div class="mt-1 text-xl">
 								<ManaCost cost={data.card.mana_cost} />
 							</div>
 						{/if}
 					</div>
-					<p class="text-xl text-muted-foreground">{data.card.type_line}</p>
+					<p class="mt-1 text-lg text-muted-foreground">{data.card.type_line}</p>
 				</div>
 
 				{#if data.card.oracle_text}
@@ -94,7 +97,7 @@
 					</div>
 				</div>
 
-				<div class="mt-4 flex">
+				<div class="mt-4 flex flex-col gap-4">
 					<Button
 						href={data.card.scryfall_uri}
 						variant="outline"
@@ -104,6 +107,58 @@
 					>
 						View on Scryfall
 					</Button>
+
+					{#if data.user}
+						<div class="rounded-lg border bg-card p-6 shadow-sm">
+							<h3 class="mb-6 text-xl font-semibold">Add to Collection</h3>
+							<form method="POST" action="?/addToCollection" use:enhance class="space-y-6">
+								<div class="grid grid-cols-2 gap-6">
+									<div class="space-y-3">
+										<label for="condition" class="text-sm font-medium">Condition</label>
+										<select
+											name="condition"
+											id="condition"
+											class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+										>
+											<option value="NM">Near Mint</option>
+											<option value="LP">Lightly Played</option>
+											<option value="MP">Moderately Played</option>
+											<option value="HP">Heavily Played</option>
+											<option value="DMG">Damaged</option>
+										</select>
+									</div>
+									<div class="space-y-3">
+										<label for="storageLocationId" class="text-sm font-medium">Location</label>
+										<select
+											name="storageLocationId"
+											id="storageLocationId"
+											class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+										>
+											<option value="none">No Location</option>
+											{#each data.locations || [] as location}
+												<option value={location.id}>
+													{location.name} ({getLocationTypeLabel(location.type)})
+												</option>
+											{/each}
+										</select>
+									</div>
+								</div>
+
+								<div class="flex items-center gap-3">
+									<input
+										type="checkbox"
+										name="isFoil"
+										id="isFoil"
+										value="true"
+										class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+									/>
+									<label for="isFoil" class="text-sm font-medium">Foil printing</label>
+								</div>
+
+								<Button type="submit" class="w-full py-6 text-lg">Add to Collection</Button>
+							</form>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -60,11 +60,27 @@
 				<p class="text-2xl font-bold">{data.stats.deckCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Decks</p>
 			</div>
-			<div class="text-center">
+			<a
+				href="/profile/{profile.username}/collection"
+				class="text-center transition-opacity hover:opacity-70"
+			>
 				<p class="text-2xl font-bold">{data.stats.cardCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Cards</p>
-			</div>
+			</a>
 		</div>
+	</div>
+
+	<div class="mb-8 flex gap-4">
+		<Button href="/profile/{profile.username}/collection" variant="outline" class="flex-1">
+			View Full Collection
+		</Button>
+		<Button
+			href="/profile/{profile.username}/collection/locations"
+			variant="outline"
+			class="flex-1"
+		>
+			Manage Locations
+		</Button>
 	</div>
 
 	<section>

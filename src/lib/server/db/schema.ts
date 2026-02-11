@@ -44,6 +44,27 @@ export const passwordResetTokens = sqliteTable('password_reset_tokens', {
 	expiresAt: integer('expires_at').notNull()
 });
 
+// --- Card Cache (Scryfall Data) ---
+
+export const cardCache = sqliteTable('card_cache', {
+	scryfallId: text('scryfall_id').primaryKey(),
+	name: text('name').notNull(),
+	set: text('set').notNull(),
+	setName: text('set_name').notNull(),
+	collectorNumber: text('collector_number').notNull(),
+	imageUri: text('image_uri'),
+	manaCost: text('mana_cost'),
+	typeLine: text('type_line'),
+	oracleText: text('oracle_text'),
+	colors: text('colors'), // JSON stringified array
+	colorIdentity: text('color_identity'), // JSON stringified array
+	rarity: text('rarity').notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`)
+		.$onUpdate(() => new Date())
+});
+
 // --- Storage & Organization ---
 
 export const storageLocations = sqliteTable('storage_locations', {
@@ -52,7 +73,7 @@ export const storageLocations = sqliteTable('storage_locations', {
 		.notNull()
 		.references(() => users.id),
 	name: text('name').notNull(),
-	type: text('type', { enum: ['binder', 'box', 'shelf', 'other'] })
+	type: text('type', { enum: ['binder', 'box', 'shelf', 'physical_deck', 'other'] })
 		.notNull()
 		.default('binder'),
 	description: text('description'),
