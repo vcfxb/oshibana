@@ -137,3 +137,19 @@ export const cardAssignments = sqliteTable(
 	},
 	(table) => [primaryKey({ columns: [table.deckSlotId, table.physicalCardId] })]
 );
+
+export const follows = sqliteTable(
+	'follows',
+	{
+		followerId: text('follower_id')
+			.notNull()
+			.references(() => users.id),
+		followingId: text('following_id')
+			.notNull()
+			.references(() => users.id),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(table) => [primaryKey({ columns: [table.followerId, table.followingId] })]
+);

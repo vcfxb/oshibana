@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { Button } from '$lib/components/ui/button';
+	import { enhance } from '$app/forms';
+	import { UserPlus, UserMinus } from 'lucide-svelte';
+
 	let { data } = $props();
-    let profile = $derived(data.profile);
-    let decks = $derived(data.decks);
+	let profile = $derived(data.profile);
+	let decks = $derived(data.decks);
 </script>
 
 <svelte:head>
@@ -10,14 +14,42 @@
 
 <div class="mx-auto max-w-4xl px-4 py-8">
 	<div class="mb-8 flex flex-col gap-6 border-b pb-6 md:flex-row md:items-end md:justify-between">
-		<div>
-			<h1 class="text-4xl font-bold">{profile.username}</h1>
-			<p class="mt-2 text-muted-foreground">
-				Member since {new Date(profile.createdAt).toLocaleDateString()}
-			</p>
+		<div class="flex flex-col gap-4">
+			<div>
+				<h1 class="text-4xl font-bold">{profile.username}</h1>
+				<p class="mt-2 text-muted-foreground">
+					Member since {new Date(profile.createdAt).toLocaleDateString()}
+				</p>
+			</div>
+
+			{#if data.user && data.user.id !== profile.id}
+				<form method="POST" action="?/toggleFollow" use:enhance>
+					<Button
+						variant={data.isFollowing ? 'secondary' : 'default'}
+						class="flex items-center gap-2"
+						type="submit"
+					>
+						{#if data.isFollowing}
+							<UserMinus class="h-4 w-4" />
+							Unfollow
+						{:else}
+							<UserPlus class="h-4 w-4" />
+							Follow
+						{/if}
+					</Button>
+				</form>
+			{/if}
 		</div>
 
 		<div class="flex gap-8">
+			<div class="text-center">
+				<p class="text-2xl font-bold">{data.stats.followerCount}</p>
+				<p class="text-xs tracking-wider text-muted-foreground uppercase">Followers</p>
+			</div>
+			<div class="text-center">
+				<p class="text-2xl font-bold">{data.stats.followingCount}</p>
+				<p class="text-xs tracking-wider text-muted-foreground uppercase">Following</p>
+			</div>
 			<div class="text-center">
 				<p class="text-2xl font-bold">{data.stats.deckCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Decks</p>
