@@ -42,14 +42,20 @@
 		</div>
 
 		<div class="flex gap-8">
-			<div class="text-center">
+			<a
+				href="/profile/{profile.username}/followers"
+				class="text-center transition-opacity hover:opacity-70"
+			>
 				<p class="text-2xl font-bold">{data.stats.followerCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Followers</p>
-			</div>
-			<div class="text-center">
+			</a>
+			<a
+				href="/profile/{profile.username}/following"
+				class="text-center transition-opacity hover:opacity-70"
+			>
 				<p class="text-2xl font-bold">{data.stats.followingCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Following</p>
-			</div>
+			</a>
 			<div class="text-center">
 				<p class="text-2xl font-bold">{data.stats.deckCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Decks</p>
