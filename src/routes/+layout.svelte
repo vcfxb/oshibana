@@ -17,6 +17,12 @@
 	const currentYear = new Date().getFullYear();
 </script>
 
+<style>
+    #wordmark :global(svg) {
+		overflow: visible;
+	}
+</style>
+
 <svelte:head>
 	<link rel="icon" href="/iconography/favicon-dark.svg" media="(prefers-color-scheme: light)" />
 	<link rel="icon" href="/iconography/favicon-light.svg" media="(prefers-color-scheme: dark)" />
@@ -29,7 +35,7 @@
 		<div class="mx-auto flex max-w-7xl items-center justify-between">
 			<div class="flex min-w-0 items-center gap-2 md:gap-8">
 				<a href="/" class="flex-shrink-0 rounded-md px-2 py-2 hover:bg-accent md:px-3 md:py-4">
-					<div class="md:h7 h-6 w-auto scale-110">
+					<div id="wordmark" class="md:h7 h-6 w-auto scale-110">
 						{@html whiteWordmarkRaw}
 					</div>
 				</a>
