@@ -26,9 +26,9 @@
 <div class="flex min-h-screen flex-col">
 	<nav class="border-b bg-background px-4 py-3">
 		<div class="mx-auto flex max-w-7xl items-center justify-between">
-			<div class="flex items-center gap-8">
-				<a href="/" class="rounded-md px-2 py-4 hover:bg-accent md:px-3">
-					<img src={wordmarkSrc} class="h-6 md:h-7" alt="Oshibana Wordmark" />
+			<div class="flex min-w-0 items-center gap-2 md:gap-8">
+				<a href="/" class="flex-shrink-0 rounded-md px-2 py-2 hover:bg-accent md:px-3 md:py-4">
+					<img src={wordmarkSrc} class="h-6 w-auto md:h-7" alt="Oshibana Wordmark" />
 				</a>
 
 				<div class="hidden items-center gap-6 text-lg font-medium text-muted-foreground md:flex">

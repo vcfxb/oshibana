@@ -68,13 +68,13 @@ export const actions: Actions = {
 				httpOnly: true,
 				sameSite: 'lax',
 				secure: import.meta.env.PROD,
-				maxAge: 60 * 60 * 24 * 30 // 30 days
+				maxAge: 60 * 60 * 24 * 30
 			});
 		} catch (e) {
 			console.error(e);
 			return fail(500, { message: 'An error occurred during registration' });
 		}
 
-		throw redirect(302, '/');
+		throw redirect(303, '/');
 	}
 };
