@@ -27,8 +27,8 @@
 	<nav class="border-b bg-background px-4 py-3">
 		<div class="mx-auto flex max-w-7xl items-center justify-between">
 			<div class="flex items-center gap-8">
-				<a href="/" class="rounded-md px-3 py-4 hover:bg-accent">
-					<img src={wordmarkSrc} class="h-7" alt="Oshibana Wordmark" />
+				<a href="/" class="rounded-md px-2 py-4 hover:bg-accent md:px-3">
+					<img src={wordmarkSrc} class="h-6 md:h-7" alt="Oshibana Wordmark" />
 				</a>
 
 				<div class="hidden items-center gap-6 text-lg font-medium text-muted-foreground md:flex">
