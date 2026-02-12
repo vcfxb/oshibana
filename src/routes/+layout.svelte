@@ -28,7 +28,7 @@
 		<div class="mx-auto flex max-w-7xl items-center justify-between">
 			<div class="flex min-w-0 items-center gap-2 md:gap-8">
 				<a href="/" class="flex-shrink-0 rounded-md px-2 py-2 hover:bg-accent md:px-3 md:py-4">
-					<img src={wordmarkSrc} class="h-6 w-auto md:h-7" alt="Oshibana Wordmark" />
+					<img src={wordmarkSrc} class="h-6 w-auto md:h-7" alt="Oshibana Wordmark" style="object-fit:contain;transform:translateZ(0);"/>
 				</a>
 
 				<div class="hidden items-center gap-6 text-lg font-medium text-muted-foreground md:flex">
