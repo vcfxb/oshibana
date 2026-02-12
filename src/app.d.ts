@@ -16,4 +16,10 @@ declare global {
 	const __APP_VERSION__: string;
 }
 
+// to make weird raw svg imports work ig
+declare module '*?raw' {
+	const content: string;
+	export default content;
+}
+
 export {};
