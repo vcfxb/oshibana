@@ -1,5 +1,14 @@
 export type StorageLocationType = 'binder' | 'box' | 'shelf' | 'physical_deck' | 'other';
 
+export type CollectionSortBy = 'name' | 'date-added' | 'value' | 'purchase-price' | 'set';
+export type SortDir = 'asc' | 'desc';
+
+function parsePriceToCents(price: string | null | undefined): number | null {
+	if (!price) return null;
+	const parsed = parseFloat(price);
+	return isNaN(parsed) ? null : Math.round(parsed * 100);
+}
+
 export function getLocationTypeLabel(type: string): string {
 	switch (type) {
 		case 'binder':
@@ -60,29 +69,52 @@ export function formatCurrentPrice(
 
 	if (isScryfallFormat) {
 		const prices = cardData.prices;
-		const rawPrice = useEur
-			? prices.eur
-			: physicalCard?.isFoil
-				? (prices.usd_foil ?? prices.usd)
-				: (prices.usd ?? prices.usd_foil);
-		if (rawPrice) {
-			const parsed = parseFloat(rawPrice);
-			if (!isNaN(parsed)) {
-				priceCents = Math.round(parsed * 100);
+		if (useEur) {
+			priceCents = parsePriceToCents(prices.eur);
+		}
+
+		if (priceCents == null) {
+			if (physicalCard?.isFoil) {
+				priceCents =
+					parsePriceToCents(prices.usd_foil) ??
+					parsePriceToCents(prices.usd_etched) ??
+					parsePriceToCents(prices.usd) ??
+					parsePriceToCents(prices.eur) ??
+					parsePriceToCents(prices.tix);
+			} else {
+				priceCents =
+					parsePriceToCents(prices.usd) ??
+					parsePriceToCents(prices.usd_foil) ??
+					parsePriceToCents(prices.usd_etched) ??
+					parsePriceToCents(prices.eur) ??
+					parsePriceToCents(prices.tix);
 			}
 		}
 	} else {
 		if (useEur) {
 			priceCents = cardData.priceEur;
-		} else {
-			// Prefer foil price if the physical card is foil
-			priceCents = physicalCard?.isFoil
-				? (cardData.priceUsdFoil ?? cardData.priceUsd)
-				: (cardData.priceUsd ?? cardData.priceUsdFoil);
+		}
+
+		if (priceCents == null) {
+			if (physicalCard?.isFoil) {
+				priceCents =
+					cardData.priceUsdFoil ??
+					cardData.priceUsdEtched ??
+					cardData.priceUsd ??
+					cardData.priceEur ??
+					cardData.priceTix;
+			} else {
+				priceCents =
+					cardData.priceUsd ??
+					cardData.priceUsdFoil ??
+					cardData.priceUsdEtched ??
+					cardData.priceEur ??
+					cardData.priceTix;
+			}
 		}
 	}
 
-	if (priceCents === null || priceCents === undefined) return '—';
+	if (priceCents == null) return '—';
 
 	try {
 		return new Intl.NumberFormat(locale, {

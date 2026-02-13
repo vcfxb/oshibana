@@ -112,11 +112,13 @@ export interface ScryfallRuling {
 
 const SCRYFALL_API_BASE = 'https://api.scryfall.com';
 
-async function scryfallFetch<T>(endpoint: string): Promise<T> {
+async function scryfallFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 	const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
+		...options,
 		headers: {
 			'User-Agent': `Oshibana/${__APP_VERSION__}`,
-			Accept: 'application/json'
+			Accept: 'application/json',
+			...(options.headers || {})
 		}
 	});
 
@@ -142,6 +144,18 @@ export async function searchCards(query: string): Promise<ScryfallList<ScryfallC
 
 export async function getCardById(id: string): Promise<ScryfallCard> {
 	return scryfallFetch(`/cards/${id}`);
+}
+
+export async function getCardsBatch(
+	identifiers: { id?: string; name?: string; set?: string; collector_number?: string }[]
+): Promise<ScryfallList<ScryfallCard>> {
+	return scryfallFetch('/cards/collection', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ identifiers })
+	});
 }
 
 export async function getCardByNamed(name: string, fuzzy = true): Promise<ScryfallCard> {

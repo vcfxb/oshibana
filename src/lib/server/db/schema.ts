@@ -61,6 +61,7 @@ export const cardCache = sqliteTable('card_cache', {
 	rarity: text('rarity').notNull(),
 	priceUsd: integer('price_usd'),
 	priceUsdFoil: integer('price_usd_foil'),
+	priceUsdEtched: integer('price_usd_etched'),
 	priceEur: integer('price_eur'),
 	priceTix: integer('price_tix'),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })

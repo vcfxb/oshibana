@@ -1,0 +1,1 @@
+ALTER TABLE `card_cache` ADD `price_usd_etched` integer;

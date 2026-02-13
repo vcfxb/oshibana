@@ -43,6 +43,13 @@
       "when": 1770951402250,
       "tag": "0005_yielding_junta",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1770953484597,
+      "tag": "0006_organic_red_shift",
+      "breakpoints": true
     }
   ]
 }
