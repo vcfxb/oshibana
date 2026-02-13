@@ -2,14 +2,15 @@ import { error, fail } from '@sveltejs/kit';
 import { eq, sql, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '$lib/server/db/schema';
-import { getStorageLocations, createStorageLocation } from '$lib/server/collection';
+import { createStorageLocation } from '$lib/server/collection';
 import type { PageServerLoad, Actions } from './$types';
+import { relations } from '$lib/server/db/relations';
 
 export const load: PageServerLoad = async ({ params, platform }) => {
 	const db = platform?.env.DB;
 	if (!db) throw error(500, 'Database not found');
 
-	const ddb = drizzle(db);
+	const ddb = drizzle(db, { relations });
 	const [profile] = await ddb
 		.select()
 		.from(schema.users)
@@ -18,7 +19,7 @@ export const load: PageServerLoad = async ({ params, platform }) => {
 
 	if (!profile) throw error(404, 'User not found');
 
-	const locations = await getStorageLocations(db, profile.id);
+	const locations = await ddb.query.storageLocations.findMany({ where: { userId: profile.id }});
 
 	// Get card counts for each location
 	const locationsWithCounts = await Promise.all(

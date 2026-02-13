@@ -2,20 +2,18 @@ import { error } from '@sveltejs/kit';
 import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '$lib/server/db/schema';
-import {
-	getCollection,
-	getStorageLocations,
-	type CollectionSortBy,
-	type SortDir
-} from '$lib/server/collection';
+import { getCollection } from '$lib/server/collection';
 import { collectionActions } from '$lib/server/collectionActions';
 import type { PageServerLoad } from './$types';
+import type { CollectionSortBy, SortDir } from '$lib/collection.js';
+import { relations } from '$lib/server/db/relations';
+
 
 export const load: PageServerLoad = async ({ params, platform, url }) => {
 	const db = platform?.env.DB;
 	if (!db) throw error(500, 'Database not found');
 
-	const ddb = drizzle(db);
+	const ddb = drizzle(db, { relations });
 	const [profile] = await ddb
 		.select()
 		.from(schema.users)
@@ -43,7 +41,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 
 	const [collectionData, locations] = await Promise.all([
 		getCollection(db, profile.id, { limit, offset, storageLocationId: params.id, sortBy, sortDir }),
-		getStorageLocations(db, profile.id)
+		ddb.query.storageLocations.findMany({ where: { userId: profile.id }})
 	]);
 
 	const formattedLocation = {

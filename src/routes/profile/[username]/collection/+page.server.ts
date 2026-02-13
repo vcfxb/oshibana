@@ -1,13 +1,10 @@
 import { error } from '@sveltejs/kit';
 import { drizzle } from 'drizzle-orm/d1';
-import {
-	getCollection,
-	type CollectionSortBy,
-	type SortDir
-} from '$lib/server/collection';
+import { getCollection } from '$lib/server/collection';
 import { collectionActions } from '$lib/server/collectionActions';
 import type { PageServerLoad } from './$types';
 import { relations } from '$lib/server/db/relations';
+import type { CollectionSortBy, SortDir } from '$lib/collection.js';
 
 export const load: PageServerLoad = async ({ params, platform, url }) => {
 	const db = platform?.env.DB;
