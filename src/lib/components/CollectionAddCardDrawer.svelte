@@ -5,6 +5,7 @@
 	import { Search, Loader2, Plus, Check } from 'lucide-svelte';
 	import { searchCards, type ScryfallCard } from '$lib/scryfall';
 	import { enhance } from '$app/forms';
+	import { formatCurrentPrice } from '$lib/collection';
 
 	let {
 		open = $bindable(false),
@@ -25,6 +26,11 @@
 	let addMode: 'close' | 'continue' = $state('continue');
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let highlightedIndex = $state(0);
+	let browserLocale = $state('en-US');
+
+	$effect(() => {
+		browserLocale = navigator.language || 'en-US';
+	});
 
 	$effect(() => {
 		if (open && !selectedSearchResult) {
@@ -180,7 +186,12 @@
 										{/if}
 									</div>
 									<div class="min-w-0 flex-1">
-										<div class="truncate font-medium">{card.name}</div>
+										<div class="flex items-center justify-between gap-2">
+											<div class="truncate font-medium">{card.name}</div>
+											<div class="text-[10px] font-bold text-primary">
+												{formatCurrentPrice(card, undefined, browserLocale)}
+											</div>
+										</div>
 										<div class="text-xs text-muted-foreground uppercase">
 											{card.set} • #{card.collector_number} • {card.rarity}
 										</div>

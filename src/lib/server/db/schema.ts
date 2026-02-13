@@ -59,6 +59,10 @@ export const cardCache = sqliteTable('card_cache', {
 	colors: text('colors'), // JSON stringified array
 	colorIdentity: text('color_identity'), // JSON stringified array
 	rarity: text('rarity').notNull(),
+	priceUsd: integer('price_usd'),
+	priceUsdFoil: integer('price_usd_foil'),
+	priceEur: integer('price_eur'),
+	priceTix: integer('price_tix'),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`)
@@ -126,7 +130,7 @@ export const physicalCards = sqliteTable('physical_cards', {
 		.notNull()
 		.default('NM'),
 	isFoil: integer('is_foil', { mode: 'boolean' }).notNull().default(false),
-	purchasePrice: real('purchase_price'),
+	purchasePrice: integer('purchase_price'),
 	isAlter: integer('is_alter', { mode: 'boolean' }).notNull().default(false),
 	isProxy: integer('is_proxy', { mode: 'boolean' }).notNull().default(false),
 	language: text('language').notNull().default('en'),

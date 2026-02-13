@@ -6,13 +6,18 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { enhance } from '$app/forms';
 	import { Trash2, Plus, Search, Loader2 } from 'lucide-svelte';
-	import { getLocationTypeLabel } from '$lib/collection';
+	import { getLocationTypeLabel, formatCurrentPrice } from '$lib/collection';
 	import CollectionAddCardDrawer from '$lib/components/CollectionAddCardDrawer.svelte';
 
 	let { data } = $props();
 	let profile = $derived(data.profile);
 	let collection = $derived(data.collection);
 	let totalPages = $derived(Math.ceil(data.total / data.limit));
+	let browserLocale = $state('en-US');
+
+	$effect(() => {
+		browserLocale = navigator.language || 'en-US';
+	});
 
 	let isDrawerOpen = $state(false);
 
@@ -54,7 +59,7 @@
 						<th class="px-4 py-3">Set</th>
 						<th class="px-4 py-3">Condition</th>
 						<th class="px-4 py-3">Language</th>
-						<th class="px-4 py-3">Price</th>
+						<th class="px-4 py-3">Value</th>
 						<th class="px-4 py-3">Flags</th>
 						{#if data.user && data.user.id === profile.id}
 							<th class="px-4 py-3 text-right">Actions</th>
@@ -103,11 +108,7 @@
 								<span class="uppercase">{item.physicalCard.language}</span>
 							</td>
 							<td class="px-4 py-3">
-								{#if item.physicalCard.purchasePrice}
-									${item.physicalCard.purchasePrice.toFixed(2)}
-								{:else}
-									<span class="text-muted-foreground">—</span>
-								{/if}
+								{formatCurrentPrice(item.cardData, item.physicalCard, browserLocale)}
 							</td>
 							<td class="px-4 py-3">
 								<div class="flex flex-wrap gap-1">

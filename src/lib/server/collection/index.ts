@@ -3,6 +3,12 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { getCardById } from '$lib/scryfall';
 
+function parsePrice(price: string | null | undefined): number | null {
+	if (!price) return null;
+	const parsed = parseFloat(price);
+	return isNaN(parsed) ? null : Math.round(parsed * 100);
+}
+
 export async function getCachedCard(db: D1Database, scryfallId: string) {
 	const ddb = drizzle(db);
 	const [cached] = await ddb
@@ -11,7 +17,10 @@ export async function getCachedCard(db: D1Database, scryfallId: string) {
 		.where(eq(schema.cardCache.scryfallId, scryfallId))
 		.limit(1);
 
-	if (cached) return cached;
+	const isExpired =
+		cached && new Date().getTime() - cached.updatedAt.getTime() > 24 * 60 * 60 * 1000;
+
+	if (cached && !isExpired) return cached;
 
 	// Fetch from Scryfall and cache it
 	const card = await getCardById(scryfallId);
@@ -32,13 +41,23 @@ export async function getCachedCard(db: D1Database, scryfallId: string) {
 		colors,
 		colorIdentity,
 		rarity: card.rarity,
+		priceUsd: parsePrice(card.prices.usd),
+		priceUsdFoil: parsePrice(card.prices.usd_foil),
+		priceEur: parsePrice(card.prices.eur),
+		priceTix: parsePrice(card.prices.tix),
 		updatedAt: new Date()
 	};
 
-	await ddb.insert(schema.cardCache).values(newCard).onConflictDoUpdate({
-		target: schema.cardCache.scryfallId,
-		set: newCard
-	});
+	await ddb
+		.insert(schema.cardCache)
+		.values(newCard)
+		.onConflictDoUpdate({
+			target: schema.cardCache.scryfallId,
+			set: {
+				...newCard,
+				updatedAt: new Date() // Ensure it's updated even if values are the same
+			}
+		});
 
 	return newCard;
 }
@@ -120,9 +139,11 @@ export async function addCardToCollection(
 			isFoil: options.isFoil || false,
 			storageLocationId: options.storageLocationId,
 			purchasePrice:
-				options.purchasePrice === null || isNaN(options.purchasePrice as number)
+				options.purchasePrice === undefined ||
+				options.purchasePrice === null ||
+				isNaN(options.purchasePrice)
 					? null
-					: options.purchasePrice,
+					: Math.round(options.purchasePrice * 100),
 			isAlter: options.isAlter || false,
 			isProxy: options.isProxy || false,
 			language: options.language || 'en'

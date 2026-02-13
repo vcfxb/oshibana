@@ -3,12 +3,17 @@
 	import ManaCost from '$lib/components/ManaCost.svelte';
 	import { enhance } from '$app/forms';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getLocationTypeLabel } from '$lib/collection';
+	import { getLocationTypeLabel, formatCurrentPrice, formatPrice } from '$lib/collection';
 	import { Plus, X } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	let showAddForm = $state(false);
+
+	let browserLocale = $state('en-US');
+	$effect(() => {
+		browserLocale = navigator.language || 'en-US';
+	});
 
 	function formatOracleText(text: string) {
 		return text.replace(/\{[^}]+\}/g, (match) => {
@@ -88,6 +93,31 @@
 					<div>
 						<span class="font-semibold text-muted-foreground">Artist:</span>
 						{data.card.artist}
+					</div>
+				</div>
+
+				<div class="mt-2">
+					<h3 class="mb-3 text-lg font-semibold">Market Prices</h3>
+					<div class="flex flex-wrap gap-4">
+						<div class="flex min-w-[100px] flex-col rounded-lg border bg-card p-3 shadow-sm">
+							<span class="text-[10px] font-semibold text-muted-foreground uppercase">USD</span>
+							<span class="text-lg font-bold"
+								>{formatPrice(data.card.prices.usd, 'USD', browserLocale)}</span
+							>
+						</div>
+						<div class="flex min-w-[100px] flex-col rounded-lg border bg-card p-3 shadow-sm">
+							<span class="text-[10px] font-semibold text-muted-foreground uppercase">USD Foil</span
+							>
+							<span class="text-lg font-bold"
+								>{formatPrice(data.card.prices.usd_foil, 'USD', browserLocale)}</span
+							>
+						</div>
+						<div class="flex min-w-[100px] flex-col rounded-lg border bg-card p-3 shadow-sm">
+							<span class="text-[10px] font-semibold text-muted-foreground uppercase">EUR</span>
+							<span class="text-lg font-bold"
+								>{formatPrice(data.card.prices.eur, 'EUR', browserLocale)}</span
+							>
+						</div>
 					</div>
 				</div>
 
