@@ -37,7 +37,7 @@
 				type="text"
 				name="q"
 				value={data.q}
-				placeholder="Search by name, type, text, etc..."
+				placeholder="Supports scryfall syntax!"
 				class="w-full rounded-full border bg-background py-3 pr-12 pl-10 text-lg shadow-sm focus:ring-2 focus:ring-primary focus:outline-none"
 			/>
 			<div class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2">

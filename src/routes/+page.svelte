@@ -75,7 +75,7 @@
 	</div>
 
 	<div class="min-h-[400px] w-full">
-		<div class="mb-8 flex items-center justify-center gap-4">
+		<div class="flex items-center justify-center gap-4">
 			<h2 class="text-2xl font-bold">
 				<span class="sm:hidden">Featured Card</span>
 				<span class="hidden sm:inline">Featured Cards</span>
@@ -90,6 +90,11 @@
 					<Dices class="h-6 w-6" />
 				</div>
 			</button>
+		</div>
+
+		<div class="text-muted-foreground w-full flex items-center justify-center mb-6 italic">
+			<span class="sm:hidden"> A random Magic card </span>
+			<span class="hidden sm:inline"> Five random cards from all of Magic </span>
 		</div>
 
 		<div class="relative grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
@@ -118,7 +123,7 @@
 		<div>
 			<h3 class="mb-2 text-xl font-bold">Collection Tracking</h3>
 			<p class="text-muted-foreground">
-				Keep track of every physical card you own, including condition and storage location.
+				Keep track of every physical card you own and their locations, in or out of decks.
 			</p>
 		</div>
 		<div>
