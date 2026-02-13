@@ -18,6 +18,7 @@
 	} from '$lib/collection';
 	import CollectionAddCardDrawer from './CollectionAddCardDrawer.svelte';
 	import { goto } from '$app/navigation';
+	import type { DbStorageLocation, DbUser } from '$lib/server/db/types';
 
 	let {
 		collection,
@@ -37,11 +38,11 @@
 		total: number;
 		page: number;
 		limit: number;
-		profile: any;
-		user: any;
+		profile: DbUser;
+		user?: DbUser | null;
 		sortBy?: CollectionSortBy;
 		sortDir?: SortDir;
-		locations?: any[];
+		locations?: DbStorageLocation[];
 		defaultLocationId?: string;
 		browserLocale?: string;
 		emptyMessage?: string;

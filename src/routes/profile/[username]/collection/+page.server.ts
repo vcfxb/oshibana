@@ -1,27 +1,21 @@
 import { error } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import * as schema from '$lib/server/db/schema';
 import {
 	getCollection,
-	getStorageLocations,
 	type CollectionSortBy,
 	type SortDir
 } from '$lib/server/collection';
 import { collectionActions } from '$lib/server/collectionActions';
 import type { PageServerLoad } from './$types';
+import { relations } from '$lib/server/db/relations';
 
 export const load: PageServerLoad = async ({ params, platform, url }) => {
 	const db = platform?.env.DB;
 	if (!db) throw error(500, 'Database not found');
 
-	const ddb = drizzle(db);
-	const [profile] = await ddb
-		.select()
-		.from(schema.users)
-		.where(eq(schema.users.username, params.username))
-		.limit(1);
+	const ddb = drizzle(db, { relations });
 
+	const profile = await ddb.query.users.findFirst({ where: { username: params.username }});
 	if (!profile) throw error(404, 'User not found');
 
 	const page = Number(url.searchParams.get('page')) || 1;
@@ -33,7 +27,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 
 	const [collectionData, locations] = await Promise.all([
 		getCollection(db, profile.id, { limit, offset, sortBy, sortDir }),
-		getStorageLocations(db, profile.id)
+		ddb.query.storageLocations.findMany({ where: { userId: profile.id }})
 	]);
 
 	return {

@@ -126,7 +126,7 @@ export const physicalCards = sqliteTable('physical_cards', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),
-	scryfallId: text('scryfall_id').notNull(),
+	scryfallId: text('scryfall_id').notNull().references(() => cardCache.scryfallId),
 	condition: text('condition', { enum: ['NM', 'LP', 'MP', 'HP', 'DMG'] })
 		.notNull()
 		.default('NM'),

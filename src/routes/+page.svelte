@@ -40,6 +40,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Oshibana</title>
+</svelte:head>
+
 <div class="container mx-auto flex min-h-[calc(100-3.5rem)] flex-col items-center px-4 py-16">
 	<div class="mb-16 text-center">
 		<h1 class="mb-4 text-5xl font-extrabold tracking-tight lg:text-6xl">

@@ -3,7 +3,6 @@
 	import CollectionCardTable from '$lib/components/CollectionCardTable.svelte';
 
 	let { data } = $props();
-	let profile = $derived(data.profile);
 	let browserLocale = $state('en-US');
 
 	$effect(() => {
@@ -14,7 +13,7 @@
 <div class="mx-auto max-w-7xl px-4 py-8">
 	<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
 		<div>
-			<h1 class="mt-2 text-4xl font-bold">{profile.username}'s Collection</h1>
+			<h1 class="mt-2 text-4xl font-bold">{data.profile.username}'s Collection</h1>
 			<p class="text-muted-foreground">{data.total} cards total</p>
 		</div>
 	</div>
@@ -26,7 +25,7 @@
 		limit={data.limit}
 		sortBy={data.sortBy}
 		sortDir={data.sortDir}
-		{profile}
+		profile={data.profile}
 		user={data.user}
 		locations={data.locations}
 		defaultLocationId="none"

@@ -3,8 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { getCardById, getCardsBatch, type ScryfallCard } from '$lib/scryfall';
 import type { CollectionSortBy, SortDir } from '$lib/collection';
-
-export type { CollectionSortBy, SortDir };
+import { relations } from '$lib/server/db/relations';
 
 function parsePrice(price: string | null | undefined): number | null {
 	if (!price) return null;
@@ -122,7 +121,18 @@ export async function getCollection(
 		sortBy = 'date-added',
 		sortDir = 'desc'
 	} = options;
-	const ddb = drizzle(db);
+
+	const ddb = drizzle(db, { relations });
+
+	const collection = await ddb.query.physicalCards.findMany({
+		where: {
+			userId,
+			storageLocationId
+		},
+		with: {
+			
+		}
+	})
 
 	let query = ddb
 		.select({
@@ -300,14 +310,6 @@ export async function removeCardFromCollection(
 		.where(
 			and(eq(schema.physicalCards.id, physicalCardId), eq(schema.physicalCards.userId, userId))
 		);
-}
-
-export async function getStorageLocations(db: D1Database, userId: string) {
-	const ddb = drizzle(db);
-	return ddb
-		.select()
-		.from(schema.storageLocations)
-		.where(eq(schema.storageLocations.userId, userId));
 }
 
 export async function createStorageLocation(

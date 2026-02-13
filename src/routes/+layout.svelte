@@ -8,7 +8,7 @@
 
 	let { children, data } = $props();
 	let mobileMenuOpen = $state(false);
-	const wordmarkSrc = '/iconography/wordmark-white.svg'; // todo: save themes in db, handle with db
+	// const wordmarkSrc = '/iconography/wordmark-white.svg'; // todo: save themes in db, handle with db
 
 	// $effect(() => {
 	// 	wordmarkSrc = mode.current === "dark" ? "/iconography/wordmark-white.svg" : "/iconography/wordmark-black.svg";

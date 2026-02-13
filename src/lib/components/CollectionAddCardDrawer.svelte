@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Input } from '$lib/components/ui/input';
-	import { Search, Loader2, Plus, Check } from 'lucide-svelte';
+	import { Search, LoaderCircle, Plus, Check } from 'lucide-svelte';
 	import { searchCards, type ScryfallCard } from '$lib/scryfall';
 	import { enhance } from '$app/forms';
 	import { formatCurrentPrice } from '$lib/collection';
@@ -153,7 +153,7 @@
 						</div>
 						<Button onclick={handleSearch} disabled={isSearching} class="h-12 px-6">
 							{#if isSearching}
-								<Loader2 class="h-4 w-4 animate-spin" />
+								<LoaderCircle class="h-4 w-4 animate-spin" />
 							{:else}
 								Search
 							{/if}
@@ -379,7 +379,7 @@
 									class="h-12 flex-1 rounded-md bg-primary text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
 								>
 									{#if isAdding && addMode === 'continue'}
-										<Loader2 class="mr-2 inline h-4 w-4 animate-spin" />
+										<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
 									{:else}
 										<Plus class="mr-2 inline h-4 w-4" />
 									{/if}
@@ -394,7 +394,7 @@
 									class="h-12 flex-1 rounded-md bg-secondary text-lg font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
 								>
 									{#if isAdding && addMode === 'close'}
-										<Loader2 class="mr-2 inline h-4 w-4 animate-spin" />
+										<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
 									{:else}
 										<Check class="mr-2 inline h-4 w-4" />
 									{/if}
