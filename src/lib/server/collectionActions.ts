@@ -17,6 +17,7 @@ export const collectionActions = {
 		await removeCardFromCollection(db, locals.user.id, physicalCardId);
 		return { success: true };
 	},
+
 	addCard: async ({ request, platform, locals }) => {
 		if (!locals.user) return fail(401);
 

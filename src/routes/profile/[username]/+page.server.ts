@@ -1,8 +1,9 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { users, decks, physicalCards, follows } from '$lib/server/db/schema';
+import { decks, physicalCards, follows } from '$lib/server/db/schema';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import { relations } from '$lib/server/db/relations';
 
 export const load: PageServerLoad = async ({ params, platform, locals }) => {
 	const { username } = params;
@@ -11,46 +12,37 @@ export const load: PageServerLoad = async ({ params, platform, locals }) => {
 		throw error(500, 'Database connection not available');
 	}
 
-	const db = drizzle(platform.env.DB);
+	const db = drizzle(platform.env.DB, { relations });
 
-	const user = await db
-		.select({
-			id: users.id,
-			username: users.username,
-			createdAt: users.createdAt
-		})
-		.from(users)
-		.where(eq(users.username, username))
-		.get();
+	const user = await db.query.users.findFirst({
+		where: {
+			username: username,
+		}
+	});
 
 	if (!user) {
 		throw error(404, 'User not found');
 	}
 
+	const getFollowingRelation = async () => {
+		if (locals.user) {
+			return db.query.follows.findFirst({ 
+				where: {
+					followerId: locals.user.id,
+					followingId: user.id,
+				}
+			});
+		} else {
+			return null;
+		}
+	};
+
 	const [userDecks, cardCount, followerCount, followingCount, isFollowing] = await Promise.all([
 		db.select().from(decks).where(eq(decks.userId, user.id)).all(),
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(physicalCards)
-			.where(eq(physicalCards.userId, user.id))
-			.get(),
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(follows)
-			.where(eq(follows.followingId, user.id))
-			.get(),
-		db
-			.select({ count: sql<number>`count(*)` })
-			.from(follows)
-			.where(eq(follows.followerId, user.id))
-			.get(),
-		locals.user
-			? db
-					.select()
-					.from(follows)
-					.where(and(eq(follows.followerId, locals.user.id), eq(follows.followingId, user.id)))
-					.get()
-			: Promise.resolve(null)
+		db.$count(physicalCards, eq(physicalCards.userId, user.id)),
+		db.$count(follows, eq(follows.followingId, user.id)),
+		db.$count(follows, eq(follows.followerId, user.id)),
+		getFollowingRelation().then((res) => !!res), // confirm truthy value
 	]);
 
 	return {
@@ -58,11 +50,11 @@ export const load: PageServerLoad = async ({ params, platform, locals }) => {
 		decks: userDecks,
 		stats: {
 			deckCount: userDecks.length,
-			cardCount: cardCount?.count ?? 0,
-			followerCount: followerCount?.count ?? 0,
-			followingCount: followingCount?.count ?? 0
+			cardCount,
+			followerCount,
+			followingCount
 		},
-		isFollowing: !!isFollowing
+		isFollowing
 	};
 };
 
@@ -77,27 +69,26 @@ export const actions: Actions = {
 		}
 
 		const { username } = params;
-		const db = drizzle(platform.env.DB);
+		const db = drizzle(platform.env.DB, { relations });
 
-		const targetUser = await db.select().from(users).where(eq(users.username, username)).get();
+		const targetUser = await db.query.users.findFirst({ where: { username } });
 
 		if (!targetUser || targetUser.id === locals.user.id) {
 			return fail(400, { message: 'Invalid user' });
 		}
 
 		try {
-			const existing = await db
-				.select()
-				.from(follows)
-				.where(and(eq(follows.followerId, locals.user.id), eq(follows.followingId, targetUser.id)))
-				.get();
+			const existing = await db.query.follows.findFirst({
+				where: { followerId: locals.user.id, followingId: targetUser.id }
+			});
 
 			if (existing) {
 				await db
 					.delete(follows)
 					.where(
 						and(eq(follows.followerId, locals.user.id), eq(follows.followingId, targetUser.id))
-					);
+					)
+					.limit(1);
 			} else {
 				await db.insert(follows).values({
 					followerId: locals.user.id,

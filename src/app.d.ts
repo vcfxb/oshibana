@@ -1,4 +1,6 @@
 import type { Env } from './worker-configuration';
+import type { DbUser, DbSession } from '$lib/server/db/types';
+
 
 declare global {
 	namespace App {
@@ -9,8 +11,8 @@ declare global {
 			cf?: IncomingRequestCfProperties;
 		}
 		interface Locals {
-			user: import('./lib/server/db/schema').users.$inferSelect | null;
-			session: import('./lib/server/db/schema').sessions.$inferSelect | null;
+			user: DbUser | null;
+			session: DbSession | null;
 		}
 	}
 	const __APP_VERSION__: string;

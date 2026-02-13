@@ -1,5 +1,5 @@
-export type StorageLocationType = 'binder' | 'box' | 'shelf' | 'physical_deck' | 'other';
 
+export type StorageLocationType = 'binder' | 'box' | 'shelf' | 'physical_deck' | 'other';
 export type CollectionSortBy = 'name' | 'date-added' | 'value' | 'purchase-price' | 'set';
 export type SortDir = 'asc' | 'desc';
 
@@ -53,6 +53,7 @@ export function formatCurrentPrice(
 		'si',
 		'es'
 	];
+	
 	const region = locale.split('-')[1]?.toLowerCase();
 	const lang = locale.split('-')[0].toLowerCase();
 	const useEur =

@@ -32,9 +32,6 @@
 		defaultLocationId = 'none',
 		browserLocale = 'en-US',
 		emptyMessage = 'No cards found in this collection.',
-		showBackButton = false,
-		backButtonHref = '',
-		backButtonText = 'Back'
 	}: {
 		collection: any[];
 		total: number;
@@ -48,7 +45,6 @@
 		defaultLocationId?: string;
 		browserLocale?: string;
 		emptyMessage?: string;
-		showBackButton?: boolean;
 		backButtonHref?: string;
 		backButtonText?: string;
 	} = $props();
@@ -219,9 +215,9 @@
 						</td>
 						<td class="px-4 py-3">
 							{#if item.cardData}
-								<span class="text-muted-foreground"
-									>{item.cardData.set.toUpperCase()} • #{item.cardData.collectorNumber}</span
-								>
+								<span class="text-muted-foreground">
+									{item.cardData.set.toUpperCase()} • #{item.cardData.collectorNumber}
+								</span>
 							{/if}
 						</td>
 						<td class="px-4 py-3 text-xs">
@@ -317,14 +313,6 @@
 	{/if}
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
-		<p class="text-xl font-medium">{emptyMessage}</p>
-		{#if showBackButton}
-			<Button href={backButtonHref} variant="outline" class="mt-6">
-				{backButtonText}
-			</Button>
-		{:else}
-			<p class="mt-2 text-muted-foreground">Start adding cards from card pages!</p>
-			<Button href="/cards" class="mt-6">Browse Cards</Button>
-		{/if}
+		<p class="text-xl font-medium mb-2">{emptyMessage}</p>
 	</div>
 {/if}

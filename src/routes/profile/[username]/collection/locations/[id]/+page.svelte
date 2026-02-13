@@ -53,7 +53,6 @@
 		defaultLocationId={location.id}
 		{browserLocale}
 		emptyMessage="No cards found in this location."
-		showBackButton={true}
 		backButtonHref="/profile/{profile.username}/collection"
 		backButtonText="Back to Collection"
 	/>
