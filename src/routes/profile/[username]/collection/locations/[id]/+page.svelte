@@ -5,14 +5,17 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import { Badge } from '$lib/components/ui/badge';
 	import { enhance } from '$app/forms';
-	import { Trash2 } from 'lucide-svelte';
+	import { Trash2, Plus } from 'lucide-svelte';
 	import { getLocationTypeLabel } from '$lib/collection';
+	import CollectionAddCardDrawer from '$lib/components/CollectionAddCardDrawer.svelte';
 
 	let { data } = $props();
 	let profile = $derived(data.profile);
 	let location = $derived(data.location);
 	let collection = $derived(data.collection);
 	let totalPages = $derived(Math.ceil(data.total / data.limit));
+
+	let isDrawerOpen = $state(false);
 
 	function getPageUrl(page: number) {
 		const url = new URL(window.location.href);
@@ -46,7 +49,15 @@
 				<p class="my-2 text-muted-foreground">{data.total} cards in this location</p>
 			</div>
 			{#if data.user && data.user.id === profile.id}
-				<Button href="/cards">Add More Cards</Button>
+				<div class="flex gap-2">
+					<Button onclick={() => (isDrawerOpen = true)}>
+						<Plus class="mr-2 h-4 w-4" />
+						Add Card
+					</Button>
+					<Button href="/profile/{profile.username}/collection" variant="outline"
+						>Back to Collection</Button
+					>
+				</div>
 			{/if}
 		</div>
 		{#if location.description}
@@ -54,42 +65,118 @@
 		{/if}
 	</div>
 
+	<CollectionAddCardDrawer
+		bind:open={isDrawerOpen}
+		locations={data.locations}
+		defaultLocationId={location.id}
+	/>
+
 	<Separator class="mb-8" />
 
 	{#if collection.length > 0}
-		<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-			{#each collection as item}
-				<div class="group relative flex flex-col gap-2">
-					{#if item.cardData}
-						<MTGCard card={item.cardData} />
-						<div class="mt-1 flex flex-wrap gap-1">
-							{#if item.physicalCard.isFoil}
-								<Badge variant="secondary" class="text-[10px] uppercase">Foil</Badge>
-							{/if}
-							<Badge variant="outline" class="text-[10px] uppercase"
-								>{item.physicalCard.condition}</Badge
-							>
-						</div>
-
+		<div class="overflow-x-auto rounded-lg border bg-card">
+			<table class="w-full text-left text-sm">
+				<thead class="border-b bg-muted/50 text-xs font-medium tracking-wider uppercase">
+					<tr>
+						<th class="px-4 py-3">Card</th>
+						<th class="px-4 py-3">Set</th>
+						<th class="px-4 py-3">Condition</th>
+						<th class="px-4 py-3">Language</th>
+						<th class="px-4 py-3">Price</th>
+						<th class="px-4 py-3">Flags</th>
 						{#if data.user && data.user.id === profile.id}
-							<form
-								method="POST"
-								action="?/removeCard"
-								use:enhance
-								class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-							>
-								<input type="hidden" name="physicalCardId" value={item.physicalCard.id} />
-								<Button size="icon" variant="destructive" type="submit" class="h-8 w-8 shadow-md">
-									<Trash2 class="h-4 w-4" />
-								</Button>
-							</form>
+							<th class="px-4 py-3 text-right">Actions</th>
 						{/if}
-					{:else}
-						<div class="aspect-[63/88] w-full animate-pulse rounded-xl bg-muted"></div>
-						<p class="text-xs text-muted-foreground">Loading card data...</p>
-					{/if}
-				</div>
-			{/each}
+					</tr>
+				</thead>
+				<tbody class="divide-y">
+					{#each collection as item}
+						<tr class="group hover:bg-muted/30">
+							<td class="px-4 py-3">
+								{#if item.cardData}
+									<div class="flex items-center gap-3">
+										<div class="relative h-12 w-9 shrink-0 overflow-hidden rounded shadow-sm">
+											{#if item.cardData.imageUri}
+												<img
+													src={item.cardData.imageUri}
+													alt={item.cardData.name}
+													class="h-full w-full object-cover"
+												/>
+											{:else}
+												<div class="flex h-full w-full items-center justify-center bg-muted"></div>
+											{/if}
+										</div>
+										<a
+											href="/cards/{item.physicalCard.scryfallId}"
+											class="font-medium hover:underline"
+										>
+											{item.cardData.name}
+										</a>
+									</div>
+								{:else}
+									<span class="animate-pulse text-muted-foreground">Loading...</span>
+								{/if}
+							</td>
+							<td class="px-4 py-3">
+								{#if item.cardData}
+									<span class="text-muted-foreground"
+										>{item.cardData.set.toUpperCase()} • #{item.cardData.collectorNumber}</span
+									>
+								{/if}
+							</td>
+							<td class="px-4 py-3 text-xs">
+								<Badge variant="outline" class="uppercase">{item.physicalCard.condition}</Badge>
+							</td>
+							<td class="px-4 py-3 text-xs">
+								<span class="uppercase">{item.physicalCard.language}</span>
+							</td>
+							<td class="px-4 py-3">
+								{#if item.physicalCard.purchasePrice}
+									${item.physicalCard.purchasePrice.toFixed(2)}
+								{:else}
+									<span class="text-muted-foreground">—</span>
+								{/if}
+							</td>
+							<td class="px-4 py-3">
+								<div class="flex flex-wrap gap-1">
+									{#if item.physicalCard.isFoil}
+										<Badge variant="secondary" class="text-[10px] uppercase">Foil</Badge>
+									{/if}
+									{#if item.physicalCard.isAlter}
+										<Badge
+											variant="secondary"
+											class="bg-purple-500 text-[10px] text-white uppercase hover:bg-purple-600"
+											>Alter</Badge
+										>
+									{/if}
+									{#if item.physicalCard.isProxy}
+										<Badge
+											variant="secondary"
+											class="bg-orange-500 text-[10px] text-white uppercase hover:bg-orange-600"
+											>Proxy</Badge
+										>
+									{/if}
+								</div>
+							</td>
+							{#if data.user && data.user.id === profile.id}
+								<td class="px-4 py-3 text-right">
+									<form method="POST" action="?/removeCard" use:enhance>
+										<input type="hidden" name="physicalCardId" value={item.physicalCard.id} />
+										<Button
+											size="icon"
+											variant="ghost"
+											type="submit"
+											class="h-8 w-8 text-destructive"
+										>
+											<Trash2 class="h-4 w-4" />
+										</Button>
+									</form>
+								</td>
+							{/if}
+						</tr>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 
 		{#if totalPages > 1}

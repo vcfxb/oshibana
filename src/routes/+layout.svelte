@@ -17,12 +17,6 @@
 	const currentYear = new Date().getFullYear();
 </script>
 
-<style>
-    #wordmark :global(svg) {
-		overflow: visible;
-	}
-</style>
-
 <svelte:head>
 	<link rel="icon" href="/iconography/favicon-dark.svg" media="(prefers-color-scheme: light)" />
 	<link rel="icon" href="/iconography/favicon-light.svg" media="(prefers-color-scheme: dark)" />
@@ -31,11 +25,13 @@
 <ModeWatcher track={false} defaultMode={'dark'} />
 
 <div class="flex min-h-screen flex-col">
-	<nav class="border-b bg-background px-4 py-3">
-		<div class="mx-auto flex max-w-7xl items-center justify-between">
-			<div class="flex min-w-0 items-center gap-2 md:gap-8">
-				<a href="/" class="flex-shrink-0 rounded-md px-2 py-2 hover:bg-accent md:px-3 md:py-4">
-					<div id="wordmark" class="md:h7 h-6 w-auto scale-110">
+	<nav
+		class="sticky top-0 z-50 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+	>
+		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+			<div class="flex min-w-0 flex-shrink-0 items-center gap-2 md:gap-8">
+				<a href="/" class="flex-shrink-0 rounded-md px-1 py-1 hover:bg-accent md:px-3 md:py-4">
+					<div id="wordmark" class="h-5 w-auto scale-110 sm:h-6 md:h-7">
 						{@html whiteWordmarkRaw}
 					</div>
 				</a>
@@ -47,7 +43,7 @@
 				</div>
 			</div>
 
-			<div class="flex items-center gap-4">
+			<div class="flex items-center gap-2 sm:gap-4">
 				<div class="hidden items-center gap-4 sm:flex">
 					{#if data.user}
 						<a
@@ -182,3 +178,9 @@
 		</div>
 	</footer>
 </div>
+
+<style>
+	#wordmark :global(svg) {
+		overflow: visible;
+	}
+</style>

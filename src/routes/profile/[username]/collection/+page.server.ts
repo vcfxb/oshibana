@@ -5,7 +5,8 @@ import * as schema from '$lib/server/db/schema';
 import {
 	getCollection,
 	getStorageLocations,
-	removeCardFromCollection
+	removeCardFromCollection,
+	addCardToCollection
 } from '$lib/server/collection';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -55,5 +56,43 @@ export const actions: Actions = {
 
 		await removeCardFromCollection(db, locals.user.id, physicalCardId);
 		return { success: true };
+	},
+	addCard: async ({ request, platform, locals }) => {
+		if (!locals.user) return fail(401);
+
+		const db = platform?.env.DB;
+		if (!db) return fail(500);
+
+		const formData = await request.formData();
+		const scryfallId = formData.get('scryfallId') as string;
+		if (!scryfallId) return fail(400, { message: 'Missing card ID' });
+
+		const condition = (formData.get('condition') as any) || 'NM';
+		const isFoil = formData.get('isFoil') === 'true';
+		const storageLocationId = (formData.get('storageLocationId') as string) || null;
+		const purchasePriceRaw = formData.get('purchasePrice') as string;
+		const purchasePrice =
+			purchasePriceRaw && !isNaN(parseFloat(purchasePriceRaw))
+				? parseFloat(purchasePriceRaw)
+				: undefined;
+		const isAlter = formData.get('isAlter') === 'true';
+		const isProxy = formData.get('isProxy') === 'true';
+		const language = (formData.get('language') as string) || 'en';
+
+		try {
+			await addCardToCollection(db, locals.user.id, scryfallId, {
+				condition,
+				isFoil,
+				storageLocationId:
+					storageLocationId === 'none' ? undefined : storageLocationId || undefined,
+				purchasePrice,
+				isAlter,
+				isProxy,
+				language
+			});
+			return { success: true };
+		} catch (e) {
+			return fail(500, { message: e instanceof Error ? e.message : 'Failed to add card' });
+		}
 	}
 };

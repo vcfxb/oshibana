@@ -29,6 +29,13 @@
       "when": 1770783192908,
       "tag": "0003_light_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1770944046584,
+      "tag": "0004_plain_angel",
+      "breakpoints": true
     }
   ]
 }

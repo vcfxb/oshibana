@@ -99,24 +99,40 @@ export async function addCardToCollection(
 		condition?: 'NM' | 'LP' | 'MP' | 'HP' | 'DMG';
 		isFoil?: boolean;
 		storageLocationId?: string;
+		purchasePrice?: number;
+		isAlter?: boolean;
+		isProxy?: boolean;
+		language?: string;
 	} = {}
 ) {
-	const ddb = drizzle(db);
+	try {
+		const ddb = drizzle(db);
 
-	// Ensure card is cached
-	await getCachedCard(db, scryfallId);
+		// Ensure card is cached
+		await getCachedCard(db, scryfallId);
 
-	const id = crypto.randomUUID();
-	await ddb.insert(schema.physicalCards).values({
-		id,
-		userId,
-		scryfallId,
-		condition: options.condition || 'NM',
-		isFoil: options.isFoil || false,
-		storageLocationId: options.storageLocationId
-	});
+		const id = crypto.randomUUID();
+		await ddb.insert(schema.physicalCards).values({
+			id,
+			userId,
+			scryfallId,
+			condition: options.condition || 'NM',
+			isFoil: options.isFoil || false,
+			storageLocationId: options.storageLocationId,
+			purchasePrice:
+				options.purchasePrice === null || isNaN(options.purchasePrice as number)
+					? null
+					: options.purchasePrice,
+			isAlter: options.isAlter || false,
+			isProxy: options.isProxy || false,
+			language: options.language || 'en'
+		});
 
-	return id;
+		return id;
+	} catch (e) {
+		console.error('Error in addCardToCollection:', e);
+		throw e;
+	}
 }
 
 export async function removeCardFromCollection(

@@ -4,9 +4,11 @@
 	import { enhance } from '$app/forms';
 	import { Badge } from '$lib/components/ui/badge';
 	import { getLocationTypeLabel } from '$lib/collection';
+	import { Plus, X } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+	let showAddForm = $state(false);
 
 	function formatOracleText(text: string) {
 		return text.replace(/\{[^}]+\}/g, (match) => {
@@ -17,34 +19,26 @@
 </script>
 
 <div class="container mx-auto px-4 py-8">
-	{#if data.error}
-		<div class="rounded-md border border-destructive/20 bg-destructive/10 p-4 text-destructive">
-			{data.error}
-		</div>
-	{:else if data.card}
+	{#if data.card}
 		<div class="grid gap-8 md:grid-cols-2">
 			<div class="flex justify-center">
 				{#if data.card.image_uris}
-					<div
-						class="aspect-[63/88] w-full max-w-[480px] overflow-hidden rounded-[4.8%] bg-black shadow-2xl"
-					>
+					<div class="w-full max-w-[480px] overflow-hidden rounded-[4.8%] shadow-2xl">
 						<img
 							src={data.card.image_uris.large}
 							alt={data.card.name}
-							class="h-full w-full rounded-[4.8%] object-cover"
+							class="h-auto w-full rounded-[4.8%]"
 						/>
 					</div>
 				{:else if data.card.card_faces}
 					<div class="flex flex-col gap-4">
 						{#each data.card.card_faces as face}
 							{#if face.image_uris}
-								<div
-									class="aspect-[63/88] w-full max-w-[480px] overflow-hidden rounded-[4.8%] bg-black shadow-2xl"
-								>
+								<div class="w-full max-w-[480px] overflow-hidden rounded-[4.8%] shadow-2xl">
 									<img
 										src={face.image_uris.large}
 										alt={face.name}
-										class="h-full w-full rounded-[4.8%] object-cover"
+										class="h-auto w-full rounded-[4.8%]"
 									/>
 								</div>
 							{/if}
@@ -97,68 +91,67 @@
 					</div>
 				</div>
 
+				<div class="mt-2">
+					<h3 class="mb-3 text-lg font-semibold">Legalities</h3>
+					<div class="overflow-hidden rounded-lg border">
+						<table class="w-full text-sm">
+							<tbody class="divide-y">
+								{#each Array(Math.ceil(Object.entries(data.card.legalities).length / 2)) as _, i}
+									{@const entries = Object.entries(data.card.legalities)}
+									<tr class="flex flex-col divide-y sm:table-row sm:divide-x sm:divide-y-0">
+										{#each [entries[i * 2], entries[i * 2 + 1]] as entry}
+											{#if entry}
+												{@const [format, status] = entry}
+												<td class="w-full px-4 py-2 hover:bg-muted/50 sm:w-1/2">
+													<div class="flex items-center justify-between gap-2">
+														<span class="font-medium capitalize">{format.replace(/_/g, ' ')}</span>
+														<div class="flex items-center gap-2">
+															<Badge
+																variant={status === 'legal'
+																	? 'default'
+																	: status === 'restricted'
+																		? 'secondary'
+																		: status === 'banned'
+																			? 'destructive'
+																			: 'outline'}
+																class="h-5 px-2 text-[10px] uppercase"
+															>
+																{status.replace(/_/g, ' ')}
+															</Badge>
+															{#if format === 'commander' && data.card.game_changer}
+																<Badge
+																	variant="secondary"
+																	class="h-5 bg-amber-500 px-2 text-[10px] text-white hover:bg-amber-600"
+																>
+																	GC
+																</Badge>
+															{/if}
+														</div>
+													</div>
+												</td>
+											{:else}
+												<td class="hidden w-1/2 px-4 py-2 sm:table-cell"></td>
+											{/if}
+										{/each}
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
 				<div class="mt-4 flex flex-col gap-4">
-					<Button
-						href={data.card.scryfall_uri}
-						variant="outline"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="w-full px-6 text-base sm:w-auto"
-					>
-						View on Scryfall
-					</Button>
-
-					{#if data.user}
-						<div class="rounded-lg border bg-card p-6 shadow-sm">
-							<h3 class="mb-6 text-xl font-semibold">Add to Collection</h3>
-							<form method="POST" action="?/addToCollection" use:enhance class="space-y-6">
-								<div class="grid grid-cols-2 gap-6">
-									<div class="space-y-3">
-										<label for="condition" class="text-sm font-medium">Condition</label>
-										<select
-											name="condition"
-											id="condition"
-											class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
-										>
-											<option value="NM">Near Mint</option>
-											<option value="LP">Lightly Played</option>
-											<option value="MP">Moderately Played</option>
-											<option value="HP">Heavily Played</option>
-											<option value="DMG">Damaged</option>
-										</select>
-									</div>
-									<div class="space-y-3">
-										<label for="storageLocationId" class="text-sm font-medium">Location</label>
-										<select
-											name="storageLocationId"
-											id="storageLocationId"
-											class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
-										>
-											<option value="none">No Location</option>
-											{#each data.locations || [] as location}
-												<option value={location.id}>
-													{location.name} ({getLocationTypeLabel(location.type)})
-												</option>
-											{/each}
-										</select>
-									</div>
-								</div>
-
-								<div class="flex items-center gap-3">
-									<input
-										type="checkbox"
-										name="isFoil"
-										id="isFoil"
-										value="true"
-										class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-									/>
-									<label for="isFoil" class="text-sm font-medium">Foil printing</label>
-								</div>
-
-								<Button type="submit" class="w-full py-6 text-lg">Add to Collection</Button>
-							</form>
-						</div>
-					{/if}
+					<div class="flex flex-wrap gap-3">
+						<Button
+							href={data.card.scryfall_uri}
+							variant="outline"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="flex-1 px-6 text-base sm:flex-initial"
+						>
+							View on Scryfall
+						</Button>
+					</div>
 				</div>
 			</div>
 		</div>

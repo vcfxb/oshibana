@@ -75,6 +75,7 @@ export interface ScryfallCard {
 	story_spotlight: boolean;
 	edhrec_rank?: number;
 	penny_rank?: number;
+	game_changer?: boolean;
 	prices: Record<string, string | null>;
 	related_uris: Record<string, string>;
 }

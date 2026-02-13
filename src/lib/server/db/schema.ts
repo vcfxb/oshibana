@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, primaryKey, real } from 'drizzle-orm/sqlite-core';
 
 // --- Authentication & User Management ---
 
@@ -126,6 +126,10 @@ export const physicalCards = sqliteTable('physical_cards', {
 		.notNull()
 		.default('NM'),
 	isFoil: integer('is_foil', { mode: 'boolean' }).notNull().default(false),
+	purchasePrice: real('purchase_price'),
+	isAlter: integer('is_alter', { mode: 'boolean' }).notNull().default(false),
+	isProxy: integer('is_proxy', { mode: 'boolean' }).notNull().default(false),
+	language: text('language').notNull().default('en'),
 
 	// Physical tracking
 	storageLocationId: text('storage_location_id').references(() => storageLocations.id, {
