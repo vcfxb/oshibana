@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Separator } from '$lib/components/ui/separator';
 	import CollectionCardTable from '$lib/components/CollectionCardTable.svelte';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 	let browserLocale = $state('en-US');
 
 	$effect(() => {

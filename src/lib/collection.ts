@@ -2,6 +2,7 @@ export type StorageLocationType = 'binder' | 'box' | 'shelf' | 'physical_deck' |
 export type CollectionSortBy =
 	| 'name'
 	| 'date-added'
+	| 'date-updated'
 	| 'value'
 	| 'purchase-price'
 	| 'set'

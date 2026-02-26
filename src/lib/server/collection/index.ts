@@ -118,7 +118,7 @@ export async function getCollection(
 		limit = 50,
 		offset = 0,
 		storageLocationId,
-		sortBy = 'date-added',
+		sortBy = 'date-updated',
 		sortDir = 'desc'
 	} = options;
 
@@ -196,8 +196,11 @@ export async function getCollection(
 			orderBy = [sortOrder(schema.physicalCards.quantity)];
 			break;
 		case 'date-added':
-		default:
 			orderBy = [sortOrder(schema.physicalCards.createdAt)];
+			break;
+		case 'date-updated':
+		default:
+			orderBy = [sortOrder(schema.physicalCards.updatedAt)];
 			break;
 	}
 
@@ -268,6 +271,8 @@ export async function getCollection(
 		total: totalResult[0]?.count || 0
 	};
 }
+
+export type CollectionData = Awaited<ReturnType<typeof getCollection>>;
 
 export async function addCardToCollection(
 	db: D1Database,

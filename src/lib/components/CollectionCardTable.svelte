@@ -14,6 +14,7 @@
 	import CollectionAddCardDrawer from './CollectionAddCardDrawer.svelte';
 	import { goto } from '$app/navigation';
 	import type { DbStorageLocation, DbUser } from '$lib/server/db/types';
+	import type { CollectionData } from '$lib/server/collection';
 
 	let {
 		collection,
@@ -22,14 +23,14 @@
 		limit,
 		profile,
 		user,
-		sortBy = 'date-added',
+		sortBy = 'date-updated',
 		sortDir = 'desc',
 		locations = [],
 		defaultLocationId = 'none',
 		browserLocale = 'en-US',
 		emptyMessage = 'No cards found in this collection.'
 	}: {
-		collection: any[];
+		collection: CollectionData['items'];
 		total: number;
 		page: number;
 		limit: number;
@@ -77,7 +78,7 @@
 	const totalPages = $derived(Math.ceil(total / limit));
 
 	const sortOptions: { label: string; value: CollectionSortBy }[] = [
-		{ label: 'Date Added', value: 'date-added' },
+		{ label: 'Date Updated', value: 'date-updated' },
 		{ label: 'Name', value: 'name' },
 		{ label: 'Value', value: 'value' },
 		{ label: 'Purchase Price', value: 'purchase-price' },
@@ -200,6 +201,17 @@
 						</button>
 					</th>
 					<th class="px-4 py-3">Flags</th>
+					<th class="px-4 py-3">
+						<button
+							onclick={() => handleSortChange('date-updated')}
+							class="flex items-center gap-1 hover:text-foreground"
+						>
+							Date Updated
+							{#if sortBy === 'date-updated'}
+								<ArrowUpDown class="h-3 w-3" />
+							{/if}
+						</button>
+					</th>
 					{#if user && user.id === profile.id}
 						<th class="px-4 py-3 text-right">Actions</th>
 					{/if}
@@ -291,6 +303,9 @@
 									>
 								{/if}
 							</div>
+						</td>
+						<td class="px-4 py-3 text-center font-medium text-muted-foreground">
+							{item.physicalCard.updatedAt.toLocaleString()}
 						</td>
 						{#if user && user.id === profile.id}
 							<td class="px-4 py-3 text-right">

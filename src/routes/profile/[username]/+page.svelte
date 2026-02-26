@@ -2,8 +2,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { enhance } from '$app/forms';
 	import { UserPlus, UserMinus } from 'lucide-svelte';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 	let profile = $derived(data.profile);
 	let decks = $derived(data.decks);
 </script>
@@ -79,7 +80,11 @@
 			variant="outline"
 			class="flex-1"
 		>
-			Manage Locations
+			{#if data.user && data.user.id === profile.id }
+				Manage Locations
+			{:else}
+				View Locations
+			{/if}
 		</Button>
 	</div>
 
