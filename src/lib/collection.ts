@@ -166,3 +166,26 @@ export function formatPrice(
 		return (symbols[currency] || '') + amount.toFixed(2);
 	}
 }
+
+export function getLanguageLabel(langCode: string): string {
+	const languages: Record<string, string> = {
+		en: 'English',
+		es: 'Spanish',
+		fr: 'French',
+		de: 'German',
+		it: 'Italian',
+		pt: 'Portuguese',
+		ja: 'Japanese',
+		ko: 'Korean',
+		ru: 'Russian',
+		zhs: 'Simplified Chinese',
+		zht: 'Traditional Chinese',
+		ph: 'Phyrexian',
+		la: 'Latin',
+		grc: 'Ancient Greek',
+		ar: 'Arabic',
+		sa: 'Sanskrit',
+		he: 'Hebrew'
+	};
+	return languages[langCode] || langCode.toUpperCase();
+}

@@ -3,12 +3,13 @@
 	import ManaCost from '$lib/components/ManaCost.svelte';
 	import { enhance } from '$app/forms';
 	import { Badge } from '$lib/components/ui/badge';
-	import { getLocationTypeLabel, formatCurrentPrice, formatPrice } from '$lib/collection';
-	import { Plus, X } from 'lucide-svelte';
+	import {
+		formatPrice,
+		getLanguageLabel
+	} from '$lib/collection';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-	let showAddForm = $state(false);
 
 	let browserLocale = $state('en-US');
 	$effect(() => {
@@ -55,19 +56,103 @@
 			<div class="flex flex-col gap-6">
 				<div class="rounded-md bg-muted p-4">
 					<div class="flex items-start justify-between gap-4">
-						<h1 class="text-3xl font-bold">{data.card.name}</h1>
+						<h1 class="text-3xl font-bold">
+							{data.card.printed_name || data.card.name}
+							{#if data.card.printed_name && data.card.printed_name !== data.card.name}
+								<span class="block text-lg font-normal text-muted-foreground">{data.card.name}</span
+								>
+							{/if}
+						</h1>
 						{#if data.card.mana_cost}
 							<div class="mt-1 text-xl">
 								<ManaCost cost={data.card.mana_cost} />
 							</div>
 						{/if}
 					</div>
-					<p class="mt-1 text-lg text-muted-foreground">{data.card.type_line}</p>
+					<p class="mt-1 text-lg text-muted-foreground">
+						{data.card.printed_type_line || data.card.type_line}
+						{#if data.card.printed_type_line && data.card.printed_type_line !== data.card.type_line}
+							<span class="ml-1 text-sm font-normal">({data.card.type_line})</span>
+						{/if}
+					</p>
 				</div>
 
-				{#if data.card.oracle_text}
-					<div class="rounded-md bg-muted p-4 whitespace-pre-wrap">
-						{@html formatOracleText(data.card.oracle_text)}
+				{#if data.card.oracle_text || data.card.printed_text}
+					<div class="flex flex-col gap-4">
+						{#if data.card.printed_text}
+							<div class="rounded-md bg-muted p-4 whitespace-pre-wrap">
+								<div class="mb-2 text-[10px] font-bold text-muted-foreground uppercase">
+									Printed Text
+								</div>
+								{@html formatOracleText(data.card.printed_text)}
+							</div>
+						{/if}
+						{#if data.card.oracle_text}
+							<div class="rounded-md bg-muted p-4 whitespace-pre-wrap">
+								{#if data.card.printed_text}
+									<div class="mb-2 text-[10px] font-bold text-muted-foreground uppercase">
+										Oracle Text
+									</div>
+								{/if}
+								{@html formatOracleText(data.card.oracle_text)}
+							</div>
+						{/if}
+					</div>
+				{/if}
+
+				{#if !data.card.oracle_text && data.card.card_faces}
+					<div class="flex flex-col gap-4">
+						{#each data.card.card_faces as face}
+							<div class="flex flex-col gap-2 rounded-md bg-muted p-4">
+								<div class="flex items-start justify-between">
+									<h3 class="font-bold">
+										{face.printed_name || face.name}
+										{#if face.printed_name && face.printed_name !== face.name}
+											<span class="block text-sm font-normal text-muted-foreground"
+												>{face.name}</span
+											>
+										{/if}
+									</h3>
+									{#if face.mana_cost}
+										<ManaCost cost={face.mana_cost} />
+									{/if}
+								</div>
+								<p class="text-sm text-muted-foreground">
+									{face.printed_type_line || face.type_line}
+									{#if face.printed_type_line && face.printed_type_line !== face.type_line}
+										<span class="ml-1 text-[10px] font-normal">({face.type_line})</span>
+									{/if}
+								</p>
+
+								{#if face.printed_text}
+									<div class="mt-2 border-t pt-2 text-sm whitespace-pre-wrap">
+										<div class="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
+											Printed
+										</div>
+										{@html formatOracleText(face.printed_text)}
+									</div>
+								{/if}
+								{#if face.oracle_text}
+									<div
+										class="mt-2 text-sm whitespace-pre-wrap {face.printed_text
+											? 'border-t pt-2'
+											: ''}"
+									>
+										{#if face.printed_text}
+											<div class="mb-1 text-[10px] font-bold text-muted-foreground uppercase">
+												Oracle
+											</div>
+										{/if}
+										{@html formatOracleText(face.oracle_text)}
+									</div>
+								{/if}
+								{#if face.flavor_text}
+									<div class="mt-2 text-xs text-muted-foreground italic">
+										{face.flavor_text}
+									</div>
+								{/if}
+							</div>
+						{/each}
 					</div>
 				{/if}
 
@@ -203,6 +288,52 @@
 								{@html formatOracleText(ruling.comment)}
 							</div>
 						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if data.languages && data.languages.data.length > 1}
+			<div class="mt-16">
+				<h2 class="mb-6 text-2xl font-bold">Other Languages</h2>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+					{#each data.languages.data as langCard}
+						{#if langCard.id !== data.card.id}
+							<a
+								href="/cards/{langCard.id}"
+								class="flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm transition-colors hover:bg-muted/50"
+							>
+								<div class="h-12 w-8 shrink-0 overflow-hidden rounded-[4.8%] bg-black">
+									{#if langCard.image_uris?.small}
+										<img
+											src={langCard.image_uris.small}
+											alt={langCard.lang}
+											class="h-full w-full object-cover"
+										/>
+									{:else if langCard.card_faces?.[0]?.image_uris?.small}
+										<img
+											src={langCard.card_faces[0].image_uris.small}
+											alt={langCard.lang}
+											class="h-full w-full object-cover"
+										/>
+									{/if}
+								</div>
+								<div class="flex flex-col overflow-hidden">
+									<span class="text-sm font-semibold">{getLanguageLabel(langCard.lang)}</span>
+									<span class="truncate text-xs text-muted-foreground">{langCard.name}</span>
+								</div>
+								<div class="ml-auto flex shrink-0 flex-col items-end">
+									<span class="text-xs font-bold"
+										>{formatPrice(langCard.prices.usd, 'USD', browserLocale)}</span
+									>
+									{#if langCard.prices.eur}
+										<span class="text-[10px] text-muted-foreground"
+											>{formatPrice(langCard.prices.eur, 'EUR', browserLocale)}</span
+										>
+									{/if}
+								</div>
+							</a>
+						{/if}
 					{/each}
 				</div>
 			</div>

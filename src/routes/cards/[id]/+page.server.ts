@@ -1,4 +1,4 @@
-import { getCardById, getPrints, getRulings } from '$lib/scryfall';
+import { getCardById, getPrints, getRulings, getLanguages } from '$lib/scryfall';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { drizzle } from 'drizzle-orm/d1';
@@ -9,17 +9,22 @@ export const load: PageServerLoad = async ({ params, platform, locals }) => {
 
 	try {
 		const card = await getCardById(params.id);
-		const [prints, rulings] = await Promise.all([getPrints(card.oracle_id), getRulings(card.id)]);
+		const [prints, rulings, languages] = await Promise.all([
+			getPrints(card.oracle_id),
+			getRulings(card.id),
+			getLanguages(card.set, card.collector_number).catch(() => ({ data: [] }))
+		]);
 
 		let locations: any[] = [];
 		if (locals.user && platform?.env.DB) {
-			locations = await ddb.query.storageLocations.findMany({ where: { userId: locals.user.id }});
+			locations = await ddb.query.storageLocations.findMany({ where: { userId: locals.user.id } });
 		}
 
 		return {
 			card,
 			prints,
 			rulings,
+			languages,
 			locations
 		};
 	} catch (e) {

@@ -9,10 +9,14 @@ export interface ScryfallImageUris {
 
 export interface ScryfallCardFace {
 	name: string;
+	printed_name?: string;
 	mana_cost: string;
 	type_line: string;
+	printed_type_line?: string;
 	oracle_text?: string;
+	printed_text?: string;
 	colors?: string[];
+	flavor_text?: string;
 	image_uris?: ScryfallImageUris;
 }
 
@@ -24,6 +28,7 @@ export interface ScryfallCard {
 	tcgplayer_id?: number;
 	cardmarket_id?: number;
 	name: string;
+	printed_name?: string;
 	lang: string;
 	released_at: string;
 	uri: string;
@@ -35,7 +40,9 @@ export interface ScryfallCard {
 	mana_cost?: string;
 	cmc: number;
 	type_line: string;
+	printed_type_line?: string;
 	oracle_text?: string;
+	printed_text?: string;
 	colors?: string[];
 	color_identity: string[];
 	keywords: string[];
@@ -165,6 +172,14 @@ export async function getCardByNamed(name: string, fuzzy = true): Promise<Scryfa
 
 export async function getPrints(oracleId: string): Promise<ScryfallList<ScryfallCard>> {
 	return scryfallFetch(`/cards/search?order=released&q=oracleid%3A${oracleId}&unique=prints`);
+}
+
+export async function getLanguages(
+	set: string,
+	collectorNumber: string
+): Promise<ScryfallList<ScryfallCard>> {
+	const query = `set:${set} cn:"${collectorNumber}" lang:any`;
+	return scryfallFetch(`/cards/search?q=${encodeURIComponent(query)}&unique=prints`);
 }
 
 export async function getRandomCard(): Promise<ScryfallCard> {
