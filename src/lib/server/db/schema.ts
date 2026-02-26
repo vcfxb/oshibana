@@ -126,7 +126,9 @@ export const physicalCards = sqliteTable('physical_cards', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),
-	scryfallId: text('scryfall_id').notNull().references(() => cardCache.scryfallId),
+	scryfallId: text('scryfall_id')
+		.notNull()
+		.references(() => cardCache.scryfallId),
 	condition: text('condition', { enum: ['NM', 'LP', 'MP', 'HP', 'DMG'] })
 		.notNull()
 		.default('NM'),
@@ -135,6 +137,7 @@ export const physicalCards = sqliteTable('physical_cards', {
 	isAlter: integer('is_alter', { mode: 'boolean' }).notNull().default(false),
 	isProxy: integer('is_proxy', { mode: 'boolean' }).notNull().default(false),
 	language: text('language').notNull().default('en'),
+	quantity: integer('quantity').notNull().default(1),
 
 	// Physical tracking
 	storageLocationId: text('storage_location_id').references(() => storageLocations.id, {

@@ -1,6 +1,12 @@
-
 export type StorageLocationType = 'binder' | 'box' | 'shelf' | 'physical_deck' | 'other';
-export type CollectionSortBy = 'name' | 'date-added' | 'value' | 'purchase-price' | 'set';
+export type CollectionSortBy =
+	| 'name'
+	| 'date-added'
+	| 'value'
+	| 'purchase-price'
+	| 'set'
+	| 'quantity'
+	| 'total-value';
 export type SortDir = 'asc' | 'desc';
 
 function parsePriceToCents(price: string | null | undefined): number | null {
@@ -22,6 +28,50 @@ export function getLocationTypeLabel(type: string): string {
 		default:
 			return 'Other';
 	}
+}
+
+export function getCurrentPriceValue(cardData: any, physicalCard?: any): number | null {
+	if (!cardData) return null;
+
+	let priceCents: number | null = null;
+	const isScryfallFormat = !!cardData.prices;
+
+	if (isScryfallFormat) {
+		const prices = cardData.prices;
+		if (physicalCard?.isFoil) {
+			priceCents =
+				parsePriceToCents(prices.usd_foil) ??
+				parsePriceToCents(prices.usd_etched) ??
+				parsePriceToCents(prices.usd) ??
+				parsePriceToCents(prices.eur) ??
+				parsePriceToCents(prices.tix);
+		} else {
+			priceCents =
+				parsePriceToCents(prices.usd) ??
+				parsePriceToCents(prices.usd_foil) ??
+				parsePriceToCents(prices.usd_etched) ??
+				parsePriceToCents(prices.eur) ??
+				parsePriceToCents(prices.tix);
+		}
+	} else {
+		if (physicalCard?.isFoil) {
+			priceCents =
+				cardData.priceUsdFoil ??
+				cardData.priceUsdEtched ??
+				cardData.priceUsd ??
+				cardData.priceEur ??
+				cardData.priceTix;
+		} else {
+			priceCents =
+				cardData.priceUsd ??
+				cardData.priceUsdFoil ??
+				cardData.priceUsdEtched ??
+				cardData.priceEur ??
+				cardData.priceTix;
+		}
+	}
+
+	return priceCents;
 }
 
 export function formatCurrentPrice(
@@ -53,7 +103,7 @@ export function formatCurrentPrice(
 		'si',
 		'es'
 	];
-	
+
 	const region = locale.split('-')[1]?.toLowerCase();
 	const lang = locale.split('-')[0].toLowerCase();
 	const useEur =
@@ -65,54 +115,17 @@ export function formatCurrentPrice(
 
 	let priceCents: number | null = null;
 
-	// Handle both Scryfall API format and our DB cache format
-	const isScryfallFormat = !!cardData.prices;
-
-	if (isScryfallFormat) {
-		const prices = cardData.prices;
-		if (useEur) {
-			priceCents = parsePriceToCents(prices.eur);
-		}
-
-		if (priceCents == null) {
-			if (physicalCard?.isFoil) {
-				priceCents =
-					parsePriceToCents(prices.usd_foil) ??
-					parsePriceToCents(prices.usd_etched) ??
-					parsePriceToCents(prices.usd) ??
-					parsePriceToCents(prices.eur) ??
-					parsePriceToCents(prices.tix);
-			} else {
-				priceCents =
-					parsePriceToCents(prices.usd) ??
-					parsePriceToCents(prices.usd_foil) ??
-					parsePriceToCents(prices.usd_etched) ??
-					parsePriceToCents(prices.eur) ??
-					parsePriceToCents(prices.tix);
-			}
-		}
-	} else {
-		if (useEur) {
+	if (useEur) {
+		const isScryfallFormat = !!cardData.prices;
+		if (isScryfallFormat) {
+			priceCents = parsePriceToCents(cardData.prices.eur);
+		} else {
 			priceCents = cardData.priceEur;
 		}
+	}
 
-		if (priceCents == null) {
-			if (physicalCard?.isFoil) {
-				priceCents =
-					cardData.priceUsdFoil ??
-					cardData.priceUsdEtched ??
-					cardData.priceUsd ??
-					cardData.priceEur ??
-					cardData.priceTix;
-			} else {
-				priceCents =
-					cardData.priceUsd ??
-					cardData.priceUsdFoil ??
-					cardData.priceUsdEtched ??
-					cardData.priceEur ??
-					cardData.priceTix;
-			}
-		}
+	if (priceCents == null) {
+		priceCents = getCurrentPriceValue(cardData, physicalCard);
 	}
 
 	if (priceCents == null) return '—';

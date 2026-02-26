@@ -1,0 +1,1 @@
+ALTER TABLE `physical_cards` ADD `quantity` integer DEFAULT 1 NOT NULL;

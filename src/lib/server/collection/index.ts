@@ -129,10 +129,8 @@ export async function getCollection(
 			userId,
 			storageLocationId
 		},
-		with: {
-			
-		}
-	})
+		with: {}
+	});
 
 	let query = ddb
 		.select({
@@ -173,11 +171,29 @@ export async function getCollection(
 				)
 			];
 			break;
+		case 'total-value':
+			orderBy = [
+				sortOrder(
+					sql`COALESCE(
+						CASE WHEN ${schema.physicalCards.isFoil} THEN ${schema.cardCache.priceUsdFoil} ELSE ${schema.cardCache.priceUsd} END,
+						${schema.cardCache.priceUsd},
+						${schema.cardCache.priceUsdFoil},
+						${schema.cardCache.priceUsdEtched},
+						${schema.cardCache.priceEur},
+						${schema.cardCache.priceTix},
+						0
+					) * ${schema.physicalCards.quantity}`
+				)
+			];
+			break;
 		case 'purchase-price':
 			orderBy = [sortOrder(schema.physicalCards.purchasePrice)];
 			break;
 		case 'set':
 			orderBy = [sortOrder(sql`${schema.cardCache.set} || ${schema.cardCache.collectorNumber}`)];
+			break;
+		case 'quantity':
+			orderBy = [sortOrder(schema.physicalCards.quantity)];
 			break;
 		case 'date-added':
 		default:
@@ -186,7 +202,7 @@ export async function getCollection(
 	}
 
 	const totalResult = await ddb
-		.select({ count: sql<number>`count(*)` })
+		.select({ count: sql<number>`CAST(SUM(${schema.physicalCards.quantity}) AS INTEGER)` })
 		.from(schema.physicalCards)
 		.where(
 			and(
@@ -265,6 +281,7 @@ export async function addCardToCollection(
 		isAlter?: boolean;
 		isProxy?: boolean;
 		language?: string;
+		quantity?: number;
 	} = {}
 ) {
 	try {
@@ -273,23 +290,69 @@ export async function addCardToCollection(
 		// Ensure card is cached
 		await getCachedCard(db, scryfallId);
 
+		const quantity = options.quantity || 1;
+		const condition = options.condition || 'NM';
+		const isFoil = options.isFoil || false;
+		const isAlter = options.isAlter || false;
+		const isProxy = options.isProxy || false;
+		const language = options.language || 'en';
+		const storageLocationId = options.storageLocationId || null;
+		const purchasePrice =
+			options.purchasePrice === undefined ||
+			options.purchasePrice === null ||
+			isNaN(options.purchasePrice)
+				? null
+				: Math.round(options.purchasePrice * 100);
+
+		// Try to find an existing identical card to increment quantity
+		const [existing] = await ddb
+			.select()
+			.from(schema.physicalCards)
+			.where(
+				and(
+					eq(schema.physicalCards.userId, userId),
+					eq(schema.physicalCards.scryfallId, scryfallId),
+					eq(schema.physicalCards.condition, condition),
+					eq(schema.physicalCards.isFoil, isFoil),
+					eq(schema.physicalCards.isAlter, isAlter),
+					eq(schema.physicalCards.isProxy, isProxy),
+					eq(schema.physicalCards.language, language),
+					storageLocationId
+						? eq(schema.physicalCards.storageLocationId, storageLocationId)
+						: sql`${schema.physicalCards.storageLocationId} IS NULL`,
+					purchasePrice !== null
+						? eq(schema.physicalCards.purchasePrice, purchasePrice)
+						: sql`${schema.physicalCards.purchasePrice} IS NULL`,
+					sql`${schema.physicalCards.currentDeckId} IS NULL`, // Only group unassigned cards
+					sql`${schema.physicalCards.notes} IS NULL` // Only group cards without specific notes
+				)
+			)
+			.limit(1);
+
+		if (existing) {
+			await ddb
+				.update(schema.physicalCards)
+				.set({
+					quantity: existing.quantity + quantity,
+					updatedAt: new Date()
+				})
+				.where(eq(schema.physicalCards.id, existing.id));
+			return existing.id;
+		}
+
 		const id = crypto.randomUUID();
 		await ddb.insert(schema.physicalCards).values({
 			id,
 			userId,
 			scryfallId,
-			condition: options.condition || 'NM',
-			isFoil: options.isFoil || false,
-			storageLocationId: options.storageLocationId,
-			purchasePrice:
-				options.purchasePrice === undefined ||
-				options.purchasePrice === null ||
-				isNaN(options.purchasePrice)
-					? null
-					: Math.round(options.purchasePrice * 100),
-			isAlter: options.isAlter || false,
-			isProxy: options.isProxy || false,
-			language: options.language || 'en'
+			condition,
+			isFoil,
+			storageLocationId,
+			purchasePrice,
+			isAlter,
+			isProxy,
+			language,
+			quantity
 		});
 
 		return id;

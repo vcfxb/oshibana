@@ -65,12 +65,18 @@
 		selectedSearchResult = null;
 		isAdding = false;
 		highlightedIndex = 0;
-		lastSearchedQuery = '';
 	}
 	let formElement = $state<HTMLFormElement | null>(null);
 
 	function handleGlobalKeydown(e: KeyboardEvent) {
 		if (!open) return;
+
+		if (e.key === 'Escape' && selectedSearchResult) {
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			resetSelection();
+			return;
+		}
 
 		// Form submission state
 		if (selectedSearchResult) {
@@ -129,7 +135,15 @@
 
 <svelte:window onkeydown={handleGlobalKeydown} />
 
-<Drawer.Root bind:open>
+<Drawer.Root
+	bind:open
+	onOpenChange={(newOpen) => {
+		if (!newOpen && selectedSearchResult) {
+			resetSelection();
+			open = true;
+		}
+	}}
+>
 	<Drawer.Content class="max-h-[90vh]">
 		<div class="mx-auto w-full max-w-2xl overflow-y-auto px-4 pt-6 pb-10">
 			<Drawer.Header class="px-0 text-left">
@@ -294,7 +308,14 @@
 								</div>
 							</div>
 
-							<div class="grid grid-cols-2 gap-4">
+							<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+								<div class="space-y-2">
+									<label
+										for="quantity"
+										class="text-xs font-semibold text-muted-foreground uppercase">Quantity</label
+									>
+									<Input type="number" name="quantity" id="quantity" value="1" min="1" required />
+								</div>
 								<div class="space-y-2">
 									<label
 										for="purchasePrice"

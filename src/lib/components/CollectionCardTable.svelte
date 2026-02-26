@@ -3,16 +3,11 @@
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { Badge } from '$lib/components/ui/badge';
 	import { enhance } from '$app/forms';
-	import {
-		Trash2,
-		Plus,
-		ArrowUpAZ,
-		ArrowDownZA,
-		ArrowUpDown
-	} from 'lucide-svelte';
+	import { Trash2, Plus, ArrowUpAZ, ArrowDownZA, ArrowUpDown } from 'lucide-svelte';
 	import {
 		formatCurrentPrice,
 		formatPrice,
+		getCurrentPriceValue,
 		type CollectionSortBy,
 		type SortDir
 	} from '$lib/collection';
@@ -32,7 +27,7 @@
 		locations = [],
 		defaultLocationId = 'none',
 		browserLocale = 'en-US',
-		emptyMessage = 'No cards found in this collection.',
+		emptyMessage = 'No cards found in this collection.'
 	}: {
 		collection: any[];
 		total: number;
@@ -86,7 +81,9 @@
 		{ label: 'Name', value: 'name' },
 		{ label: 'Value', value: 'value' },
 		{ label: 'Purchase Price', value: 'purchase-price' },
-		{ label: 'Set', value: 'set' }
+		{ label: 'Set', value: 'set' },
+		{ label: 'Quantity', value: 'quantity' },
+		{ label: 'Total Value', value: 'total-value' }
 	];
 </script>
 
@@ -132,7 +129,7 @@
 {#if collection.length > 0}
 	<div class="overflow-x-auto rounded-lg border bg-card">
 		<table class="w-full text-left text-sm">
-			<thead class="border-b bg-muted/50 text-xs font-medium tracking-wider uppercase">
+			<thead class="border-b bg-muted/50 text-xs font-medium tracking-wider">
 				<tr>
 					<th class="px-4 py-3">
 						<button
@@ -150,8 +147,19 @@
 							onclick={() => handleSortChange('set')}
 							class="flex items-center gap-1 hover:text-foreground"
 						>
-							Set
+							Set • #CN
 							{#if sortBy === 'set'}
+								<ArrowUpDown class="h-3 w-3" />
+							{/if}
+						</button>
+					</th>
+					<th class="px-4 py-3 text-center">
+						<button
+							onclick={() => handleSortChange('quantity')}
+							class="mx-auto flex items-center gap-1 hover:text-foreground"
+						>
+							Qty
+							{#if sortBy === 'quantity'}
 								<ArrowUpDown class="h-3 w-3" />
 							{/if}
 						</button>
@@ -165,6 +173,17 @@
 						>
 							Value
 							{#if sortBy === 'value'}
+								<ArrowUpDown class="h-3 w-3" />
+							{/if}
+						</button>
+					</th>
+					<th class="px-4 py-3">
+						<button
+							onclick={() => handleSortChange('total-value')}
+							class="flex items-center gap-1 hover:text-foreground"
+						>
+							Total Value
+							{#if sortBy === 'total-value'}
 								<ArrowUpDown class="h-3 w-3" />
 							{/if}
 						</button>
@@ -221,6 +240,9 @@
 								</span>
 							{/if}
 						</td>
+						<td class="px-4 py-3 text-center font-medium">
+							{item.physicalCard.quantity}
+						</td>
 						<td class="px-4 py-3 text-xs">
 							<Badge variant="outline" class="uppercase">{item.physicalCard.condition}</Badge>
 						</td>
@@ -229,6 +251,18 @@
 						</td>
 						<td class="px-4 py-3">
 							{formatCurrentPrice(item.cardData, item.physicalCard, browserLocale)}
+						</td>
+						<td class="px-4 py-3 text-muted-foreground">
+							{#if item.cardData}
+								{@const price = getCurrentPriceValue(item.cardData, item.physicalCard)}
+								{#if price}
+									{formatPrice(price * item.physicalCard.quantity, 'USD', browserLocale)}
+								{:else}
+									—
+								{/if}
+							{:else}
+								—
+							{/if}
 						</td>
 						<td class="px-4 py-3 text-muted-foreground">
 							{#if item.physicalCard.purchasePrice}
@@ -314,6 +348,6 @@
 	{/if}
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
-		<p class="text-xl font-medium mb-2">{emptyMessage}</p>
+		<p class="mb-2 text-xl font-medium">{emptyMessage}</p>
 	</div>
 {/if}
