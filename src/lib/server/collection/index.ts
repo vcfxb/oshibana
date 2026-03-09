@@ -287,6 +287,7 @@ export async function addCardToCollection(
 		isProxy?: boolean;
 		language?: string;
 		quantity?: number;
+		notes?: string;
 	} = {}
 ) {
 	try {
@@ -302,6 +303,7 @@ export async function addCardToCollection(
 		const isProxy = options.isProxy || false;
 		const language = options.language || 'en';
 		const storageLocationId = options.storageLocationId || null;
+		const notes = options.notes?.slice(0, 250) || null;
 		const purchasePrice =
 			options.purchasePrice === undefined ||
 			options.purchasePrice === null ||
@@ -329,7 +331,9 @@ export async function addCardToCollection(
 						? eq(schema.physicalCards.purchasePrice, purchasePrice)
 						: sql`${schema.physicalCards.purchasePrice} IS NULL`,
 					sql`${schema.physicalCards.currentDeckId} IS NULL`, // Only group unassigned cards
-					sql`${schema.physicalCards.notes} IS NULL` // Only group cards without specific notes
+					notes !== null
+						? eq(schema.physicalCards.notes, notes)
+						: sql`${schema.physicalCards.notes} IS NULL` // Only group cards without specific notes
 				)
 			)
 			.limit(1);
@@ -357,7 +361,8 @@ export async function addCardToCollection(
 			isAlter,
 			isProxy,
 			language,
-			quantity
+			quantity,
+			notes
 		});
 
 		return id;

@@ -390,6 +390,23 @@
 								</label>
 							</div>
 
+							<div class="space-y-2">
+								<div class="flex items-center justify-between">
+									<label for="notes" class="text-xs font-semibold text-muted-foreground uppercase"
+										>Notes</label
+									>
+									<span class="text-[10px] text-muted-foreground">Optional • Max 250 chars</span>
+								</div>
+								<textarea
+									name="notes"
+									id="notes"
+									rows="2"
+									maxlength="250"
+									placeholder="Add any specific details about this card (e.g. 'signed', 'misprint', 'sentimental value')..."
+									class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+								></textarea>
+							</div>
+
 							<div class="flex flex-col gap-3 sm:flex-row">
 								<button
 									type="submit"

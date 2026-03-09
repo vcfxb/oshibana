@@ -234,12 +234,22 @@
 											<div class="flex h-full w-full items-center justify-center bg-muted"></div>
 										{/if}
 									</div>
-									<a
-										href="/cards/{item.physicalCard.scryfallId}"
-										class="font-medium hover:underline"
-									>
-										{item.cardData.name}
-									</a>
+									<div class="flex flex-col">
+										<a
+											href="/cards/{item.physicalCard.scryfallId}"
+											class="font-medium hover:underline"
+										>
+											{item.cardData.name}
+										</a>
+										{#if item.physicalCard.notes}
+											<span
+												class="mt-0.5 line-clamp-2 max-w-[250px] text-[10px] leading-tight text-muted-foreground"
+												title={item.physicalCard.notes}
+											>
+												{item.physicalCard.notes}
+											</span>
+										{/if}
+									</div>
 								</div>
 							{:else}
 								<span class="animate-pulse text-muted-foreground">Loading...</span>

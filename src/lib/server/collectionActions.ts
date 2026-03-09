@@ -41,6 +41,7 @@ export const collectionActions = {
 		const language = (formData.get('language') as string) || 'en';
 		const quantityRaw = formData.get('quantity') as string;
 		const quantity = Math.max(1, Math.min(parseInt(quantityRaw) || 1, 100));
+		const notes = formData.get('notes') as string;
 
 		try {
 			await addCardToCollection(db, locals.user.id, scryfallId, {
@@ -52,7 +53,8 @@ export const collectionActions = {
 				isAlter,
 				isProxy,
 				language,
-				quantity
+				quantity,
+				notes
 			});
 			return { success: true };
 		} catch (e) {
