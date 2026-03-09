@@ -3,7 +3,7 @@
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Input } from '$lib/components/ui/input';
 	import { Search, LoaderCircle, Plus, Check } from 'lucide-svelte';
-	import { searchCards, type ScryfallCard } from '$lib/scryfall';
+	import { searchCards, getPrints, type ScryfallCard } from '$lib/scryfall';
 	import { enhance } from '$app/forms';
 	import { formatCurrentPrice } from '$lib/collection';
 
@@ -27,6 +27,25 @@
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let highlightedIndex = $state(0);
 	let browserLocale = $state('en-US');
+
+	let relatedPrintings = $derived(
+		selectedSearchResult
+			? searchResults.filter((r) => r.oracle_id === selectedSearchResult?.oracle_id)
+			: []
+	);
+
+	async function fetchPrintings() {
+		if (!selectedSearchResult || isSearching) return;
+		isSearching = true;
+		try {
+			const results = await getPrints(selectedSearchResult.oracle_id);
+			searchResults = results.data;
+		} catch (e) {
+			console.error(e);
+		} finally {
+			isSearching = false;
+		}
+	}
 
 	$effect(() => {
 		browserLocale = navigator.language || 'en-US';
@@ -234,12 +253,52 @@
 							</div>
 							<div class="flex-1">
 								<h4 class="text-xl font-bold">{selectedSearchResult.name}</h4>
-								<p class="text-sm text-muted-foreground uppercase">
-									{selectedSearchResult.set_name} • #{selectedSearchResult.collector_number}
-								</p>
-								<Button variant="outline" size="sm" onclick={resetSelection} class="mt-2">
-									Change Card
-								</Button>
+								{#if relatedPrintings.length > 1}
+									<div class="mt-1 space-y-1">
+										<label
+											for="printing-select"
+											class="text-[10px] font-semibold text-muted-foreground uppercase"
+											>Printing</label
+										>
+										<select
+											id="printing-select"
+											class="w-full rounded-md border bg-background px-2 py-1 text-xs focus:ring-2 focus:ring-primary"
+											value={selectedSearchResult.id}
+											onchange={(e) => {
+												const id = e.currentTarget.value;
+												const found = relatedPrintings.find((p) => p.id === id);
+												if (found) selectedSearchResult = found;
+											}}
+										>
+											{#each relatedPrintings as printing}
+												<option value={printing.id}>
+													{printing.set_name} • #{printing.collector_number} ({printing.set.toUpperCase()})
+												</option>
+											{/each}
+										</select>
+									</div>
+								{:else}
+									<p class="text-sm text-muted-foreground uppercase">
+										{selectedSearchResult.set_name} • #{selectedSearchResult.collector_number}
+									</p>
+								{/if}
+								<div class="mt-2 flex gap-2">
+									<Button variant="outline" size="sm" onclick={resetSelection}>Change Card</Button>
+									{#if relatedPrintings.length === 1}
+										<Button
+											variant="outline"
+											size="sm"
+											onclick={fetchPrintings}
+											disabled={isSearching}
+										>
+											{#if isSearching}
+												<LoaderCircle class="h-3 w-3 animate-spin" />
+											{:else}
+												Show All Printings
+											{/if}
+										</Button>
+									{/if}
+								</div>
 							</div>
 						</div>
 
