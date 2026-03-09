@@ -63,10 +63,11 @@
 	async function handleSearch() {
 		if (searchQuery.length < 2 || isSearching) return;
 		isSearching = true;
+		searchResults = [];
+		lastSearchedQuery = searchQuery;
 		try {
 			const results = await searchCards(searchQuery);
 			searchResults = results.data;
-			lastSearchedQuery = searchQuery;
 			highlightedIndex = 0;
 
 			// If exactly one result, select it automatically
@@ -231,6 +232,13 @@
 									</div>
 								</button>
 							{/each}
+						</div>
+					{:else if lastSearchedQuery && !isSearching}
+						<div class="rounded-lg border border-dashed p-12 text-center">
+							<p class="text-muted-foreground">No cards found matching "{lastSearchedQuery}"</p>
+							<p class="mt-1 text-xs text-muted-foreground/60">
+								Try a different search term or check for typos.
+							</p>
 						</div>
 					{/if}
 				{:else}
