@@ -51,7 +51,9 @@ export const actions: Actions = {
 			// Weird hacky workaround for import problems.
 			let EmailMessage;
 			try {
-				const cfEmail = await import('cloudflare:email');
+				// truly absurd the hoops I have to jump through to get vite to stop losing its mind
+				const moduleName = 'cloudflare:email';
+				const cfEmail = await import(/* @vite-ignore */ moduleName);
 				EmailMessage = cfEmail.EmailMessage;
 			} catch {
 				EmailMessage = class EmailMessage {
