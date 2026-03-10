@@ -62,7 +62,7 @@
 	let isDrawerOpen = $state(false);
 	let isEditDrawerOpen = $state(false);
 	let editingItem = $state<any>(null);
-	let searchQuery = $state(q);
+	let searchQuery = $state('');
 
 	$effect(() => {
 		searchQuery = q;

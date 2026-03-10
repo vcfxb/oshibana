@@ -4,8 +4,6 @@ import { drizzle } from 'drizzle-orm/d1';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { createPasswordResetToken } from '$lib/server/auth';
-import { env } from 'cloudflare:workers';
-import { EmailMessage } from 'cloudflare:email';
 import { createMimeMessage } from 'mimetext';
 
 export const actions: Actions = {
@@ -31,13 +29,13 @@ export const actions: Actions = {
 		try {
 			const token = await createPasswordResetToken(platform!.env.DB, user.id);
 			const resetLink = `${url.origin}/reset-password/${token}`;
-			const senderAddr = "no-reply@oshibana.cards";
+			const senderAddr = 'no-reply@oshibana.cards';
 
 			const mimeMessage = createMimeMessage();
 
-			mimeMessage.setSender({ name: "oshibana.cards", addr: senderAddr });
+			mimeMessage.setSender({ name: 'oshibana.cards', addr: senderAddr });
 			mimeMessage.setRecipient(user.email);
-			mimeMessage.setSubject("Oshibana password reset request");
+			mimeMessage.setSubject('Oshibana password reset request');
 			mimeMessage.addMessage({
 				contentType: 'text/html',
 				data: `
@@ -48,12 +46,19 @@ export const actions: Actions = {
 					<p><a href="${resetLink}">${resetLink}</a></p>
 					<p>If you did not request this, please safely ignore this email.</p>
 				</div>
-				`,
+				`
 			});
 
-			const emailMessage = new EmailMessage(senderAddr, user.email, mimeMessage.asRaw());
-
-			await env.PASSWORD_RESETS.send(emailMessage);
+			if (platform?.env.PASSWORD_RESETS) {
+				const emailMessage = new platform.env.EmailMessage(
+					senderAddr,
+					user.email,
+					mimeMessage.asRaw()
+				);
+				await platform.env.PASSWORD_RESETS.send(emailMessage);
+			} else {
+				console.log(`Password reset link for ${user.email}: ${resetLink}`);
+			}
 
 			return {
 				success: true,
