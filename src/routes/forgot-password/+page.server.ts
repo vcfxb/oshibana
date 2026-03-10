@@ -30,7 +30,6 @@ export const actions: Actions = {
 			const token = await createPasswordResetToken(platform!.env.DB, user.id);
 			const resetLink = `${url.origin}/reset-password/${token}`;
 			const senderAddr = 'no-reply@oshibana.cards';
-
 			const mimeMessage = createMimeMessage();
 
 			mimeMessage.setSender({ name: 'oshibana.cards', addr: senderAddr });
@@ -38,7 +37,7 @@ export const actions: Actions = {
 			mimeMessage.setSubject('Oshibana password reset request');
 			mimeMessage.addMessage({
 				contentType: 'text/html',
-				data: `
+				data: `\
 				<div style="font-family: sans-serif;">
 					<h2>Password Reset</h2>
 					<p>We received a request to reset your password.</p>
@@ -46,18 +45,27 @@ export const actions: Actions = {
 					<p><a href="${resetLink}">${resetLink}</a></p>
 					<p>If you did not request this, please safely ignore this email.</p>
 				</div>
-				`
+				`.split('\n').map((s) => s.trimStart()).join('\n') // weird hack for making it look less weird
 			});
 
-			if (platform?.env.PASSWORD_RESETS) {
-				const emailMessage = new platform.env.EmailMessage(
-					senderAddr,
-					user.email,
-					mimeMessage.asRaw()
-				);
-				await platform.env.PASSWORD_RESETS.send(emailMessage);
+			// Weird hacky workaround for import problems.
+			let EmailMessage;
+			try {
+				const cfEmail = await import('cloudflare:email');
+				EmailMessage = cfEmail.EmailMessage;
+			} catch {
+				EmailMessage = class EmailMessage {
+					constructor (public sender: string, public recipient: string, public raw: string) {}
+				};
+			}
+
+
+			const emailMessage = new EmailMessage(senderAddr, user.email, mimeMessage.asRaw());
+
+			if (platform?.env.PASSWORD_RESETS?.send) {
+				await platform?.env.PASSWORD_RESETS.send(emailMessage);
 			} else {
-				console.log(`Password reset link for ${user.email}: ${resetLink}`);
+				console.log(`email:\n${mimeMessage.asRaw()}`);
 			}
 
 			return {
