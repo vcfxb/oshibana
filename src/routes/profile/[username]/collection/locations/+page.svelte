@@ -3,7 +3,16 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Card from '$lib/components/ui/card';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { Package, Inbox, Bookmark, Plus, Trash2, WalletCards, EllipsisIcon } from 'lucide-svelte';
+	import {
+		Package,
+		Inbox,
+		Bookmark,
+		Plus,
+		Trash2,
+		WalletCards,
+		EllipsisIcon,
+		Pencil
+	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { getLocationTypeLabel } from '$lib/collection';
 
@@ -12,6 +21,13 @@
 	let isOwner = $derived(data.user?.id === profile.id);
 
 	let isSheetOpen = $state(false);
+	let isEditSheetOpen = $state(false);
+	let editingLocation = $state<any>(null);
+
+	function openEditSheet(location: any) {
+		editingLocation = location;
+		isEditSheetOpen = true;
+	}
 </script>
 
 <div class="mx-auto max-w-7xl px-4 py-8">
@@ -146,26 +162,37 @@
 					</a>
 
 					{#if isOwner}
-						<form
-							method="POST"
-							action="?/deleteLocation"
-							use:enhance
-							class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-							onsubmit={(e) => {
-								if (
-									!confirm(
-										'Are you sure you want to delete this location? Cards inside will NOT be deleted.'
-									)
-								) {
-									e.preventDefault();
-								}
-							}}
+						<div
+							class="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
 						>
-							<input type="hidden" name="id" value={location.id} />
-							<Button size="icon" variant="destructive" type="submit" class="h-8 w-8 shadow-md">
-								<Trash2 class="h-4 w-4" />
+							<Button
+								size="icon"
+								variant="secondary"
+								class="h-8 w-8 shadow-md"
+								onclick={() => openEditSheet(location)}
+							>
+								<Pencil class="h-4 w-4" />
 							</Button>
-						</form>
+							<form
+								method="POST"
+								action="?/deleteLocation"
+								use:enhance
+								onsubmit={(e) => {
+									if (
+										!confirm(
+											'Are you sure you want to delete this location? Cards inside will NOT be deleted.'
+										)
+									) {
+										e.preventDefault();
+									}
+								}}
+							>
+								<input type="hidden" name="id" value={location.id} />
+								<Button size="icon" variant="destructive" type="submit" class="h-8 w-8 shadow-md">
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							</form>
+						</div>
 					{/if}
 				</div>
 			{/each}
@@ -177,5 +204,73 @@
 				Users can organize their collection into binders, boxes, and more.
 			</p>
 		</div>
+	{/if}
+
+	{#if isOwner && editingLocation}
+		<Sheet.Root bind:open={isEditSheetOpen}>
+			<Sheet.Content side="right" class="p-6 sm:max-w-md">
+				<Sheet.Header class="mb-6">
+					<Sheet.Title class="text-2xl">Edit Location</Sheet.Title>
+					<Sheet.Description class="text-base">
+						Update the details for this storage location.
+					</Sheet.Description>
+				</Sheet.Header>
+				<form
+					method="POST"
+					action="?/updateLocation"
+					use:enhance={() => {
+						return async ({ result }) => {
+							if (result.type === 'success') {
+								isEditSheetOpen = false;
+							}
+						};
+					}}
+					class="space-y-6"
+				>
+					<input type="hidden" name="id" value={editingLocation.id} />
+					<div class="space-y-2">
+						<label for="edit-locationName" class="text-sm font-medium">Location Name</label>
+						<input
+							type="text"
+							id="edit-locationName"
+							name="locationName"
+							value={editingLocation.name}
+							required
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<label for="edit-type" class="text-sm font-medium">Type</label>
+						<select
+							id="edit-type"
+							name="type"
+							value={editingLocation.type}
+							required
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+						>
+							<option value="binder">Binder</option>
+							<option value="box">Box</option>
+							<option value="shelf">Shelf</option>
+							<option value="physical_deck">Physical Deck</option>
+							<option value="other">Other</option>
+						</select>
+					</div>
+					<div class="space-y-2">
+						<label for="edit-description" class="text-sm font-medium">Description (Optional)</label>
+						<textarea
+							id="edit-description"
+							name="description"
+							value={editingLocation.description || ''}
+							rows="3"
+							class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+						></textarea>
+					</div>
+					<Sheet.Footer>
+						<Button type="submit" class="w-full">Save Changes</Button>
+					</Sheet.Footer>
+				</form>
+			</Sheet.Content>
+		</Sheet.Root>
 	{/if}
 </div>

@@ -372,6 +372,59 @@ export async function addCardToCollection(
 	}
 }
 
+export async function updateCardInCollection(
+	db: D1Database,
+	userId: string,
+	physicalCardId: string,
+	options: {
+		condition?: 'NM' | 'LP' | 'MP' | 'HP' | 'DMG';
+		isFoil?: boolean;
+		storageLocationId?: string | null;
+		purchasePrice?: number | null;
+		isAlter?: boolean;
+		isProxy?: boolean;
+		language?: string;
+		quantity?: number;
+		notes?: string | null;
+	} = {}
+) {
+	try {
+		const ddb = drizzle(db);
+
+		const updates: any = {
+			updatedAt: new Date()
+		};
+
+		if (options.condition !== undefined) updates.condition = options.condition;
+		if (options.isFoil !== undefined) updates.isFoil = options.isFoil;
+		if (options.storageLocationId !== undefined) {
+			updates.storageLocationId =
+				options.storageLocationId === 'none' ? null : options.storageLocationId;
+		}
+		if (options.purchasePrice !== undefined) {
+			updates.purchasePrice =
+				options.purchasePrice === null || isNaN(options.purchasePrice)
+					? null
+					: Math.round(options.purchasePrice * 100);
+		}
+		if (options.isAlter !== undefined) updates.isAlter = options.isAlter;
+		if (options.isProxy !== undefined) updates.isProxy = options.isProxy;
+		if (options.language !== undefined) updates.language = options.language;
+		if (options.quantity !== undefined) updates.quantity = Math.max(1, options.quantity);
+		if (options.notes !== undefined) updates.notes = options.notes?.slice(0, 250) || null;
+
+		await ddb
+			.update(schema.physicalCards)
+			.set(updates)
+			.where(
+				and(eq(schema.physicalCards.id, physicalCardId), eq(schema.physicalCards.userId, userId))
+			);
+	} catch (e) {
+		console.error('Error in updateCardInCollection:', e);
+		throw e;
+	}
+}
+
 export async function removeCardFromCollection(
 	db: D1Database,
 	userId: string,
@@ -404,4 +457,24 @@ export async function createStorageLocation(
 		description: data.description
 	});
 	return id;
+}
+
+export async function updateStorageLocation(
+	db: D1Database,
+	userId: string,
+	id: string,
+	data: {
+		name?: string;
+		type?: 'binder' | 'box' | 'shelf' | 'physical_deck' | 'other';
+		description?: string | null;
+	}
+) {
+	const ddb = drizzle(db);
+	await ddb
+		.update(schema.storageLocations)
+		.set({
+			...data,
+			updatedAt: new Date()
+		})
+		.where(and(eq(schema.storageLocations.id, id), eq(schema.storageLocations.userId, userId)));
 }

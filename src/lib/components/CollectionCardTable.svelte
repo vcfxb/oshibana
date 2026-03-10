@@ -3,7 +3,7 @@
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { Badge } from '$lib/components/ui/badge';
 	import { enhance } from '$app/forms';
-	import { Trash2, Plus, ArrowUpAZ, ArrowDownZA, ArrowUpDown } from 'lucide-svelte';
+	import { Trash2, Plus, ArrowUpAZ, ArrowDownZA, ArrowUpDown, Pencil } from 'lucide-svelte';
 	import {
 		formatCurrentPrice,
 		formatPrice,
@@ -12,6 +12,7 @@
 		type SortDir
 	} from '$lib/collection';
 	import CollectionAddCardDrawer from './CollectionAddCardDrawer.svelte';
+	import CollectionEditCardDrawer from './CollectionEditCardDrawer.svelte';
 	import { goto } from '$app/navigation';
 	import type { DbStorageLocation, DbUser } from '$lib/server/db/types';
 	import type { CollectionData } from '$lib/server/collection';
@@ -47,6 +48,13 @@
 	} = $props();
 
 	let isDrawerOpen = $state(false);
+	let isEditDrawerOpen = $state(false);
+	let editingItem = $state<any>(null);
+
+	function openEditDrawer(item: any) {
+		editingItem = item;
+		isEditDrawerOpen = true;
+	}
 
 	function updateUrl(params: Record<string, string>) {
 		const url = new URL(window.location.href);
@@ -86,6 +94,19 @@
 		{ label: 'Quantity', value: 'quantity' },
 		{ label: 'Total Value', value: 'total-value' }
 	];
+
+	const languageFlags: Record<string, string> = {
+		en: '🇺🇸',
+		ja: '🇯🇵',
+		fr: '🇫🇷',
+		de: '🇩🇪',
+		it: '🇮🇹',
+		ko: '🇰🇷',
+		pt: '🇧🇷',
+		ru: '🇷🇺',
+		es: '🇪🇸',
+		zh: '🇨🇳'
+	};
 </script>
 
 <div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -126,6 +147,7 @@
 </div>
 
 <CollectionAddCardDrawer bind:open={isDrawerOpen} {locations} {defaultLocationId} />
+<CollectionEditCardDrawer bind:open={isEditDrawerOpen} item={editingItem} {locations} />
 
 {#if collection.length > 0}
 	<div class="overflow-x-auto rounded-lg border bg-card">
@@ -165,6 +187,7 @@
 							{/if}
 						</button>
 					</th>
+					<th class="px-4 py-3">Location</th>
 					<th class="px-4 py-3">Condition</th>
 					<th class="px-4 py-3">Language</th>
 					<th class="px-4 py-3">
@@ -266,10 +289,34 @@
 							{item.physicalCard.quantity}
 						</td>
 						<td class="px-4 py-3 text-xs">
+							{#if item.physicalCard.storageLocationId}
+								{@const location = locations.find(
+									(l) => l.id === item.physicalCard.storageLocationId
+								)}
+								{#if location}
+									<a
+										href="/profile/{profile.username}/collection/locations/{location.id}"
+										class="hover:underline"
+									>
+										{location.name}
+									</a>
+								{:else}
+									<span class="text-muted-foreground italic">Unknown</span>
+								{/if}
+							{:else}
+								<span class="text-muted-foreground italic">None</span>
+							{/if}
+						</td>
+						<td class="px-4 py-3 text-xs">
 							<Badge variant="outline" class="uppercase">{item.physicalCard.condition}</Badge>
 						</td>
 						<td class="px-4 py-3 text-xs">
-							<span class="uppercase">{item.physicalCard.language || 'en'}</span>
+							<div class="flex items-center gap-1.5">
+								<span class="text-lg leading-none"
+									>{languageFlags[item.physicalCard.language || 'en'] || ''}</span
+								>
+								<span class="uppercase">{item.physicalCard.language || 'en'}</span>
+							</div>
 						</td>
 						<td class="px-4 py-3">
 							{formatCurrentPrice(item.cardData, item.physicalCard, browserLocale)}
@@ -319,17 +366,27 @@
 						</td>
 						{#if user && user.id === profile.id}
 							<td class="px-4 py-3 text-right">
-								<form method="POST" action="?/removeCard" use:enhance>
-									<input type="hidden" name="physicalCardId" value={item.physicalCard.id} />
+								<div class="flex justify-end gap-2">
 									<Button
 										size="icon"
 										variant="ghost"
-										type="submit"
-										class="h-8 w-8 text-destructive"
+										class="h-8 w-8 text-muted-foreground"
+										onclick={() => openEditDrawer(item)}
 									>
-										<Trash2 class="h-4 w-4" />
+										<Pencil class="h-4 w-4" />
 									</Button>
-								</form>
+									<form method="POST" action="?/removeCard" use:enhance>
+										<input type="hidden" name="physicalCardId" value={item.physicalCard.id} />
+										<Button
+											size="icon"
+											variant="ghost"
+											type="submit"
+											class="h-8 w-8 text-destructive"
+										>
+											<Trash2 class="h-4 w-4" />
+										</Button>
+									</form>
+								</div>
 							</td>
 						{/if}
 					</tr>

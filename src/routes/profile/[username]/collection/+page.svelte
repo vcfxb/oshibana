@@ -11,7 +11,7 @@
 	});
 </script>
 
-<div class="mx-auto max-w-7xl px-4 py-8">
+<div class="mx-auto max-w-[90rem] px-4 py-8">
 	<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
 		<div>
 			<h1 class="mt-2 text-4xl font-bold">{data.profile.username}'s Collection</h1>

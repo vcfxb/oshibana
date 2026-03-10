@@ -13,7 +13,7 @@
 	});
 </script>
 
-<div class="mx-auto max-w-7xl px-4 py-8">
+<div class="mx-auto max-w-[90rem] px-4 py-8">
 	<div class="mb-8">
 		<div class="flex items-center gap-2 text-sm text-muted-foreground">
 			<a href="/profile/{profile.username}/collection" class="hover:underline">Collection</a>
