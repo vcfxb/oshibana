@@ -5,11 +5,13 @@ import { users } from '$lib/server/db/schema';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, or } from 'drizzle-orm';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.user) {
 		throw redirect(302, '/');
 	}
-	return {};
+	return {
+		resetSuccess: url.searchParams.has('resetSuccess')
+	};
 };
 
 export const actions: Actions = {

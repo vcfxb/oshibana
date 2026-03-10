@@ -8,7 +8,6 @@ import type { PageServerLoad } from './$types';
 import type { CollectionSortBy, SortDir } from '$lib/collection.js';
 import { relations } from '$lib/server/db/relations';
 
-
 export const load: PageServerLoad = async ({ params, platform, url }) => {
 	const db = platform?.env.DB;
 	if (!db) throw error(500, 'Database not found');
@@ -38,10 +37,18 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 
 	const sortBy = (url.searchParams.get('sortBy') as CollectionSortBy) || 'date-added';
 	const sortDir = (url.searchParams.get('sortDir') as SortDir) || 'desc';
+	const q = url.searchParams.get('q') || '';
 
 	const [collectionData, locations] = await Promise.all([
-		getCollection(db, profile.id, { limit, offset, storageLocationId: params.id, sortBy, sortDir }),
-		ddb.query.storageLocations.findMany({ where: { userId: profile.id }})
+		getCollection(db, profile.id, {
+			limit,
+			offset,
+			storageLocationId: params.id,
+			sortBy,
+			sortDir,
+			q
+		}),
+		ddb.query.storageLocations.findMany({ where: { userId: profile.id } })
 	]);
 
 	const formattedLocation = {
@@ -58,6 +65,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 		limit,
 		sortBy,
 		sortDir,
+		q,
 		locations
 	};
 };

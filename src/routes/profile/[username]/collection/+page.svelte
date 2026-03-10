@@ -26,6 +26,7 @@
 		limit={data.limit}
 		sortBy={data.sortBy}
 		sortDir={data.sortDir}
+		q={data.q}
 		profile={data.profile}
 		user={data.user}
 		locations={data.locations}

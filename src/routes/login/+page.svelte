@@ -4,7 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Card from '$lib/components/ui/card';
 
-	let { form } = $props();
+	let { data, form } = $props();
 </script>
 
 <div
@@ -19,6 +19,11 @@
 			</Card.Header>
 			<Card.Content>
 				<form class="space-y-6" method="POST" use:enhance>
+					{#if data.resetSuccess}
+						<div class="rounded-md bg-green-500/15 p-4 text-sm text-green-500">
+							Your password has been successfully reset. You can now log in.
+						</div>
+					{/if}
 					{#if form?.message}
 						<div class="rounded-md bg-destructive/15 p-4 text-sm text-destructive">
 							{form.message}
@@ -38,7 +43,12 @@
 							/>
 						</div>
 						<div class="space-y-2">
-							<label for="password" class="text-sm leading-none font-medium">Password</label>
+							<div class="flex items-center justify-between">
+								<label for="password" class="text-sm leading-none font-medium">Password</label>
+								<a href="/forgot-password" class="text-xs font-medium text-primary hover:underline">
+									Forgot password?
+								</a>
+							</div>
 							<Input
 								id="password"
 								name="password"

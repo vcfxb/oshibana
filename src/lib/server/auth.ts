@@ -127,3 +127,66 @@ export async function invalidateSession(db: D1Database, sessionId: string) {
 	const ddb = drizzle(db);
 	await ddb.delete(schema.sessions).where(eq(schema.sessions.id, sessionId));
 }
+
+// --- Password Reset ---
+
+const RESET_TOKEN_EXPIRATION_MS = 1000 * 60 * 60 * 2; // 2 hours
+
+export async function createPasswordResetToken(db: D1Database, userId: string): Promise<string> {
+	const ddb = drizzle(db);
+	// Delete any existing tokens for this user
+	await ddb.delete(schema.passwordResetTokens).where(eq(schema.passwordResetTokens.userId, userId));
+
+	const token = crypto.randomUUID();
+	const tokenHash = await hashToken(token);
+	const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_MS);
+
+	await ddb.insert(schema.passwordResetTokens).values({
+		tokenHash,
+		userId,
+		expiresAt: expiresAt.getTime()
+	});
+
+	return token;
+}
+
+export async function validatePasswordResetToken(
+	db: D1Database,
+	token: string
+): Promise<string | null> {
+	const ddb = drizzle(db);
+	const tokenHash = await hashToken(token);
+
+	const [result] = await ddb
+		.select()
+		.from(schema.passwordResetTokens)
+		.where(eq(schema.passwordResetTokens.tokenHash, tokenHash))
+		.limit(1);
+
+	if (!result) return null;
+
+	if (Date.now() >= result.expiresAt) {
+		await ddb
+			.delete(schema.passwordResetTokens)
+			.where(eq(schema.passwordResetTokens.tokenHash, tokenHash));
+		return null;
+	}
+
+	return result.userId;
+}
+
+export async function deletePasswordResetToken(db: D1Database, token: string) {
+	const ddb = drizzle(db);
+	const tokenHash = await hashToken(token);
+	await ddb
+		.delete(schema.passwordResetTokens)
+		.where(eq(schema.passwordResetTokens.tokenHash, tokenHash));
+}
+
+async function hashToken(token: string): Promise<string> {
+	const data = new TextEncoder().encode(token);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+	return Array.from(new Uint8Array(hashBuffer))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+}

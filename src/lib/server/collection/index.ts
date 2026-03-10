@@ -1,4 +1,4 @@
-import { eq, and, sql, asc, desc, inArray } from 'drizzle-orm';
+import { eq, and, sql, asc, desc, inArray, or, like } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { getCardById, getCardsBatch, type ScryfallCard } from '$lib/scryfall';
@@ -112,6 +112,7 @@ export async function getCollection(
 		storageLocationId?: string;
 		sortBy?: CollectionSortBy;
 		sortDir?: SortDir;
+		q?: string;
 	} = {}
 ) {
 	const {
@@ -119,18 +120,28 @@ export async function getCollection(
 		offset = 0,
 		storageLocationId,
 		sortBy = 'date-updated',
-		sortDir = 'desc'
+		sortDir = 'desc',
+		q
 	} = options;
 
 	const ddb = drizzle(db, { relations });
 
-	const collection = await ddb.query.physicalCards.findMany({
-		where: {
-			userId,
-			storageLocationId
-		},
-		with: {}
-	});
+	const whereClauses = [eq(schema.physicalCards.userId, userId)];
+
+	if (storageLocationId) {
+		whereClauses.push(eq(schema.physicalCards.storageLocationId, storageLocationId));
+	}
+
+	if (q) {
+		const searchPattern = `%${q}%`;
+		whereClauses.push(
+			or(
+				like(schema.cardCache.name, searchPattern),
+				like(schema.cardCache.setName, searchPattern),
+				like(schema.physicalCards.notes, searchPattern)
+			)!
+		);
+	}
 
 	let query = ddb
 		.select({
@@ -139,14 +150,7 @@ export async function getCollection(
 		})
 		.from(schema.physicalCards)
 		.leftJoin(schema.cardCache, eq(schema.physicalCards.scryfallId, schema.cardCache.scryfallId))
-		.where(
-			and(
-				eq(schema.physicalCards.userId, userId),
-				storageLocationId
-					? eq(schema.physicalCards.storageLocationId, storageLocationId)
-					: undefined
-			)
-		);
+		.where(and(...whereClauses));
 
 	const sortOrder = sortDir === 'asc' ? asc : desc;
 	let orderBy;
@@ -207,14 +211,8 @@ export async function getCollection(
 	const totalResult = await ddb
 		.select({ count: sql<number>`CAST(SUM(${schema.physicalCards.quantity}) AS INTEGER)` })
 		.from(schema.physicalCards)
-		.where(
-			and(
-				eq(schema.physicalCards.userId, userId),
-				storageLocationId
-					? eq(schema.physicalCards.storageLocationId, storageLocationId)
-					: undefined
-			)
-		);
+		.leftJoin(schema.cardCache, eq(schema.physicalCards.scryfallId, schema.cardCache.scryfallId))
+		.where(and(...whereClauses));
 
 	const items = await query
 		.orderBy(...orderBy)

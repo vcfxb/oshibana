@@ -47,6 +47,7 @@
 		limit={data.limit}
 		sortBy={data.sortBy}
 		sortDir={data.sortDir}
+		q={data.q}
 		{profile}
 		user={data.user}
 		locations={data.locations}

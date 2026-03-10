@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 
 	const ddb = drizzle(db, { relations });
 
-	const profile = await ddb.query.users.findFirst({ where: { username: params.username }});
+	const profile = await ddb.query.users.findFirst({ where: { username: params.username } });
 	if (!profile) throw error(404, 'User not found');
 
 	const page = Number(url.searchParams.get('page')) || 1;
@@ -21,10 +21,11 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 
 	const sortBy = (url.searchParams.get('sortBy') as CollectionSortBy) || 'date-updated';
 	const sortDir = (url.searchParams.get('sortDir') as SortDir) || 'desc';
+	const q = url.searchParams.get('q') || '';
 
 	const [collectionData, locations] = await Promise.all([
-		getCollection(db, profile.id, { limit, offset, sortBy, sortDir }),
-		ddb.query.storageLocations.findMany({ where: { userId: profile.id }})
+		getCollection(db, profile.id, { limit, offset, sortBy, sortDir, q }),
+		ddb.query.storageLocations.findMany({ where: { userId: profile.id } })
 	]);
 
 	return {
@@ -35,6 +36,7 @@ export const load: PageServerLoad = async ({ params, platform, url }) => {
 		limit,
 		sortBy,
 		sortDir,
+		q,
 		locations
 	};
 };

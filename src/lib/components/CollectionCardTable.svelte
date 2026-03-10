@@ -1,9 +1,19 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 	import * as Pagination from '$lib/components/ui/pagination';
 	import { Badge } from '$lib/components/ui/badge';
 	import { enhance } from '$app/forms';
-	import { Trash2, Plus, ArrowUpAZ, ArrowDownZA, ArrowUpDown, Pencil } from 'lucide-svelte';
+	import {
+		Trash2,
+		Plus,
+		ArrowUpAZ,
+		ArrowDownZA,
+		ArrowUpDown,
+		Pencil,
+		Search,
+		X
+	} from 'lucide-svelte';
 	import {
 		formatCurrentPrice,
 		formatPrice,
@@ -26,6 +36,7 @@
 		user,
 		sortBy = 'date-updated',
 		sortDir = 'desc',
+		q = '',
 		locations = [],
 		defaultLocationId = 'none',
 		browserLocale = 'en-US',
@@ -39,6 +50,7 @@
 		user?: DbUser | null;
 		sortBy?: CollectionSortBy;
 		sortDir?: SortDir;
+		q?: string;
 		locations?: DbStorageLocation[];
 		defaultLocationId?: string;
 		browserLocale?: string;
@@ -50,6 +62,21 @@
 	let isDrawerOpen = $state(false);
 	let isEditDrawerOpen = $state(false);
 	let editingItem = $state<any>(null);
+	let searchQuery = $state(q);
+
+	$effect(() => {
+		searchQuery = q;
+	});
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		updateUrl({ q: searchQuery, page: '1' });
+	}
+
+	function clearSearch() {
+		searchQuery = '';
+		updateUrl({ q: '', page: '1' });
+	}
 
 	function openEditDrawer(item: any) {
 		editingItem = item;
@@ -117,6 +144,20 @@
 				Add Card
 			</Button>
 		{/if}
+
+		<form onsubmit={handleSearch} class="relative flex-1 sm:max-w-xs">
+			<Search class="absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+			<Input type="search" placeholder="Search cards..." class="pl-9" bind:value={searchQuery} />
+			{#if searchQuery}
+				<button
+					type="button"
+					onclick={clearSearch}
+					class="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+				>
+					<X class="h-4 w-4" />
+				</button>
+			{/if}
+		</form>
 	</div>
 
 	<div class="flex flex-wrap items-center gap-3">
