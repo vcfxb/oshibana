@@ -102,7 +102,7 @@
 		if (selectedSearchResult) {
 			if (e.key === 'Enter' && !isAdding) {
 				const activeElement = document.activeElement;
-				if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'SELECT') {
+				if (activeElement?.tagName === 'BUTTON' || activeElement?.tagName === 'TEXTAREA') {
 					return;
 				}
 				e.preventDefault();
@@ -165,7 +165,7 @@
 	}}
 >
 	<Drawer.Content class="max-h-[90vh]">
-		<div class="mx-auto w-full max-w-2xl overflow-y-auto px-4 pt-6 pb-10">
+		<div class="mx-auto w-full max-w-5xl overflow-y-auto px-4 pt-6 pb-10">
 			<Drawer.Header class="px-0 text-left">
 				<Drawer.Title class="text-2xl">Add Card to Collection</Drawer.Title>
 				<Drawer.Description>Search and add cards to your physical inventory.</Drawer.Description>
@@ -243,270 +243,297 @@
 					{/if}
 				{:else}
 					<div class="rounded-xl border bg-muted/30 p-6">
-						<div class="mb-6 flex items-start gap-4">
-							<div class="h-24 w-18 shrink-0 overflow-hidden rounded-md shadow-md">
+						<div class="flex flex-col gap-6 lg:flex-row lg:items-start">
+							<div
+								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-[4.8%] bg-black shadow-2xl lg:w-80"
+							>
 								{#if selectedSearchResult.image_uris}
 									<img
-										src={selectedSearchResult.image_uris.small}
+										src={selectedSearchResult.image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full object-cover"
+										class="h-full w-full rounded-[4.8%] object-contain"
 									/>
 								{:else if selectedSearchResult.card_faces?.[0]?.image_uris}
 									<img
-										src={selectedSearchResult.card_faces[0].image_uris.small}
+										src={selectedSearchResult.card_faces[0].image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full object-cover"
+										class="h-full w-full rounded-[4.8%] object-contain"
 									/>
 								{/if}
 							</div>
-							<div class="flex-1">
-								<h4 class="text-xl font-bold">{selectedSearchResult.name}</h4>
-								{#if relatedPrintings.length > 1}
-									<div class="mt-1 space-y-1">
-										<label
-											for="printing-select"
-											class="text-[10px] font-semibold text-muted-foreground uppercase"
-											>Printing</label
-										>
-										<select
-											id="printing-select"
-											class="w-full rounded-md border bg-background px-2 py-1 text-xs focus:ring-2 focus:ring-primary"
-											value={selectedSearchResult.id}
-											onchange={(e) => {
-												const id = e.currentTarget.value;
-												const found = relatedPrintings.find((p) => p.id === id);
-												if (found) selectedSearchResult = found;
-											}}
-										>
-											{#each relatedPrintings as printing}
-												<option value={printing.id}>
-													{printing.set_name} • #{printing.collector_number} ({printing.set.toUpperCase()})
-												</option>
-											{/each}
-										</select>
+
+							<div class="min-w-0 flex-1">
+								<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+									<div class="min-w-0 flex-1">
+										<h4 class="truncate text-2xl font-bold">{selectedSearchResult.name}</h4>
+										{#if relatedPrintings.length > 1}
+											<div class="mt-2 space-y-1">
+												<label
+													for="printing-select"
+													class="text-[10px] font-semibold text-muted-foreground uppercase"
+													>Printing</label
+												>
+												<select
+													id="printing-select"
+													class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+													value={selectedSearchResult.id}
+													onchange={(e) => {
+														const id = e.currentTarget.value;
+														const found = relatedPrintings.find((p) => p.id === id);
+														if (found) selectedSearchResult = found;
+													}}
+												>
+													{#each relatedPrintings as printing}
+														<option value={printing.id}>
+															{printing.set_name} • #{printing.collector_number} ({printing.set.toUpperCase()})
+														</option>
+													{/each}
+												</select>
+											</div>
+										{:else}
+											<p class="mt-1 text-sm text-muted-foreground uppercase">
+												{selectedSearchResult.set_name} • #{selectedSearchResult.collector_number}
+											</p>
+										{/if}
 									</div>
-								{:else}
-									<p class="text-sm text-muted-foreground uppercase">
-										{selectedSearchResult.set_name} • #{selectedSearchResult.collector_number}
-									</p>
-								{/if}
-								<div class="mt-2 flex gap-2">
-									<Button variant="outline" size="sm" onclick={resetSelection}>Change Card</Button>
-									{#if relatedPrintings.length === 1}
-										<Button
-											variant="outline"
-											size="sm"
-											onclick={fetchPrintings}
-											disabled={isSearching}
-										>
-											{#if isSearching}
-												<LoaderCircle class="h-3 w-3 animate-spin" />
-											{:else}
-												Show All Printings
-											{/if}
+									<div class="flex shrink-0 gap-2">
+										<Button variant="outline" size="sm" onclick={resetSelection} type="button">
+											Change Card
 										</Button>
-									{/if}
+										{#if relatedPrintings.length === 1}
+											<Button
+												variant="outline"
+												size="sm"
+												onclick={fetchPrintings}
+												disabled={isSearching}
+												type="button"
+											>
+												{#if isSearching}
+													<LoaderCircle class="h-3 w-3 animate-spin" />
+												{:else}
+													All Prints
+												{/if}
+											</Button>
+										{/if}
+									</div>
 								</div>
+
+								<form
+									bind:this={formElement}
+									method="POST"
+									action="?/addCard"
+									use:enhance={() => {
+										isAdding = true;
+										return async ({ result, update }) => {
+											if (result.type === 'success') {
+												if (addMode === 'close') {
+													open = false;
+													selectedSearchResult = null;
+													searchQuery = '';
+													searchResults = [];
+												} else {
+													selectedSearchResult = null;
+													searchQuery = '';
+													searchResults = [];
+													lastSearchedQuery = '';
+												}
+												await update();
+											}
+											isAdding = false;
+										};
+									}}
+									class="space-y-6"
+								>
+									<input type="hidden" name="scryfallId" value={selectedSearchResult.id} />
+
+									<div class="grid grid-cols-2 gap-4">
+										<div class="space-y-2">
+											<label
+												for="condition"
+												class="text-xs font-semibold text-muted-foreground uppercase"
+												>Condition</label
+											>
+											<select
+												name="condition"
+												id="condition"
+												class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+											>
+												<option value="NM">Near Mint</option>
+												<option value="LP">Lightly Played</option>
+												<option value="MP">Moderately Played</option>
+												<option value="HP">Heavily Played</option>
+												<option value="DMG">Damaged</option>
+											</select>
+										</div>
+										<div class="space-y-2">
+											<label
+												for="storageLocationId"
+												class="text-xs font-semibold text-muted-foreground uppercase"
+												>Location</label
+											>
+											<select
+												name="storageLocationId"
+												id="storageLocationId"
+												class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+											>
+												<option value="none" selected={defaultLocationId === 'none'}
+													>No Location</option
+												>
+												{#each locations as location}
+													<option value={location.id} selected={defaultLocationId === location.id}>
+														{location.name}
+													</option>
+												{/each}
+											</select>
+										</div>
+									</div>
+
+									<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+										<div class="space-y-2">
+											<label
+												for="quantity"
+												class="text-xs font-semibold text-muted-foreground uppercase"
+												>Quantity</label
+											>
+											<Input
+												type="number"
+												name="quantity"
+												id="quantity"
+												value="1"
+												min="1"
+												required
+											/>
+										</div>
+										<div class="space-y-2">
+											<label
+												for="purchasePrice"
+												class="text-xs font-semibold text-muted-foreground uppercase"
+												>Price Paid</label
+											>
+											<div class="relative">
+												<span
+													class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground"
+													>$</span
+												>
+												<Input
+													type="number"
+													step="0.01"
+													name="purchasePrice"
+													id="purchasePrice"
+													placeholder="0.00"
+													class="pl-7"
+												/>
+											</div>
+										</div>
+										<div class="space-y-2">
+											<label
+												for="language"
+												class="text-xs font-semibold text-muted-foreground uppercase"
+												>Language</label
+											>
+											<select
+												name="language"
+												id="language"
+												class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+											>
+												<option value="en">English</option>
+												<option value="ja">Japanese</option>
+												<option value="zh">Chinese</option>
+												<option value="fr">French</option>
+												<option value="de">German</option>
+												<option value="it">Italian</option>
+												<option value="ko">Korean</option>
+												<option value="pt">Portuguese</option>
+												<option value="ru">Russian</option>
+												<option value="es">Spanish</option>
+											</select>
+										</div>
+									</div>
+
+									<div class="flex flex-wrap gap-6 rounded-lg bg-muted/50 p-4">
+										<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
+											<input
+												type="checkbox"
+												name="isFoil"
+												value="true"
+												class="h-4 w-4 rounded border-input"
+											/>
+											Foil
+										</label>
+										<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
+											<input
+												type="checkbox"
+												name="isAlter"
+												value="true"
+												class="h-4 w-4 rounded border-input"
+											/>
+											Alter
+										</label>
+										<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
+											<input
+												type="checkbox"
+												name="isProxy"
+												value="true"
+												class="h-4 w-4 rounded border-input"
+											/>
+											Proxy
+										</label>
+									</div>
+
+									<div class="space-y-2">
+										<div class="flex items-center justify-between">
+											<label
+												for="notes"
+												class="text-xs font-semibold text-muted-foreground uppercase">Notes</label
+											>
+											<span class="text-[10px] text-muted-foreground">Optional • Max 250 chars</span
+											>
+										</div>
+										<textarea
+											name="notes"
+											id="notes"
+											rows="2"
+											maxlength="250"
+											placeholder="Add any specific details about this card..."
+											class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+										></textarea>
+									</div>
+
+									<div class="flex flex-col gap-3 sm:flex-row">
+										<button
+											type="submit"
+											onclick={() => {
+												addMode = 'continue';
+											}}
+											disabled={isAdding}
+											class="h-12 flex-1 rounded-md bg-primary text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+										>
+											{#if isAdding && addMode === 'continue'}
+												<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
+											{:else}
+												<Plus class="mr-2 inline h-4 w-4" />
+											{/if}
+											Add & Continue
+										</button>
+										<button
+											type="submit"
+											onclick={() => {
+												addMode = 'close';
+											}}
+											disabled={isAdding}
+											class="h-12 flex-1 rounded-md bg-secondary text-lg font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+										>
+											{#if isAdding && addMode === 'close'}
+												<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
+											{:else}
+												<Check class="mr-2 inline h-4 w-4" />
+											{/if}
+											Add & Close
+										</button>
+									</div>
+								</form>
 							</div>
 						</div>
-
-						<form
-							bind:this={formElement}
-							method="POST"
-							action="?/addCard"
-							use:enhance={() => {
-								isAdding = true;
-								return async ({ result, update }) => {
-									if (result.type === 'success') {
-										if (addMode === 'close') {
-											open = false;
-											selectedSearchResult = null;
-											searchQuery = '';
-											searchResults = [];
-										} else {
-											// Keep open for more, but clear selection
-											selectedSearchResult = null;
-										}
-										await update();
-									}
-									isAdding = false;
-								};
-							}}
-							class="space-y-6"
-						>
-							<input type="hidden" name="scryfallId" value={selectedSearchResult.id} />
-
-							<div class="grid grid-cols-2 gap-4">
-								<div class="space-y-2">
-									<label
-										for="condition"
-										class="text-xs font-semibold text-muted-foreground uppercase">Condition</label
-									>
-									<select
-										name="condition"
-										id="condition"
-										class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
-									>
-										<option value="NM">Near Mint</option>
-										<option value="LP">Lightly Played</option>
-										<option value="MP">Moderately Played</option>
-										<option value="HP">Heavily Played</option>
-										<option value="DMG">Damaged</option>
-									</select>
-								</div>
-								<div class="space-y-2">
-									<label
-										for="storageLocationId"
-										class="text-xs font-semibold text-muted-foreground uppercase">Location</label
-									>
-									<select
-										name="storageLocationId"
-										id="storageLocationId"
-										class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
-									>
-										<option value="none" selected={defaultLocationId === 'none'}>No Location</option
-										>
-										{#each locations as location}
-											<option value={location.id} selected={defaultLocationId === location.id}>
-												{location.name}
-											</option>
-										{/each}
-									</select>
-								</div>
-							</div>
-
-							<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-								<div class="space-y-2">
-									<label
-										for="quantity"
-										class="text-xs font-semibold text-muted-foreground uppercase">Quantity</label
-									>
-									<Input type="number" name="quantity" id="quantity" value="1" min="1" required />
-								</div>
-								<div class="space-y-2">
-									<label
-										for="purchasePrice"
-										class="text-xs font-semibold text-muted-foreground uppercase">Price Paid</label
-									>
-									<div class="relative">
-										<span
-											class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground"
-											>$</span
-										>
-										<Input
-											type="number"
-											step="0.01"
-											name="purchasePrice"
-											id="purchasePrice"
-											placeholder="0.00"
-											class="pl-7"
-										/>
-									</div>
-								</div>
-								<div class="space-y-2">
-									<label
-										for="language"
-										class="text-xs font-semibold text-muted-foreground uppercase">Language</label
-									>
-									<select
-										name="language"
-										id="language"
-										class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
-									>
-										<option value="en">English</option>
-										<option value="ja">Japanese</option>
-										<option value="zh">Chinese</option>
-										<option value="fr">French</option>
-										<option value="de">German</option>
-										<option value="it">Italian</option>
-										<option value="ko">Korean</option>
-										<option value="pt">Portuguese</option>
-										<option value="ru">Russian</option>
-										<option value="es">Spanish</option>
-									</select>
-								</div>
-							</div>
-
-							<div class="flex flex-wrap gap-6 rounded-lg bg-muted/50 p-4">
-								<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
-									<input
-										type="checkbox"
-										name="isFoil"
-										value="true"
-										class="h-4 w-4 rounded border-input"
-									/>
-									Foil
-								</label>
-								<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
-									<input
-										type="checkbox"
-										name="isAlter"
-										value="true"
-										class="h-4 w-4 rounded border-input"
-									/>
-									Alter
-								</label>
-								<label class="flex cursor-pointer items-center gap-2 text-sm font-medium">
-									<input
-										type="checkbox"
-										name="isProxy"
-										value="true"
-										class="h-4 w-4 rounded border-input"
-									/>
-									Proxy
-								</label>
-							</div>
-
-							<div class="space-y-2">
-								<div class="flex items-center justify-between">
-									<label for="notes" class="text-xs font-semibold text-muted-foreground uppercase"
-										>Notes</label
-									>
-									<span class="text-[10px] text-muted-foreground">Optional • Max 250 chars</span>
-								</div>
-								<textarea
-									name="notes"
-									id="notes"
-									rows="2"
-									maxlength="250"
-									placeholder="Add any specific details about this card (e.g. 'signed', 'misprint', 'sentimental value')..."
-									class="w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
-								></textarea>
-							</div>
-
-							<div class="flex flex-col gap-3 sm:flex-row">
-								<button
-									type="submit"
-									onclick={() => {
-										addMode = 'continue';
-									}}
-									disabled={isAdding}
-									class="h-12 flex-1 rounded-md bg-primary text-lg font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-								>
-									{#if isAdding && addMode === 'continue'}
-										<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
-									{:else}
-										<Plus class="mr-2 inline h-4 w-4" />
-									{/if}
-									Add & Continue
-								</button>
-								<button
-									type="submit"
-									onclick={() => {
-										addMode = 'close';
-									}}
-									disabled={isAdding}
-									class="h-12 flex-1 rounded-md bg-secondary text-lg font-medium text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
-								>
-									{#if isAdding && addMode === 'close'}
-										<LoaderCircle class="mr-2 inline h-4 w-4 animate-spin" />
-									{:else}
-										<Check class="mr-2 inline h-4 w-4" />
-									{/if}
-									Add & Close
-								</button>
-							</div>
-						</form>
 					</div>
 				{/if}
 			</div>
