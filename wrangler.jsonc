@@ -28,6 +28,14 @@
 			"database_id": "dfe60f6d-7a92-4de7-b6fd-f9a48274f426",
 			"migrations_dir": "migrations"
 		}
+	],
+	"send_email": [
+		{
+			"name": "PASSWORD_RESETS",
+			"allowed_sender_addresses": [
+				"no-reply@oshibana.cards"
+			]
+		}
 	]
 	/**
 	 * Smart Placement
