@@ -236,7 +236,7 @@
 															{#if format === 'commander' && data.card.game_changer}
 																<Badge
 																	variant="secondary"
-																	class="h-5 bg-amber-500 px-2 text-[10px] text-white hover:bg-amber-600"
+																	class="h-5 px-2 text-[10px] text-white bg-amber-600"
 																>
 																	GC
 																</Badge>
