@@ -62,7 +62,7 @@
 		"vite": "^7.2.6",
 		"vitest": "^4.0.15",
 		"vitest-browser-svelte": "^2.0.1",
-		"wrangler": "^4.64.0"
+		"wrangler": "^4.76.0"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.6.2",
