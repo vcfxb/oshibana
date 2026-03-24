@@ -32,15 +32,11 @@ export async function hashPassword(password: string): Promise<string> {
 	combined.set(salt);
 	combined.set(new Uint8Array(derivedKey), SALT_SIZE);
 
-	return btoa(String.fromCharCode(...combined));
+	return Buffer.from(combined).toString('base64');
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-	const combined = new Uint8Array(
-		atob(hash)
-			.split('')
-			.map((c) => c.charCodeAt(0))
-	);
+	const combined = new Uint8Array(Buffer.from(hash, 'base64'));
 	const salt = combined.slice(0, SALT_SIZE);
 	const originalKey = combined.slice(SALT_SIZE);
 
