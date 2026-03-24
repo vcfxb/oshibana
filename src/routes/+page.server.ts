@@ -1,26 +1,48 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { invalidateSession } from '$lib/server/auth';
-import { getRandomCard } from '$lib/scryfall';
+import { users, decks, physicalCards } from '$lib/server/db/schema';
+import { drizzle } from 'drizzle-orm/d1';
+import { count, sql } from 'drizzle-orm';
 
-export const load: PageServerLoad = async () => {
-	// Fetch a few random cards for the landing page
-	// We use Promise.all to fetch them in parallel
+export const load: PageServerLoad = async ({ platform }) => {
+	if (!platform?.env?.DB) {
+		throw error(500, 'Database connection not available');
+	}
+
+	const ddb = drizzle(platform.env.DB);
+
 	try {
-		const featuredCards = await Promise.all([
-			getRandomCard(),
-			getRandomCard(),
-			getRandomCard(),
-			getRandomCard(),
-			getRandomCard()
+		const [userCount, deckCount, cardStats] = await Promise.all([
+			ddb
+				.select({ count: count() })
+				.from(users)
+				.get(),
+			ddb
+				.select({ count: count() })
+				.from(decks)
+				.get(),
+			ddb
+				.select({ totalCards: sql<number>`SUM(quantity)` })
+				.from(physicalCards)
+				.get()
 		]);
+
 		return {
-			featuredCards
+			stats: {
+				users: userCount?.count ?? 0,
+				decks: deckCount?.count ?? 0,
+				cards: cardStats?.totalCards ?? 0
+			}
 		};
 	} catch (e) {
-		console.error('Failed to fetch featured cards:', e);
+		console.error('Failed to fetch landing page stats:', e);
 		return {
-			featuredCards: []
+			stats: {
+				users: 0,
+				decks: 0,
+				cards: 0
+			}
 		};
 	}
 };
