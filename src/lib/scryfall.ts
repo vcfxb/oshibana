@@ -1,187 +1,74 @@
-export interface ScryfallImageUris {
-	small: string;
-	normal: string;
-	large: string;
-	png: string;
-	art_crop: string;
-	border_crop: string;
-}
 
-export interface ScryfallCardFace {
-	name: string;
-	printed_name?: string;
-	mana_cost: string;
-	type_line: string;
-	printed_type_line?: string;
-	oracle_text?: string;
-	printed_text?: string;
-	colors?: string[];
-	flavor_text?: string;
-	image_uris?: ScryfallImageUris;
-}
-
-export interface ScryfallCard {
-	id: string;
-	oracle_id: string;
-	multiverse_ids?: number[];
-	mtgo_id?: number;
-	tcgplayer_id?: number;
-	cardmarket_id?: number;
-	name: string;
-	printed_name?: string;
-	lang: string;
-	released_at: string;
-	uri: string;
-	scryfall_uri: string;
-	layout: string;
-	highres_image: boolean;
-	image_status: string;
-	image_uris?: ScryfallImageUris;
-	mana_cost?: string;
-	cmc: number;
-	type_line: string;
-	printed_type_line?: string;
-	oracle_text?: string;
-	printed_text?: string;
-	colors?: string[];
-	color_identity: string[];
-	keywords: string[];
-	card_faces?: ScryfallCardFace[];
-	legalities: Record<string, string>;
-	games: string[];
-	reserved: boolean;
-	foil: boolean;
-	nonfoil: boolean;
-	finishes: string[];
-	oversized: boolean;
-	promo: boolean;
-	reprint: boolean;
-	variation: boolean;
-	set_id: string;
-	set: string;
-	set_name: string;
-	set_type: string;
-	set_uri: string;
-	set_search_uri: string;
-	scryfall_set_uri: string;
-	rulings_uri: string;
-	prints_search_uri: string;
-	collector_number: string;
-	digital: boolean;
-	rarity: string;
-	flavor_text?: string;
-	card_back_id: string;
-	artist: string;
-	artist_ids: string[];
-	illustration_id?: string;
-	border_color: string;
-	frame: string;
-	full_art: boolean;
-	textless: boolean;
-	booster: boolean;
-	story_spotlight: boolean;
-	edhrec_rank?: number;
-	penny_rank?: number;
-	game_changer?: boolean;
-	prices: Record<string, string | null>;
-	related_uris: Record<string, string>;
-}
-
-export interface ScryfallList<T> {
-	object: 'list';
-	total_cards?: number;
-	has_more: boolean;
-	next_page?: string;
-	data: T[];
-}
-
-export interface ScryfallSymbol {
-	symbol: string;
-	loose_variant: string | null;
-	english: string;
-	transposable: boolean;
-	represents_mana: boolean;
-	cmc: number | null;
-	appears_in_mana_costs: boolean;
-	funny: boolean;
-	colors: string[];
-	gatherer_alternates?: string[];
-	svg_uri?: string;
-}
-
-export interface ScryfallRuling {
-	object: 'ruling';
-	oracle_id: string;
-	source: string;
-	published_at: string;
-	comment: string;
-}
+import type { ScryfallCard } from "./scryfall/card";
+import type { ScryfallError } from "./scryfall/error";
+import type { ScryfallList } from "./scryfall/list";
+import type { ScryfallRuling } from "./scryfall/rulings";
+import type { ScryfallSymbol } from "./scryfall/symbology";
 
 const SCRYFALL_API_BASE = 'https://api.scryfall.com';
+const MAX_REQUESTS_PER_SEC = 10;
+const ONE_SECOND_MS = 1000;
 
-async function scryfallFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-	const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
-		...options,
-		headers: {
-			'User-Agent': `Oshibana/${__APP_VERSION__}`,
-			Accept: 'application/json',
-			...(options.headers || {})
-		}
-	});
 
-	if (!response.ok) {
-		const error = (await response.json()) as { details?: string };
-		throw new Error(error.details || `Failed to fetch from Scryfall: ${response.statusText}`);
+
+export class ScryfallClient {
+	protected request_timestamps: number[];
+
+	constructor() {
+		this.request_timestamps = [];
 	}
 
-	return response.json() as Promise<T>;
+	private gcTimestamps() {
+		let now_ms = Date.now();
+
+		this.request_timestamps = this.request_timestamps.filter((timestamp) => {
+			timestamp >= now_ms - ONE_SECOND_MS
+		});
+	}
+
+	private async waitForRatelimit() {
+		this.gcTimestamps();
+
+		let count = this.request_timestamps.length;
+		if (count >= MAX_REQUESTS_PER_SEC) {
+			let ninth_oldest = this.request_timestamps[count - 9];
+			let next_available_time = ninth_oldest + ONE_SECOND_MS;
+			let delta = next_available_time - Date.now();
+			console.warn(`waiting ${delta} ms for scryfall ratelimit`);
+			await new Promise((resolve) => setTimeout(resolve, delta));
+		}
+	}
+
+	protected async scryfallFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T | ScryfallError> {
+		await this.waitForRatelimit();
+
+		const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
+			...options,
+			headers: {
+				'User-Agent': `Oshibana/${__APP_VERSION__}`,
+				Accept: 'application/json',
+				...(options.headers || {})
+			}
+		});
+
+		this.request_timestamps.push(Date.now());
+		return response.json() as Promise<T | ScryfallError>;
+	}
+
+	async getSymbology() {
+		return this.scryfallFetch<ScryfallList<ScryfallSymbol>>('/symbology');
+	}
+
+	async getRulings(id: string) {
+		return this.scryfallFetch<ScryfallList<ScryfallRuling>>(`/cards/${id}/rulings`);
+	}
+
+	async searchCards(query: string) {
+		return this.scryfallFetch<ScryfallList<ScryfallCard>>(`/cards/search?q=${encodeURIComponent(query)}`);
+	}
+
+	async getCardById(id: string) {
+		return this.scryfallFetch<ScryfallCard>(`/cards/${id}`);
+	}
 }
 
-export async function getSymbology(): Promise<ScryfallList<ScryfallSymbol>> {
-	return scryfallFetch('/symbology');
-}
-
-export async function getRulings(id: string): Promise<ScryfallList<ScryfallRuling>> {
-	return scryfallFetch(`/cards/${id}/rulings`);
-}
-
-export async function searchCards(query: string): Promise<ScryfallList<ScryfallCard>> {
-	return scryfallFetch(`/cards/search?q=${encodeURIComponent(query)}`);
-}
-
-export async function getCardById(id: string): Promise<ScryfallCard> {
-	return scryfallFetch(`/cards/${id}`);
-}
-
-export async function getCardsBatch(
-	identifiers: { id?: string; name?: string; set?: string; collector_number?: string }[]
-): Promise<ScryfallList<ScryfallCard>> {
-	return scryfallFetch('/cards/collection', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({ identifiers })
-	});
-}
-
-export async function getCardByNamed(name: string, fuzzy = true): Promise<ScryfallCard> {
-	const type = fuzzy ? 'fuzzy' : 'exact';
-	return scryfallFetch(`/cards/named?${type}=${encodeURIComponent(name)}`);
-}
-
-export async function getPrints(oracleId: string): Promise<ScryfallList<ScryfallCard>> {
-	return scryfallFetch(`/cards/search?order=released&q=oracleid%3A${oracleId}&unique=prints`);
-}
-
-export async function getLanguages(
-	set: string,
-	collectorNumber: string
-): Promise<ScryfallList<ScryfallCard>> {
-	const query = `set:${set} cn:"${collectorNumber}" lang:any`;
-	return scryfallFetch(`/cards/search?q=${encodeURIComponent(query)}&unique=prints`);
-}
-
-export async function getRandomCard(): Promise<ScryfallCard> {
-	return scryfallFetch('/cards/random');
-}
