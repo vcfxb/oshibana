@@ -85,9 +85,7 @@ export class ScryfallClient {
 	}
 
 	async getLanguages(set: string, collectorNumber: string) {
-		return this.scryfallFetch<ScryfallList<ScryfallCard>>(
-			`/cards/search?q=set:${set}+cn:${collectorNumber}&unique=prints`
-		);
+		return this.searchCards(`s:"${set}" cn:"${collectorNumber}" lang:any unique:prints`);
 	}
 
 	async getCardsBatch(
