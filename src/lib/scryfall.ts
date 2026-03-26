@@ -79,9 +79,7 @@ export class ScryfallClient {
 	}
 
 	async getPrints(oracleId: string) {
-		return this.scryfallFetch<ScryfallList<ScryfallCard>>(
-			`/cards/search?q=oracle_id:${oracleId}&unique=prints`
-		);
+		return this.searchCards(`oracle_id:${oracleId} unique:prints`);
 	}
 
 	async getLanguages(set: string, collectorNumber: string) {
