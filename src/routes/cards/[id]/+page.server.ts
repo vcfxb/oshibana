@@ -1,4 +1,4 @@
-import { getCardById, getPrints, getRulings, getLanguages } from '$lib/scryfall';
+import { getCardById, getPrints, getRulings, getLanguages } from '$lib/scryfall/index';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { drizzle } from 'drizzle-orm/d1';

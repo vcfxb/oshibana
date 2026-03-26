@@ -1,7 +1,7 @@
 import { eq, and, sql, asc, desc, inArray, or, like } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
-import { getCardById, getCardsBatch, type ScryfallCard } from '$lib/scryfall';
+import { getCardById, getCardsBatch, type ScryfallCard } from '$lib/scryfall/index';
 import type { CollectionSortBy, SortDir } from '$lib/collection';
 import { relations } from '$lib/server/db/relations';
 

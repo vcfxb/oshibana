@@ -1,8 +1,8 @@
-import type { ScryfallCard } from './scryfall/card';
-import type { ScryfallError } from './scryfall/error';
-import type { ScryfallList } from './scryfall/list';
-import type { ScryfallRuling } from './scryfall/rulings';
-import type { ScryfallSymbol } from './scryfall/symbology';
+import type { ScryfallCard } from './card';
+import type { ScryfallError } from './error';
+import type { ScryfallList } from './list';
+import type { ScryfallRuling } from './rulings';
+import type { ScryfallSymbol } from './symbology';
 
 const SCRYFALL_API_BASE = 'https://api.scryfall.com';
 const MAX_REQUESTS_PER_SEC = 10;

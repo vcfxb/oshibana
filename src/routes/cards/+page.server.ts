@@ -1,4 +1,4 @@
-import { searchCards } from '$lib/scryfall';
+import { searchCards } from '$lib/scryfall/index';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

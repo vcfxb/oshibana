@@ -3,9 +3,10 @@
 	import * as Drawer from '$lib/components/ui/drawer';
 	import { Input } from '$lib/components/ui/input';
 	import { Search, LoaderCircle, Plus, Check } from 'lucide-svelte';
-	import { searchCards, getPrints, type ScryfallCard } from '$lib/scryfall';
+	import { searchCards, getPrints, type ScryfallCard } from '$lib/scryfall/index';
 	import { enhance } from '$app/forms';
 	import { formatCurrentPrice } from '$lib/collection';
+	import type { UUID } from '$lib/scryfall/card';
 
 	let {
 		open = $bindable(false),
@@ -38,7 +39,7 @@
 		if (!selectedSearchResult || isSearching) return;
 		isSearching = true;
 		try {
-			const results = await getPrints(selectedSearchResult.oracle_id);
+			const results = await getPrints(selectedSearchResult.oracle_id as UUID);
 			searchResults = results.data;
 		} catch (e) {
 			console.error(e);
