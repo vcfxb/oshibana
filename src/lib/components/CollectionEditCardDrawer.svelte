@@ -56,7 +56,7 @@
 									<img
 										src={item.cardData.imageUri}
 										alt={item.cardData.name}
-										class="h-full w-full rounded-card object-contain"
+										class="h-full w-full rounded-card object-fill"
 									/>
 								{:else}
 									<div class="flex h-full w-full items-center justify-center bg-muted"></div>

@@ -6,7 +6,7 @@
 
 :root {
 	--radius: 0.625rem;
-	--card-radius: 4.75% / 3.5%;
+	--card-radius: 5% / 3.75%;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.129 0.042 264.695);
 	--card: oklch(1 0 0);

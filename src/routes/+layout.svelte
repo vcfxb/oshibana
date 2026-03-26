@@ -138,11 +138,11 @@
 	<footer class="border-t bg-background px-4 py-12">
 		<div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 md:flex-row">
 			<div class="flex flex-col items-center gap-6 md:flex-row">
-				<div class="aspect-[63/88] h-28 overflow-hidden rounded-card bg-black shadow-lg">
+				<div class="aspect-[488/680] h-28 overflow-hidden rounded-card bg-black shadow-lg">
 					<img
 						src="https://cards.scryfall.io/small/front/f/8/f85ab5f9-508e-45de-8fa1-ce1f16552ffc.jpg?1701537448"
 						alt="Lotus Petal Magic Card"
-						class="h-full w-full rounded-card object-cover"
+						class="h-full w-full rounded-card object-fill"
 					/>
 				</div>
 				<div class="max-w-4xl text-center md:text-left">

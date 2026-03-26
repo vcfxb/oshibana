@@ -205,18 +205,21 @@
 										? 'bg-muted ring-2 ring-primary'
 										: ''}"
 								>
-									<div class="h-14 w-10 shrink-0 overflow-hidden rounded bg-muted shadow-sm">
+									<div
+										class="aspect-[488/680] h-14 shrink-0 overflow-hidden rounded bg-muted shadow-sm"
+										data-set={card.set}
+									>
 										{#if card.image_uris}
 											<img
 												src={card.image_uris.small}
 												alt={card.name}
-												class="h-full w-full object-cover"
+												class="h-full w-full rounded object-fill"
 											/>
 										{:else if card.card_faces?.[0]?.image_uris}
 											<img
 												src={card.card_faces[0].image_uris.small}
 												alt={card.name}
-												class="h-full w-full object-cover"
+												class="h-full w-full rounded object-fill"
 											/>
 										{/if}
 									</div>
@@ -253,13 +256,13 @@
 									<img
 										src={selectedSearchResult.image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full rounded-card object-contain"
+										class="h-full w-full rounded-card object-fill"
 									/>
 								{:else if selectedSearchResult.card_faces?.[0]?.image_uris}
 									<img
 										src={selectedSearchResult.card_faces[0].image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full rounded-card object-contain"
+										class="h-full w-full rounded-card object-fill"
 									/>
 								{/if}
 							</div>
