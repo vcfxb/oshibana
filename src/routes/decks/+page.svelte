@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Card from '$lib/components/ui/card';
-	import { Layout, Plus, Users } from 'lucide-svelte';
+	import { PanelsTopLeft, Plus, Users } from 'lucide-svelte';
 
 	let { data } = $props();
 </script>
@@ -33,7 +33,7 @@
 						<Card.Header>
 							<div class="flex items-center justify-between">
 								<div class="rounded-full bg-primary/10 p-2 text-primary">
-									<Layout class="h-5 w-5" />
+									<PanelsTopLeft class="h-5 w-5" />
 								</div>
 								<div class="flex items-center gap-1 text-xs text-muted-foreground">
 									<Users class="h-3 w-3" />

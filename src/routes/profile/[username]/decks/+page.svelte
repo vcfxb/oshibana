@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Card from '$lib/components/ui/card';
-	import { Layout, Plus, ArrowLeft } from 'lucide-svelte';
+	import { PanelsTopLeft, Plus, ArrowLeft } from 'lucide-svelte';
 
 	let { data } = $props();
 	let profile = $derived(data.profile);
@@ -30,7 +30,7 @@
 			</Button>
 		{/if}
 	</div>
-	
+
 	<Separator class="mb-8" />
 
 	{#if data.decks.length > 0}
@@ -41,7 +41,7 @@
 						<Card.Header>
 							<div class="flex items-center justify-between">
 								<div class="rounded-full bg-primary/10 p-2 text-primary">
-									<Layout class="h-5 w-5" />
+									<PanelsTopLeft class="h-5 w-5" />
 								</div>
 							</div>
 							<Card.Title class="mt-4">{deck.name}</Card.Title>

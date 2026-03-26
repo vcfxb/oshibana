@@ -3,7 +3,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Layout, Calendar, User, History, Plus, Minus, Trash2 } from 'lucide-svelte';
+	import { PanelsTopLeft, Calendar, User, History, Plus, Minus, Trash2 } from 'lucide-svelte';
 	import ManaCost from '$lib/components/ManaCost.svelte';
 	import MTGCard from '$lib/components/MTGCard.svelte';
 

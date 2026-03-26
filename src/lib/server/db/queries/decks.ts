@@ -23,26 +23,47 @@ export async function getDeckSlots(db: D1Database, deckId: string) {
 export async function createDeck(
 	db: D1Database,
 	userId: string,
-	data: { name: string; description?: string; format?: string; physicalLocationId?: string }
+	data: {
+		name: string;
+		description?: string;
+		format?: string;
+		primer?: string;
+		physicalLocationId?: string;
+	}
 ) {
 	const ddb = drizzle(db);
-	const id = crypto.randomUUID();
+	const deckId = crypto.randomUUID();
+
 	await ddb.insert(schema.decks).values({
-		id,
+		id: deckId,
 		userId,
 		name: data.name,
 		description: data.description || null,
-		format: (data.format as any) || 'commander',
-		physicalLocationId: data.physicalLocationId === 'none' ? null : data.physicalLocationId || null
+		primer: data.primer || null,
+		format: data.format || 'commander'
 	});
-	return id;
+
+	// If a physical deck location is provided, set it to track this virtual deck
+	if (data.physicalLocationId && data.physicalLocationId !== 'none') {
+		await ddb
+			.update(schema.storageLocations)
+			.set({ trackedDeckId: deckId })
+			.where(
+				and(
+					eq(schema.storageLocations.id, data.physicalLocationId),
+					eq(schema.storageLocations.userId, userId)
+				)
+			);
+	}
+
+	return deckId;
 }
 
 export async function updateDeck(
 	db: D1Database,
 	userId: string,
 	deckId: string,
-	data: { name?: string; description?: string | null }
+	data: { name?: string; description?: string | null; primer?: string | null; format?: string }
 ) {
 	const ddb = drizzle(db);
 	await ddb
@@ -66,7 +87,7 @@ export async function addCardToDeck(
 	deckId: string,
 	scryfallId: string,
 	quantity: number = 1,
-	board: 'main' | 'side' | 'maybe' | 'commander' = 'main'
+	board: string = 'main'
 ) {
 	const ddb = drizzle(db);
 

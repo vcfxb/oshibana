@@ -34,7 +34,11 @@ export const load: PageServerLoad = async ({ platform, locals }) => {
 			const [physicalCountResult] = await ddb
 				.select({ count: sql<number>`count(*)` })
 				.from(schema.physicalCards)
-				.where(eq(schema.physicalCards.currentDeckId, deck.id));
+				.innerJoin(
+					schema.storageLocations,
+					eq(schema.physicalCards.storageLocationId, schema.storageLocations.id)
+				)
+				.where(eq(schema.storageLocations.trackedDeckId, deck.id));
 
 			const [author] = await ddb
 				.select({ username: schema.users.username })
