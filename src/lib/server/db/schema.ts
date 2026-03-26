@@ -70,7 +70,7 @@ export const cardCache = sqliteTable('card_cache', {
 		.$onUpdate(() => new Date())
 });
 
-// --- Storage & Organization ---
+// --- Physical Storage & Organization ---
 
 export const storageLocations = sqliteTable('storage_locations', {
 	id: text('id').primaryKey(), // UUID
@@ -81,6 +81,7 @@ export const storageLocations = sqliteTable('storage_locations', {
 	type: text('type', { enum: ['binder', 'box', 'shelf', 'physical_deck', 'other'] })
 		.notNull()
 		.default('binder'),
+	trackedDeckId: text('tracked_deck_id').references(() => decks.id, { onDelete: 'set null' }),
 	description: text('description'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
@@ -89,57 +90,6 @@ export const storageLocations = sqliteTable('storage_locations', {
 		.notNull()
 		.default(sql`(unixepoch())`)
 		.$onUpdate(() => new Date())
-});
-
-// --- Deck & Collection Management ---
-
-export const decks = sqliteTable('decks', {
-	id: text('id').primaryKey(), // UUID
-	userId: text('user_id')
-		.notNull()
-		.references(() => users.id),
-	name: text('name').notNull(),
-	description: text('description'),
-	format: text('format', {
-		enum: [
-			'standard',
-			'pioneer',
-			'modern',
-			'legacy',
-			'vintage',
-			'commander',
-			'pauper',
-			'oathbreaker',
-			'brawl',
-			'limited',
-			'other'
-		]
-	})
-		.notNull()
-		.default('commander'),
-	// Linking to a physical location if this deck is built in paper
-	physicalLocationId: text('physical_location_id').references(() => storageLocations.id, {
-		onDelete: 'set null'
-	}),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`),
-	updatedAt: integer('updated_at', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`)
-		.$onUpdate(() => new Date())
-});
-
-export const deckSlots = sqliteTable('deck_slots', {
-	id: text('id').primaryKey(), // UUID
-	deckId: text('deck_id')
-		.notNull()
-		.references(() => decks.id, { onDelete: 'cascade' }),
-	scryfallId: text('scryfall_id').notNull(),
-	quantity: integer('quantity').notNull().default(1),
-	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] })
-		.notNull()
-		.default('main')
 });
 
 export const physicalCards = sqliteTable('physical_cards', {
@@ -164,7 +114,6 @@ export const physicalCards = sqliteTable('physical_cards', {
 	storageLocationId: text('storage_location_id').references(() => storageLocations.id, {
 		onDelete: 'no action'
 	}),
-	currentDeckId: text('current_deck_id').references(() => decks.id, { onDelete: 'set null' }),
 
 	notes: text('notes'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
@@ -176,21 +125,52 @@ export const physicalCards = sqliteTable('physical_cards', {
 		.$onUpdate(() => new Date())
 });
 
-export const cardAssignments = sqliteTable(
-	'card_assignments',
-	{
-		deckSlotId: text('deck_slot_id')
-			.notNull()
-			.references(() => deckSlots.id, { onDelete: 'cascade' }),
-		physicalCardId: text('physical_card_id')
-			.notNull()
-			.references(() => physicalCards.id, { onDelete: 'cascade' }),
-		createdAt: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
-	},
-	(table) => [primaryKey({ columns: [table.deckSlotId, table.physicalCardId] })]
-);
+
+// --- Deck management ---
+
+export const decks = sqliteTable('decks', {
+	id: text('id').primaryKey(), // UUID
+	userId: text('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	description: text('description'),
+	primer: text('primer'),
+	format: text('format').notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`),
+	updatedAt: integer('updated_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`)
+		.$onUpdate(() => new Date())
+});
+
+export const deckSlots = sqliteTable('deck_slots', {
+	id: text('id').primaryKey(), // UUID
+	deckId: text('deck_id')
+		.notNull()
+		.references(() => decks.id, { onDelete: 'cascade' }),
+	scryfallId: text('scryfall_id').notNull().references(() => cardCache.scryfallId),
+	quantity: integer('quantity').notNull().default(1),
+	board: text('board').notNull().default('main')
+});
+
+export const deckChanges = sqliteTable('deck_changes', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	deckId: text('deck_id')
+		.notNull()
+		.references(() => decks.id, { onDelete: 'cascade' }),
+	scryfallId: text('scryfall_id').notNull(),
+	changeType: text('change_type', { enum: ['add', 'remove', 'update_quantity'] }).notNull(),
+	quantityChange: integer('quantity_change').notNull(),
+	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] }).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`)
+});
+
+// --- Social (follows/likes/comments) ---
 
 export const follows = sqliteTable(
 	'follows',
@@ -207,17 +187,3 @@ export const follows = sqliteTable(
 	},
 	(table) => [primaryKey({ columns: [table.followerId, table.followingId] })]
 );
-
-export const deckChanges = sqliteTable('deck_changes', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	deckId: text('deck_id')
-		.notNull()
-		.references(() => decks.id, { onDelete: 'cascade' }),
-	scryfallId: text('scryfall_id').notNull(),
-	changeType: text('change_type', { enum: ['add', 'remove', 'update_quantity'] }).notNull(),
-	quantityChange: integer('quantity_change').notNull(),
-	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] }).notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' })
-		.notNull()
-		.default(sql`(unixepoch())`)
-});
