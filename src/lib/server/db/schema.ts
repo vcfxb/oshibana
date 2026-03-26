@@ -100,6 +100,23 @@ export const decks = sqliteTable('decks', {
 		.references(() => users.id),
 	name: text('name').notNull(),
 	description: text('description'),
+	format: text('format', {
+		enum: [
+			'standard',
+			'pioneer',
+			'modern',
+			'legacy',
+			'vintage',
+			'commander',
+			'pauper',
+			'oathbreaker',
+			'brawl',
+			'limited',
+			'other'
+		]
+	})
+		.notNull()
+		.default('commander'),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -113,7 +130,7 @@ export const deckSlots = sqliteTable('deck_slots', {
 	id: text('id').primaryKey(), // UUID
 	deckId: text('deck_id')
 		.notNull()
-		.references(() => decks.id),
+		.references(() => decks.id, { onDelete: 'cascade' }),
 	scryfallId: text('scryfall_id').notNull(),
 	quantity: integer('quantity').notNull().default(1),
 	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] })
@@ -160,10 +177,10 @@ export const cardAssignments = sqliteTable(
 	{
 		deckSlotId: text('deck_slot_id')
 			.notNull()
-			.references(() => deckSlots.id),
+			.references(() => deckSlots.id, { onDelete: 'cascade' }),
 		physicalCardId: text('physical_card_id')
 			.notNull()
-			.references(() => physicalCards.id),
+			.references(() => physicalCards.id, { onDelete: 'cascade' }),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`)
@@ -186,3 +203,17 @@ export const follows = sqliteTable(
 	},
 	(table) => [primaryKey({ columns: [table.followerId, table.followingId] })]
 );
+
+export const deckChanges = sqliteTable('deck_changes', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	deckId: text('deck_id')
+		.notNull()
+		.references(() => decks.id, { onDelete: 'cascade' }),
+	scryfallId: text('scryfall_id').notNull(),
+	changeType: text('change_type', { enum: ['add', 'remove', 'update_quantity'] }).notNull(),
+	quantityChange: integer('quantity_change').notNull(),
+	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] }).notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.default(sql`(unixepoch())`)
+});

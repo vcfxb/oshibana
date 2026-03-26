@@ -57,10 +57,13 @@
 				<p class="text-2xl font-bold">{data.stats.followingCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Following</p>
 			</a>
-			<div class="text-center">
+			<a
+				href="/profile/{profile.username}/decks"
+				class="text-center transition-opacity hover:opacity-70"
+			>
 				<p class="text-2xl font-bold">{data.stats.deckCount}</p>
 				<p class="text-xs tracking-wider text-muted-foreground uppercase">Decks</p>
-			</div>
+			</a>
 			<a
 				href="/profile/{profile.username}/collection"
 				class="text-center transition-opacity hover:opacity-70"
@@ -71,25 +74,40 @@
 		</div>
 	</div>
 
-	<div class="mb-8 flex gap-4">
-		<Button href="/profile/{profile.username}/collection" variant="outline" class="flex-1">
+	<div class="mb-8 flex flex-wrap gap-4">
+		<Button
+			href="/profile/{profile.username}/collection"
+			variant="outline"
+			class="min-w-[150px] flex-1"
+		>
 			View Full Collection
 		</Button>
 		<Button
 			href="/profile/{profile.username}/collection/locations"
 			variant="outline"
-			class="flex-1"
+			class="min-w-[150px] flex-1"
 		>
-			{#if data.user && data.user.id === profile.id }
+			{#if data.user && data.user.id === profile.id}
 				Manage Locations
 			{:else}
 				View Locations
 			{/if}
 		</Button>
+		<Button href="/profile/{profile.username}/decks" variant="outline" class="min-w-[150px] flex-1">
+			View Decks
+		</Button>
 	</div>
 
 	<section>
-		<h2 class="mb-4 text-2xl font-semibold">Decks</h2>
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="text-2xl font-semibold">Decks</h2>
+			<a
+				href="/profile/{profile.username}/decks"
+				class="text-sm font-medium text-primary hover:underline"
+			>
+				View All
+			</a>
+		</div>
 		{#if decks.length > 0}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each decks as deck}

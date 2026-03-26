@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import * as Card from '$lib/components/ui/card';
-	import { Layout } from 'lucide-svelte';
+	import { Layout, Plus, ArrowLeft } from 'lucide-svelte';
 
 	let { data } = $props();
 	let profile = $derived(data.profile);
@@ -11,38 +11,26 @@
 <div class="mx-auto max-w-7xl px-4 py-8">
 	<div class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
 		<div>
-			<div class="flex items-center gap-2 text-sm text-muted-foreground">
-				<a href="/profile/{profile.username}/collection" class="hover:underline">Collection</a>
-				<span>/</span>
-				<span class="text-foreground">Decks</span>
-			</div>
-			<h1 class="mt-2 text-4xl font-bold">Physical Decks</h1>
+			<a
+				href="/profile/{profile.username}"
+				class="mb-2 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+			>
+				<ArrowLeft class="h-4 w-4" />
+				Back to Profile
+			</a>
+			<h1 class="text-4xl font-bold">{profile.username}'s Decks</h1>
 			<p class="text-muted-foreground">
-				Decks built using cards from {profile.username}'s collection
+				Digital decklists created by {profile.username}.
 			</p>
 		</div>
+		{#if data.isOwnProfile}
+			<Button href="/decks/new" class="w-full sm:w-auto">
+				<Plus class="mr-2 h-4 w-4" />
+				Create Deck
+			</Button>
+		{/if}
 	</div>
-
-	<div class="mb-8 flex gap-4 overflow-x-auto pb-2">
-		<Button variant="ghost" href="/profile/{profile.username}/collection" class="shrink-0">
-			All Cards
-		</Button>
-		<Button
-			variant="ghost"
-			href="/profile/{profile.username}/collection/locations"
-			class="shrink-0"
-		>
-			Locations
-		</Button>
-		<Button
-			variant="secondary"
-			href="/profile/{profile.username}/collection/decks"
-			class="shrink-0"
-		>
-			Decks
-		</Button>
-	</div>
-
+	
 	<Separator class="mb-8" />
 
 	{#if data.decks.length > 0}
@@ -62,8 +50,16 @@
 							{/if}
 						</Card.Header>
 						<Card.Content>
-							<p class="text-2xl font-bold">{deck.cardCount}</p>
-							<p class="text-sm text-muted-foreground">Physical cards assigned</p>
+							<div class="flex justify-between border-t pt-4">
+								<div class="text-center">
+									<p class="text-xl font-bold">{deck.virtualCount}</p>
+									<p class="text-xs tracking-wider text-muted-foreground uppercase">Cards</p>
+								</div>
+								<div class="text-center">
+									<p class="text-xl font-bold">{deck.physicalCount}</p>
+									<p class="text-xs tracking-wider text-muted-foreground uppercase">Physical</p>
+								</div>
+							</div>
 						</Card.Content>
 					</Card.Root>
 				</a>
@@ -73,11 +69,13 @@
 		<div class="flex flex-col items-center justify-center py-20 text-center">
 			<p class="text-xl font-medium">No decks found.</p>
 			<p class="mt-2 text-muted-foreground">
-				Users can assign physical cards to their digital decklists.
+				{data.isOwnProfile
+					? "You haven't created any decks yet."
+					: `${profile.username} hasn't created any decks yet.`}
 			</p>
-			<Button href="/profile/{profile.username}" variant="outline" class="mt-6">
-				Back to Profile
-			</Button>
+			{#if data.isOwnProfile}
+				<Button href="/decks/new" variant="outline" class="mt-6">Create Your First Deck</Button>
+			{/if}
 		</div>
 	{/if}
 </div>
