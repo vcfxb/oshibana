@@ -328,7 +328,6 @@ export async function addCardToCollection(
 					purchasePrice !== null
 						? eq(schema.physicalCards.purchasePrice, purchasePrice)
 						: sql`${schema.physicalCards.purchasePrice} IS NULL`,
-					sql`${schema.physicalCards.currentDeckId} IS NULL`, // Only group unassigned cards
 					notes !== null
 						? eq(schema.physicalCards.notes, notes)
 						: sql`${schema.physicalCards.notes} IS NULL` // Only group cards without specific notes

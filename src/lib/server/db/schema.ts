@@ -125,7 +125,6 @@ export const physicalCards = sqliteTable('physical_cards', {
 		.$onUpdate(() => new Date())
 });
 
-
 // --- Deck management ---
 
 export const decks = sqliteTable('decks', {
@@ -151,7 +150,9 @@ export const deckSlots = sqliteTable('deck_slots', {
 	deckId: text('deck_id')
 		.notNull()
 		.references(() => decks.id, { onDelete: 'cascade' }),
-	scryfallId: text('scryfall_id').notNull().references(() => cardCache.scryfallId),
+	scryfallId: text('scryfall_id')
+		.notNull()
+		.references(() => cardCache.scryfallId),
 	quantity: integer('quantity').notNull().default(1),
 	board: text('board').notNull().default('main')
 });
@@ -164,7 +165,7 @@ export const deckChanges = sqliteTable('deck_changes', {
 	scryfallId: text('scryfall_id').notNull(),
 	changeType: text('change_type', { enum: ['add', 'remove', 'update_quantity'] }).notNull(),
 	quantityChange: integer('quantity_change').notNull(),
-	board: text('board', { enum: ['main', 'side', 'maybe', 'commander'] }).notNull(),
+	board: text('board').notNull(),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`)
