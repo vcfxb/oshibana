@@ -3,6 +3,7 @@
 		id?: string;
 		scryfallId?: string;
 		name: string;
+		set?: string;
 		image_uris?: { normal: string };
 		imageUri?: string | null;
 		card_faces?: Array<{ image_uris?: { normal: string } }>;
@@ -18,6 +19,7 @@
 
 <a
 	href="/cards/{id}"
+	data-set={card.set}
 	class="group relative aspect-[63/88] w-full overflow-hidden rounded-card bg-black shadow-md transition-all hover:scale-105 hover:shadow-xl"
 >
 	{#if imageUrl}

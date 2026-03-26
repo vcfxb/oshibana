@@ -247,6 +247,7 @@
 						<div class="flex flex-col gap-6 lg:flex-row lg:items-start">
 							<div
 								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-card bg-black shadow-2xl lg:w-80"
+								data-set={selectedSearchResult.set}
 							>
 								{#if selectedSearchResult.image_uris}
 									<img

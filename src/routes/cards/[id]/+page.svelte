@@ -24,7 +24,7 @@
 <div class="container mx-auto px-4 py-8">
 	{#if data.card}
 		<div class="grid gap-8 md:grid-cols-2">
-			<div class="flex justify-center">
+			<div class="flex justify-center" data-set={data.card.set}>
 				{#if data.card.image_uris}
 					<div class="w-full max-w-[480px] overflow-hidden rounded-card shadow-2xl">
 						<img
@@ -305,6 +305,7 @@
 						{#if langCard.id !== data.card.id}
 							<a
 								href="/cards/{langCard.id}"
+								data-set={langCard.set}
 								class="flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm transition-colors hover:bg-muted/50"
 							>
 								<div class="h-12 w-8 shrink-0 overflow-hidden rounded-card bg-black">
@@ -350,6 +351,7 @@
 					{#each data.prints.data as printing}
 						<a
 							href="/cards/{printing.id}"
+							data-set={printing.set}
 							class="group flex flex-col gap-2 transition-transform hover:scale-105"
 							title="{printing.set_name} #{printing.collector_number}"
 						>
