@@ -61,8 +61,10 @@ export const collectionActions = {
 				notes
 			});
 			return { success: true };
-		} catch (e) {
-			return fail(500, { message: e instanceof Error ? e.message : 'Failed to add card' });
+		} catch (e: any) {
+			return fail(500, {
+				message: e.details || e.message || 'Failed to add card'
+			});
 		}
 	},
 
@@ -104,8 +106,10 @@ export const collectionActions = {
 				notes
 			});
 			return { success: true };
-		} catch (e) {
-			return fail(500, { message: e instanceof Error ? e.message : 'Failed to update card' });
+		} catch (e: any) {
+			return fail(500, {
+				message: e.details || e.message || 'Failed to update card'
+			});
 		}
 	}
 } satisfies Actions;

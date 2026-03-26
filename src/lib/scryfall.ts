@@ -41,6 +41,7 @@ export class ScryfallClient {
 	protected async scryfallFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
 		await this.waitForRatelimit();
 
+		this.request_timestamps.push(Date.now());
 		const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
 			...options,
 			headers: {
@@ -51,7 +52,6 @@ export class ScryfallClient {
 			}
 		});
 
-		this.request_timestamps.push(Date.now());
 		const data = (await response.json()) as any;
 		if (data.object === 'error') {
 			throw data as ScryfallError;

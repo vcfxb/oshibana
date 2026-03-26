@@ -17,12 +17,13 @@ export const load: PageServerLoad = async ({ url }) => {
 				results,
 				q
 			};
-		} catch (e) {
+		} catch (e: any) {
 			if (e && typeof e === 'object' && 'status' in e && e.status === 302) {
 				throw e;
 			}
+
 			return {
-				error: e instanceof Error ? e.message : 'Unknown error',
+				error: e.details || e.message || 'Unknown error',
 				q
 			};
 		}
