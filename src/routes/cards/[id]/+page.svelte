@@ -26,22 +26,22 @@
 		<div class="grid gap-8 md:grid-cols-2">
 			<div class="flex justify-center">
 				{#if data.card.image_uris}
-					<div class="w-full max-w-[480px] overflow-hidden rounded-[4.8%] shadow-2xl">
+					<div class="w-full max-w-[480px] overflow-hidden rounded-card shadow-2xl">
 						<img
 							src={data.card.image_uris.large}
 							alt={data.card.name}
-							class="h-auto w-full rounded-[4.8%]"
+							class="h-auto w-full rounded-card"
 						/>
 					</div>
 				{:else if data.card.card_faces}
 					<div class="flex flex-col gap-4">
 						{#each data.card.card_faces as face}
 							{#if face.image_uris}
-								<div class="w-full max-w-[480px] overflow-hidden rounded-[4.8%] shadow-2xl">
+								<div class="w-full max-w-[480px] overflow-hidden rounded-card shadow-2xl">
 									<img
 										src={face.image_uris.large}
 										alt={face.name}
-										class="h-auto w-full rounded-[4.8%]"
+										class="h-auto w-full rounded-card"
 									/>
 								</div>
 							{/if}
@@ -307,7 +307,7 @@
 								href="/cards/{langCard.id}"
 								class="flex items-center gap-3 rounded-lg border bg-card p-3 shadow-sm transition-colors hover:bg-muted/50"
 							>
-								<div class="h-12 w-8 shrink-0 overflow-hidden rounded-[4.8%] bg-black">
+								<div class="h-12 w-8 shrink-0 overflow-hidden rounded-card bg-black">
 									{#if langCard.image_uris?.small}
 										<img
 											src={langCard.image_uris.small}
@@ -353,19 +353,19 @@
 							class="group flex flex-col gap-2 transition-transform hover:scale-105"
 							title="{printing.set_name} #{printing.collector_number}"
 						>
-							<div class="aspect-[63/88] w-full overflow-hidden rounded-[4.8%] bg-black shadow-sm">
+							<div class="aspect-[63/88] w-full overflow-hidden rounded-card bg-black shadow-sm">
 								{#if printing.image_uris?.small}
 									<img
 										src={printing.image_uris.small}
 										alt={printing.set_name}
-										class="h-full w-full rounded-[4.8%] object-cover"
+										class="h-full w-full rounded-card object-cover"
 										loading="lazy"
 									/>
 								{:else if printing.card_faces?.[0]?.image_uris?.small}
 									<img
 										src={printing.card_faces[0].image_uris.small}
 										alt={printing.set_name}
-										class="h-full w-full rounded-[4.8%] object-cover"
+										class="h-full w-full rounded-card object-cover"
 										loading="lazy"
 									/>
 								{:else}

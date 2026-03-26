@@ -18,13 +18,13 @@
 
 <a
 	href="/cards/{id}"
-	class="group relative aspect-[63/88] w-full overflow-hidden rounded-[4.8%] bg-black shadow-md transition-all hover:scale-105 hover:shadow-xl"
+	class="group relative aspect-[63/88] w-full overflow-hidden rounded-card bg-black shadow-md transition-all hover:scale-105 hover:shadow-xl"
 >
 	{#if imageUrl}
 		<img
 			src={imageUrl}
 			alt={card.name}
-			class="h-full w-full rounded-[4.8%] object-cover"
+			class="h-full w-full rounded-card object-cover"
 			loading="lazy"
 		/>
 	{:else}

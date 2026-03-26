@@ -49,13 +49,13 @@
 					<div class="rounded-xl border bg-muted/30 p-6">
 						<div class="flex flex-col gap-6 lg:flex-row lg:items-start">
 							<div
-								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-[4.8%] bg-black shadow-2xl lg:w-80"
+								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-card bg-black shadow-2xl lg:w-80"
 							>
 								{#if item.cardData?.imageUri}
 									<img
 										src={item.cardData.imageUri}
 										alt={item.cardData.name}
-										class="h-full w-full rounded-[4.8%] object-contain"
+										class="h-full w-full rounded-card object-contain"
 									/>
 								{:else}
 									<div class="flex h-full w-full items-center justify-center bg-muted"></div>

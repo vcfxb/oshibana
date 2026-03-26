@@ -246,19 +246,19 @@
 					<div class="rounded-xl border bg-muted/30 p-6">
 						<div class="flex flex-col gap-6 lg:flex-row lg:items-start">
 							<div
-								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-[4.8%] bg-black shadow-2xl lg:w-80"
+								class="relative aspect-[488/680] w-full shrink-0 overflow-hidden rounded-card bg-black shadow-2xl lg:w-80"
 							>
 								{#if selectedSearchResult.image_uris}
 									<img
 										src={selectedSearchResult.image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full rounded-[4.8%] object-contain"
+										class="h-full w-full rounded-card object-contain"
 									/>
 								{:else if selectedSearchResult.card_faces?.[0]?.image_uris}
 									<img
 										src={selectedSearchResult.card_faces[0].image_uris.normal}
 										alt={selectedSearchResult.name}
-										class="h-full w-full rounded-[4.8%] object-contain"
+										class="h-full w-full rounded-card object-contain"
 									/>
 								{/if}
 							</div>
