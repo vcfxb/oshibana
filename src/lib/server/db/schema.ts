@@ -117,6 +117,10 @@ export const decks = sqliteTable('decks', {
 	})
 		.notNull()
 		.default('commander'),
+	// Linking to a physical location if this deck is built in paper
+	physicalLocationId: text('physical_location_id').references(() => storageLocations.id, {
+		onDelete: 'set null'
+	}),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.default(sql`(unixepoch())`),
@@ -160,7 +164,7 @@ export const physicalCards = sqliteTable('physical_cards', {
 	storageLocationId: text('storage_location_id').references(() => storageLocations.id, {
 		onDelete: 'no action'
 	}),
-	currentDeckId: text('current_deck_id').references(() => decks.id, { onDelete: 'no action' }),
+	currentDeckId: text('current_deck_id').references(() => decks.id, { onDelete: 'set null' }),
 
 	notes: text('notes'),
 	createdAt: integer('created_at', { mode: 'timestamp' })

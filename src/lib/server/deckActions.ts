@@ -21,11 +21,17 @@ export const deckActions = {
 		const name = formData.get('name') as string;
 		const description = formData.get('description') as string;
 		const format = formData.get('format') as string;
+		const physicalLocationId = formData.get('physicalLocation') as string;
 
 		if (!name) return fail(400, { message: 'Missing deck name' });
 
 		try {
-			const id = await createDeck(db, locals.user.id, { name, description, format });
+			const id = await createDeck(db, locals.user.id, {
+				name,
+				description,
+				format,
+				physicalLocationId
+			});
 			return { success: true, id };
 		} catch (e: any) {
 			return fail(500, { message: e.message || 'Failed to create deck' });

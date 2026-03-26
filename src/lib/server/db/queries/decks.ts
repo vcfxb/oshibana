@@ -23,7 +23,7 @@ export async function getDeckSlots(db: D1Database, deckId: string) {
 export async function createDeck(
 	db: D1Database,
 	userId: string,
-	data: { name: string; description?: string; format?: string }
+	data: { name: string; description?: string; format?: string; physicalLocationId?: string }
 ) {
 	const ddb = drizzle(db);
 	const id = crypto.randomUUID();
@@ -32,7 +32,8 @@ export async function createDeck(
 		userId,
 		name: data.name,
 		description: data.description || null,
-		format: (data.format as any) || 'commander'
+		format: (data.format as any) || 'commander',
+		physicalLocationId: data.physicalLocationId === 'none' ? null : data.physicalLocationId || null
 	});
 	return id;
 }
