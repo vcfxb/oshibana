@@ -3,10 +3,7 @@
 	import ManaCost from '$lib/components/ManaCost.svelte';
 	import { enhance } from '$app/forms';
 	import { Badge } from '$lib/components/ui/badge';
-	import {
-		formatPrice,
-		getLanguageLabel
-	} from '$lib/collection';
+	import { formatPrice, getLanguageLabel } from '$lib/collection';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -176,6 +173,13 @@
 						{data.card.collector_number}
 					</div>
 					<div>
+						<span class="font-semibold text-muted-foreground">Released:</span>
+						{new Date(data.card.released_at).toLocaleDateString(undefined, {
+							month: 'long',
+							year: 'numeric'
+						})}
+					</div>
+					<div>
 						<span class="font-semibold text-muted-foreground">Artist:</span>
 						{data.card.artist}
 					</div>
@@ -236,7 +240,7 @@
 															{#if format === 'commander' && data.card.game_changer}
 																<Badge
 																	variant="secondary"
-																	class="h-5 px-2 text-[10px] text-white bg-amber-600"
+																	class="h-5 bg-amber-600 px-2 text-[10px] text-white"
 																>
 																	GC
 																</Badge>
@@ -370,8 +374,18 @@
 									</div>
 								{/if}
 							</div>
-							<div class="truncate text-center text-xs font-medium text-muted-foreground">
-								{printing.set.toUpperCase()} • #{printing.collector_number}
+							<div class="flex flex-col">
+								<div
+									class="truncate text-center text-[9px] font-medium tracking-tighter text-foreground/80"
+								>
+									{printing.set.toUpperCase()} • #{printing.collector_number}
+								</div>
+								<div class="text-center text-[9px] text-foreground/60">
+									{new Date(printing.released_at).toLocaleDateString(undefined, {
+										month: 'short',
+										year: 'numeric'
+									})}
+								</div>
 							</div>
 						</a>
 					{/each}
