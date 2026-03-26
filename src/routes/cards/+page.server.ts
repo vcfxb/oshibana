@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	if (q) {
 		try {
-			const results = await searchCards(q);
+			const results = await searchCards({ q });
 
 			if (results.total_cards === 1 && results.data.length === 1) {
 				throw redirect(302, `/cards/${results.data[0].id}`);

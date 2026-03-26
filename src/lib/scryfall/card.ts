@@ -122,3 +122,29 @@ export interface ScryfallCardPrint {
 }
 
 export type ScryfallCard = ScryfallCardCore & ScryfallCardGameplay & ScryfallCardPrint;
+
+export interface ScryfallSearchParams {
+	q: string;
+	unique?: 'cards' | 'art' | 'prints';
+	order?: 
+		| 'name'
+		| 'set'
+		| 'released'
+		| 'rarity'
+		| 'color'
+		| 'tix'
+		| 'eur'
+		| 'usd'
+		| 'cmc'
+		| 'power'
+		| 'toughness'
+		| 'edhrec'
+		| 'penny'
+		| 'artist'
+		| 'review';
+	dir?: 'auto' | 'asc' | 'desc';
+	include_extras?: 'true' | 'false';
+	include_multilingual?: 'true' | 'false';
+	include_variations?: 'true' | 'false';
+	page?: number;
+}

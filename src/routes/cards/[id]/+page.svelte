@@ -325,7 +325,7 @@
 								</div>
 								<div class="flex flex-col overflow-hidden">
 									<span class="text-sm font-semibold">{getLanguageLabel(langCard.lang)}</span>
-									<span class="truncate text-xs text-muted-foreground">{langCard.name}</span>
+									<span class="truncate text-xs text-muted-foreground">{langCard.printed_name || langCard.name}</span>
 								</div>
 								<div class="ml-auto flex shrink-0 flex-col items-end">
 									<span class="text-xs font-bold"

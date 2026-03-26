@@ -67,7 +67,7 @@
 		searchResults = [];
 		lastSearchedQuery = searchQuery;
 		try {
-			const results = await searchCards(searchQuery);
+			const results = await searchCards({ q: searchQuery });
 			searchResults = results.data;
 			highlightedIndex = 0;
 

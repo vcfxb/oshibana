@@ -1,4 +1,4 @@
-import type { ScryfallCard } from './card';
+import type { ScryfallCard, ScryfallSearchParams } from './card';
 import type { ScryfallError } from './error';
 import type { ScryfallList } from './list';
 import type { ScryfallRuling } from './rulings';
@@ -68,10 +68,9 @@ export class ScryfallClient {
 		return this.scryfallFetch<ScryfallList<ScryfallRuling>>(`/cards/${id}/rulings`);
 	}
 
-	async searchCards(query: string) {
-		return this.scryfallFetch<ScryfallList<ScryfallCard>>(
-			`/cards/search?q=${encodeURIComponent(query)}`
-		);
+	async searchCards(params: ScryfallSearchParams & { [key: string]: string }) {
+		const encoded = new URLSearchParams(params);
+		return this.scryfallFetch<ScryfallList<ScryfallCard>>(`/cards/search?${encoded.toString()}`);
 	}
 
 	async getCardById(id: string) {
@@ -79,13 +78,19 @@ export class ScryfallClient {
 	}
 
 	async getPrints(oracleId: string) {
-		return this.searchCards(`oracle_id:${oracleId} unique:prints`);
+		return this.searchCards({
+			q: `oracle_id:${oracleId}`,
+			unique: 'prints',
+			order: 'released',
+		});
 	}
 
 	async getLanguages(set: string, collectorNumber: string) {
-		return this.scryfallFetch<ScryfallList<ScryfallCard>>(
-			`/cards/search?q=${encodeURIComponent(`s:"${set}" cn:"${collectorNumber}" lang:any`)}&include_multilingual=true`
-		);
+		return this.searchCards({
+			q: `s:"${set}" cn:"${collectorNumber}"`,
+			unique: 'prints',
+			include_multilingual: 'true',
+		});
 	}
 
 	async getCardsBatch(
