@@ -45,7 +45,7 @@ export class ScryfallClient {
 		const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
 			...options,
 			headers: {
-				'User-Agent': `Oshibana/${__APP_VERSION__}`,
+				'User-Agent': `Oshibana/${__APP_VERSION__ || "unknown"}`,
 				Accept: 'application/json',
 				...(options.method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
 				...(options.headers || {})
