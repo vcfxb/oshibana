@@ -1,9 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { verifyPassword, createSession } from '$lib/server/auth';
+import { verifyPassword, createSession, createEmailVerificationCode } from '$lib/server/auth';
 import { users } from '$lib/server/db/schema';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, or } from 'drizzle-orm';
+import { sendVerificationEmail } from '$lib/server/email';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.user) {
@@ -15,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, platform, cookies }) => {
+	default: async ({ request, platform, cookies, url }) => {
 		const formData = await request.formData();
 		const identifier = formData.get('identifier'); // Email or username
 		const password = formData.get('password');
@@ -45,6 +46,18 @@ export const actions: Actions = {
 
 		if (!valid) {
 			return fail(400, { message: 'Invalid credentials' });
+		}
+
+		if (!user.emailVerified) {
+			// Resend verification email
+			const code = await createEmailVerificationCode(platform!.env.DB, user.id, user.email);
+			const verifyLink = `${url.origin}/verify-email/${code}`;
+			await sendVerificationEmail(platform, user.email, verifyLink);
+
+			return fail(400, {
+				message:
+					'Your email address is not verified. We’ve sent a new verification link to your inbox.'
+			});
 		}
 
 		const sessionId = await createSession(platform!.env.DB, user.id);

@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { createPasswordResetToken } from '$lib/server/auth';
-import { createMimeMessage } from 'mimetext';
+import { sendEmail } from '$lib/server/email';
 
 export const actions: Actions = {
 	default: async ({ request, platform, url }) => {
@@ -29,15 +29,11 @@ export const actions: Actions = {
 		try {
 			const token = await createPasswordResetToken(platform!.env.DB, user.id);
 			const resetLink = `${url.origin}/reset-password/${token}`;
-			const senderAddr = 'no-reply@oshibana.cards';
-			const mimeMessage = createMimeMessage();
 
-			mimeMessage.setSender({ name: 'oshibana.cards', addr: senderAddr });
-			mimeMessage.setRecipient(user.email);
-			mimeMessage.setSubject('Oshibana password reset request');
-			mimeMessage.addMessage({
-				contentType: 'text/html',
-				data: `\
+			await sendEmail(platform, {
+				recipient: user.email,
+				subject: 'Oshibana password reset request',
+				html: `
 				<div style="font-family: sans-serif;">
 					<h2>Password Reset</h2>
 					<p>We received a request to reset your password.</p>
@@ -45,30 +41,11 @@ export const actions: Actions = {
 					<p><a href="${resetLink}">${resetLink}</a></p>
 					<p>If you did not request this, please safely ignore this email.</p>
 				</div>
-				`.split('\n').map((s) => s.trimStart()).join('\n') // weird hack for making it look less weird
+				`
+					.split('\n')
+					.map((s) => s.trimStart())
+					.join('\n')
 			});
-
-			// Weird hacky workaround for import problems.
-			let EmailMessage;
-			try {
-				// truly absurd the hoops I have to jump through to get vite to stop losing its mind
-				const moduleName = 'cloudflare:email';
-				const cfEmail = await import(/* @vite-ignore */ moduleName);
-				EmailMessage = cfEmail.EmailMessage;
-			} catch {
-				EmailMessage = class EmailMessage {
-					constructor (public sender: string, public recipient: string, public raw: string) {}
-				};
-			}
-
-
-			const emailMessage = new EmailMessage(senderAddr, user.email, mimeMessage.asRaw());
-
-			if (platform?.env.PASSWORD_RESETS?.send) {
-				await platform?.env.PASSWORD_RESETS.send(emailMessage);
-			} else {
-				console.log(`email:\n${mimeMessage.asRaw()}`);
-			}
 
 			return {
 				success: true,

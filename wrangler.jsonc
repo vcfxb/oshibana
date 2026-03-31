@@ -31,7 +31,7 @@
 	],
 	"send_email": [
 		{
-			"name": "PASSWORD_RESETS",
+			"name": "NOREPLY_EMAIL",
 			"allowed_sender_addresses": [
 				"no-reply@oshibana.cards"
 			]

@@ -1,9 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { hashPassword, createSession } from '$lib/server/auth';
+import { hashPassword, createEmailVerificationCode } from '$lib/server/auth';
 import { users } from '$lib/server/db/schema';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, or } from 'drizzle-orm';
+import { sendVerificationEmail } from '$lib/server/email';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
@@ -13,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, platform, cookies }) => {
+	default: async ({ request, platform, url }) => {
 		const formData = await request.formData();
 		const username = formData.get('username');
 		const email = formData.get('email');
@@ -62,19 +63,17 @@ export const actions: Actions = {
 				passwordHash
 			});
 
-			const sessionId = await createSession(platform!.env.DB, userId);
-			cookies.set('session_id', sessionId, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: import.meta.env.PROD,
-				maxAge: 60 * 60 * 24 * 30
-			});
+			const code = await createEmailVerificationCode(platform!.env.DB, userId, email);
+			const verifyLink = `${url.origin}/verify-email/${code}`;
+			await sendVerificationEmail(platform, email, verifyLink);
+
+			return {
+				success: true,
+				message: 'Registration successful! Please check your email to verify your account.'
+			};
 		} catch (e) {
 			console.error(e);
 			return fail(500, { message: 'An error occurred during registration' });
 		}
-
-		throw redirect(303, '/');
 	}
 };

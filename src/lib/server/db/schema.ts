@@ -28,7 +28,7 @@ export const sessions = sqliteTable('sessions', {
 
 export const emailVerificationCodes = sqliteTable('email_verification_codes', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	code: text('code').notNull(),
+	code: text('code').notNull().unique(),
 	userId: text('user_id')
 		.notNull()
 		.references(() => users.id),

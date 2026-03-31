@@ -179,6 +179,66 @@ export async function deletePasswordResetToken(db: D1Database, token: string) {
 		.where(eq(schema.passwordResetTokens.tokenHash, tokenHash));
 }
 
+// --- Email Verification ---
+
+const EMAIL_VERIFICATION_EXPIRATION_MS = 1000 * 60 * 60 * 24; // 24 hours
+
+export async function createEmailVerificationCode(
+	db: D1Database,
+	userId: string,
+	email: string
+): Promise<string> {
+	const ddb = drizzle(db);
+	// Delete any existing codes for this user
+	await ddb
+		.delete(schema.emailVerificationCodes)
+		.where(eq(schema.emailVerificationCodes.userId, userId));
+
+	const code = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+	const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_EXPIRATION_MS);
+
+	await ddb.insert(schema.emailVerificationCodes).values({
+		code,
+		userId,
+		email,
+		expiresAt: expiresAt.getTime()
+	});
+
+	return code;
+}
+
+export async function validateEmailVerificationCode(
+	db: D1Database,
+	code: string
+): Promise<string | null> {
+	const ddb = drizzle(db);
+	const [result] = await ddb
+		.select()
+		.from(schema.emailVerificationCodes)
+		.where(eq(schema.emailVerificationCodes.code, code))
+		.limit(1);
+
+	if (!result) return null;
+
+	if (Date.now() >= result.expiresAt) {
+		await ddb
+			.delete(schema.emailVerificationCodes)
+			.where(eq(schema.emailVerificationCodes.id, result.id));
+		return null;
+	}
+
+	return result.userId;
+}
+
+export async function deleteEmailVerificationCode(db: D1Database, userId: string) {
+	const ddb = drizzle(db);
+	await ddb
+		.delete(schema.emailVerificationCodes)
+		.where(eq(schema.emailVerificationCodes.userId, userId));
+}
+
 async function hashToken(token: string): Promise<string> {
 	const data = new TextEncoder().encode(token);
 	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
