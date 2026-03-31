@@ -146,7 +146,10 @@ export function formatPrice(
 	currency: 'USD' | 'EUR' | 'TIX',
 	locale: string = 'en-US'
 ): string {
-	if (price === null || price === undefined) return '—';
+	const symbols = { USD: '$', EUR: '€', TIX: 'TIX ' };
+	if (price === null || price === undefined) {
+		return `${symbols[currency] || ''} —`;
+	}
 
 	let amount: number;
 	if (typeof price === 'string') {
