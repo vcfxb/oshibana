@@ -158,7 +158,7 @@ export function formatPrice(
 		amount = price / 100;
 	}
 
-	if (isNaN(amount)) return '—';
+	if (isNaN(amount)) return `${symbols[currency] || ''} —`;
 
 	try {
 		return new Intl.NumberFormat(locale, {
