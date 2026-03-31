@@ -45,7 +45,7 @@ export class ScryfallClient {
 		const response = await fetch(`${SCRYFALL_API_BASE}${endpoint}`, {
 			...options,
 			headers: {
-				'User-Agent': `Oshibana/${__APP_VERSION__ || "unknown"}`,
+				'User-Agent': `Oshibana/${__APP_VERSION__ || 'unknown'}`,
 				Accept: 'application/json',
 				...(options.method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
 				...(options.headers || {})
@@ -68,8 +68,13 @@ export class ScryfallClient {
 		return this.scryfallFetch<ScryfallList<ScryfallRuling>>(`/cards/${id}/rulings`);
 	}
 
-	async searchCards(params: ScryfallSearchParams & { [key: string]: string }) {
-		const encoded = new URLSearchParams(params);
+	async searchCards(params: ScryfallSearchParams) {
+		const encoded = new URLSearchParams();
+		for (const [key, value] of Object.entries(params)) {
+			if (value !== undefined) {
+				encoded.append(key, value.toString());
+			}
+		}
 		return this.scryfallFetch<ScryfallList<ScryfallCard>>(`/cards/search?${encoded.toString()}`);
 	}
 
@@ -81,7 +86,7 @@ export class ScryfallClient {
 		return this.searchCards({
 			q: `oracle_id:${oracleId}`,
 			unique: 'prints',
-			order: 'released',
+			order: 'released'
 		});
 	}
 
@@ -89,7 +94,7 @@ export class ScryfallClient {
 		return this.searchCards({
 			q: `s:"${set}" cn:"${collectorNumber}"`,
 			unique: 'prints',
-			include_multilingual: 'true',
+			include_multilingual: 'true'
 		});
 	}
 

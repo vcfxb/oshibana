@@ -4,7 +4,6 @@
  */
 
 import { parseArgs } from "util";
-import Cloudflare from 'cloudflare';
 
 function main() {
     const { values: { target } } = parseArgs({

@@ -325,7 +325,9 @@
 								</div>
 								<div class="flex flex-col overflow-hidden">
 									<span class="text-sm font-semibold">{getLanguageLabel(langCard.lang)}</span>
-									<span class="truncate text-xs text-muted-foreground">{langCard.printed_name || langCard.name}</span>
+									<span class="truncate text-xs text-muted-foreground"
+										>{langCard.printed_name || langCard.name}</span
+									>
 								</div>
 								<div class="ml-auto flex shrink-0 flex-col items-end">
 									<span class="text-xs font-bold"
@@ -346,9 +348,19 @@
 
 		{#if data.prints && data.prints.data.length > 1}
 			<div class="mt-16">
-				<h2 class="mb-6 text-2xl font-bold">Other Printings</h2>
+				<div class="mb-6 flex flex-wrap items-baseline justify-between gap-4">
+					<h2 class="text-2xl font-bold">Other Printings</h2>
+					{#if data.prints.total_cards && data.prints.total_cards > 100}
+						<a
+							href="/cards?q=oracle_id:{data.card.oracle_id}&unique=prints&order=released"
+							class="text-sm font-medium text-primary hover:underline"
+						>
+							View all {data.prints.total_cards} printings →
+						</a>
+					{/if}
+				</div>
 				<div class="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-					{#each data.prints.data as printing}
+					{#each data.prints.data.slice(0, 100) as printing}
 						<a
 							href="/cards/{printing.id}"
 							data-set={printing.set}

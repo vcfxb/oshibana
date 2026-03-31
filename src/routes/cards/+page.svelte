@@ -1,7 +1,9 @@
 <script lang="ts">
 	import MTGCard from '$lib/components/MTGCard.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import * as Pagination from '$lib/components/ui/pagination';
 	import { Search } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -18,6 +20,12 @@
 			event.preventDefault();
 			searchInput?.focus();
 		}
+	}
+
+	function handlePageChange(page: number) {
+		const url = new URL(window.location.href);
+		url.searchParams.set('page', page.toString());
+		goto(url.toString());
 	}
 </script>
 
@@ -65,11 +73,54 @@
 	{/if}
 
 	{#if data.results}
+		{#if data.results.total_cards && data.results.total_cards > 0}
+			<p class="mb-4 text-center text-sm text-muted-foreground">
+				Found {data.results.total_cards.toLocaleString()}
+				{data.results.total_cards === 1 ? 'card' : 'cards'}
+			</p>
+		{/if}
+
 		<div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 			{#each data.results.data as card}
 				<MTGCard {card} />
 			{/each}
 		</div>
+
+		{#if data.results.total_cards && data.results.total_cards > 175}
+			<div class="mt-12 flex justify-center">
+				<Pagination.Root
+					count={data.results.total_cards}
+					perPage={175}
+					siblingCount={1}
+					page={data.page}
+					onPageChange={handlePageChange}
+				>
+					{#snippet children({ pages, currentPage })}
+						<Pagination.Content>
+							<Pagination.Item>
+								<Pagination.PrevButton />
+							</Pagination.Item>
+							{#each pages as page (page.key)}
+								{#if page.type === 'ellipsis'}
+									<Pagination.Item>
+										<Pagination.Ellipsis />
+									</Pagination.Item>
+								{:else}
+									<Pagination.Item>
+										<Pagination.Link {page} isActive={currentPage === page.value}>
+											{page.value}
+										</Pagination.Link>
+									</Pagination.Item>
+								{/if}
+							{/each}
+							<Pagination.Item>
+								<Pagination.NextButton />
+							</Pagination.Item>
+						</Pagination.Content>
+					{/snippet}
+				</Pagination.Root>
+			</div>
+		{/if}
 
 		{#if data.results.total_cards === 0}
 			<p class="text-center text-muted-foreground">No cards found.</p>
