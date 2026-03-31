@@ -42,8 +42,8 @@ export async function getCachedCard(db: D1Database, scryfallId: string) {
 	const ddb = drizzle(db);
 	const [cached] = await ddb
 		.select()
-		.from(schema.cardCache)
-		.where(eq(schema.cardCache.scryfallId, scryfallId))
+		.from(schema.cards)
+		.where(eq(schema.cards.scryfallId, scryfallId))
 		.limit(1);
 
 	const isExpired =
@@ -56,10 +56,10 @@ export async function getCachedCard(db: D1Database, scryfallId: string) {
 	const newCard = mapScryfallToCache(card);
 
 	await ddb
-		.insert(schema.cardCache)
+		.insert(schema.cards)
 		.values(newCard)
 		.onConflictDoUpdate({
-			target: schema.cardCache.scryfallId,
+			target: schema.cards.scryfallId,
 			set: {
 				...newCard,
 				updatedAt: new Date() // Ensure it's updated even if values are the same
@@ -87,10 +87,10 @@ export async function updateStaleCards(db: D1Database, scryfallIds: string[]) {
 
 			for (const card of cardsToCache) {
 				await ddb
-					.insert(schema.cardCache)
+					.insert(schema.cards)
 					.values(card)
 					.onConflictDoUpdate({
-						target: schema.cardCache.scryfallId,
+						target: schema.cards.scryfallId,
 						set: {
 							...card,
 							updatedAt: new Date()
@@ -136,8 +136,8 @@ export async function getCollection(
 		const searchPattern = `%${q}%`;
 		whereClauses.push(
 			or(
-				like(schema.cardCache.name, searchPattern),
-				like(schema.cardCache.setName, searchPattern),
+				like(schema.cards.name, searchPattern),
+				like(schema.cards.setName, searchPattern),
 				like(schema.physicalCards.notes, searchPattern)
 			)!
 		);
@@ -146,10 +146,10 @@ export async function getCollection(
 	let query = ddb
 		.select({
 			physicalCard: schema.physicalCards,
-			cardData: schema.cardCache
+			cardData: schema.cards
 		})
 		.from(schema.physicalCards)
-		.leftJoin(schema.cardCache, eq(schema.physicalCards.scryfallId, schema.cardCache.scryfallId))
+		.leftJoin(schema.cards, eq(schema.physicalCards.scryfallId, schema.cards.scryfallId))
 		.where(and(...whereClauses));
 
 	const sortOrder = sortDir === 'asc' ? asc : desc;
@@ -157,19 +157,19 @@ export async function getCollection(
 
 	switch (sortBy) {
 		case 'name':
-			orderBy = [sortOrder(schema.cardCache.name)];
+			orderBy = [sortOrder(schema.cards.name)];
 			break;
 		case 'value':
 			// Sort by actual value based on foil status, with fallback to other currencies
 			orderBy = [
 				sortOrder(
 					sql`COALESCE(
-						CASE WHEN ${schema.physicalCards.isFoil} THEN ${schema.cardCache.priceUsdFoil} ELSE ${schema.cardCache.priceUsd} END,
-						${schema.cardCache.priceUsd},
-						${schema.cardCache.priceUsdFoil},
-						${schema.cardCache.priceUsdEtched},
-						${schema.cardCache.priceEur},
-						${schema.cardCache.priceTix},
+						CASE WHEN ${schema.physicalCards.isFoil} THEN ${schema.cards.priceUsdFoil} ELSE ${schema.cards.priceUsd} END,
+						${schema.cards.priceUsd},
+						${schema.cards.priceUsdFoil},
+						${schema.cards.priceUsdEtched},
+						${schema.cards.priceEur},
+						${schema.cards.priceTix},
 						0
 					)`
 				)
@@ -179,12 +179,12 @@ export async function getCollection(
 			orderBy = [
 				sortOrder(
 					sql`COALESCE(
-						CASE WHEN ${schema.physicalCards.isFoil} THEN ${schema.cardCache.priceUsdFoil} ELSE ${schema.cardCache.priceUsd} END,
-						${schema.cardCache.priceUsd},
-						${schema.cardCache.priceUsdFoil},
-						${schema.cardCache.priceUsdEtched},
-						${schema.cardCache.priceEur},
-						${schema.cardCache.priceTix},
+						CASE WHEN ${schema.physicalCards.isFoil} THEN ${schema.cards.priceUsdFoil} ELSE ${schema.cards.priceUsd} END,
+						${schema.cards.priceUsd},
+						${schema.cards.priceUsdFoil},
+						${schema.cards.priceUsdEtched},
+						${schema.cards.priceEur},
+						${schema.cards.priceTix},
 						0
 					) * ${schema.physicalCards.quantity}`
 				)
@@ -194,7 +194,7 @@ export async function getCollection(
 			orderBy = [sortOrder(schema.physicalCards.purchasePrice)];
 			break;
 		case 'set':
-			orderBy = [sortOrder(sql`${schema.cardCache.set} || ${schema.cardCache.collectorNumber}`)];
+			orderBy = [sortOrder(sql`${schema.cards.set} || ${schema.cards.collectorNumber}`)];
 			break;
 		case 'quantity':
 			orderBy = [sortOrder(schema.physicalCards.quantity)];
@@ -211,7 +211,7 @@ export async function getCollection(
 	const totalResult = await ddb
 		.select({ count: sql<number>`CAST(SUM(${schema.physicalCards.quantity}) AS INTEGER)` })
 		.from(schema.physicalCards)
-		.leftJoin(schema.cardCache, eq(schema.physicalCards.scryfallId, schema.cardCache.scryfallId))
+		.leftJoin(schema.cards, eq(schema.physicalCards.scryfallId, schema.cards.scryfallId))
 		.where(and(...whereClauses));
 
 	const items = await query
@@ -252,8 +252,8 @@ export async function getCollection(
 		// Since we only updated the cache, we can re-query the cache for these IDs.
 		const updatedCache = await ddb
 			.select()
-			.from(schema.cardCache)
-			.where(inArray(schema.cardCache.scryfallId, staleIds));
+			.from(schema.cards)
+			.where(inArray(schema.cards.scryfallId, staleIds));
 
 		const cacheMap = new Map(updatedCache.map((c) => [c.scryfallId, c]));
 		for (const item of items) {

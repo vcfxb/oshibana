@@ -13,10 +13,10 @@ export async function getDeckSlots(db: D1Database, deckId: string) {
 	return await ddb
 		.select({
 			slot: schema.deckSlots,
-			card: schema.cardCache
+			card: schema.cards
 		})
 		.from(schema.deckSlots)
-		.leftJoin(schema.cardCache, eq(schema.deckSlots.scryfallId, schema.cardCache.scryfallId))
+		.leftJoin(schema.cards, eq(schema.deckSlots.scryfallId, schema.cards.scryfallId))
 		.where(eq(schema.deckSlots.deckId, deckId));
 }
 
@@ -201,10 +201,10 @@ export async function getDeckHistory(db: D1Database, deckId: string) {
 	return await ddb
 		.select({
 			change: schema.deckChanges,
-			card: schema.cardCache
+			card: schema.cards
 		})
 		.from(schema.deckChanges)
-		.leftJoin(schema.cardCache, eq(schema.deckChanges.scryfallId, schema.cardCache.scryfallId))
+		.leftJoin(schema.cards, eq(schema.deckChanges.scryfallId, schema.cards.scryfallId))
 		.where(eq(schema.deckChanges.deckId, deckId))
 		.orderBy(schema.deckChanges.createdAt);
 }

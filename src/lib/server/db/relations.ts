@@ -1,7 +1,7 @@
 import { defineRelations } from 'drizzle-orm';
-import { users, follows, storageLocations, physicalCards, cardCache } from './schema';
+import { users, follows, storageLocations, physicalCards, cards } from './schema';
 
-const tables = { users, follows, storageLocations, physicalCards, cardCache };
+const tables = { users, follows, storageLocations, physicalCards, cards };
 
 export const relations = defineRelations(tables, (r) => ({
     users: {
@@ -28,9 +28,9 @@ export const relations = defineRelations(tables, (r) => ({
     },
 
     physicalCards: {
-        card: r.one.cardCache({
+        card: r.one.cards({
             from: r.physicalCards.scryfallId,
-            to: r.cardCache.scryfallId,
+            to: r.cards.scryfallId,
             optional: false,
         })
     }

@@ -44,10 +44,11 @@ export const passwordResetTokens = sqliteTable('password_reset_tokens', {
 	expiresAt: integer('expires_at').notNull()
 });
 
-// --- Card Cache (Scryfall Data) ---
+// --- Card Data from Scryfall bulk exports ---
 
-export const cardCache = sqliteTable('card_cache', {
+export const cards = sqliteTable('cards', {
 	scryfallId: text('scryfall_id').primaryKey(),
+	oracleId: text('oracle_id'),
 	name: text('name').notNull(),
 	set: text('set').notNull(),
 	setName: text('set_name').notNull(),
@@ -99,7 +100,7 @@ export const physicalCards = sqliteTable('physical_cards', {
 		.references(() => users.id),
 	scryfallId: text('scryfall_id')
 		.notNull()
-		.references(() => cardCache.scryfallId),
+		.references(() => cards.scryfallId),
 	condition: text('condition', { enum: ['NM', 'LP', 'MP', 'HP', 'DMG'] })
 		.notNull()
 		.default('NM'),
@@ -152,7 +153,7 @@ export const deckSlots = sqliteTable('deck_slots', {
 		.references(() => decks.id, { onDelete: 'cascade' }),
 	scryfallId: text('scryfall_id')
 		.notNull()
-		.references(() => cardCache.scryfallId),
+		.references(() => cards.scryfallId),
 	quantity: integer('quantity').notNull().default(1),
 	board: text('board').notNull().default('main')
 });
