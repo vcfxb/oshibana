@@ -2,10 +2,9 @@
     "name": "oshibana",
     "private": "true",
     "workspaces": [
-        "oshibana-web"
+        "oshibana-web",
+        "scryfall-pull-cron-trigger"
     ],
     "scripts": {
-        "dev": "npm run -w oshibana-web dev",
-        "build": "npm run -w oshibana-web build"
     }
 }

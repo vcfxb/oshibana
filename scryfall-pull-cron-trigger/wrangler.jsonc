@@ -4,44 +4,33 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "oshibana-web",
-	"main": ".svelte-kit/cloudflare/_worker.js",
-	"compatibility_date": "2026-01-28",
-	"compatibility_flags": ["nodejs_als", "nodejs_compat"],
-	"assets": {
-		"binding": "ASSETS",
-		"directory": ".svelte-kit/cloudflare"
-	},
+	"name": "oshibana-scryfall-pull-cron-trigger",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-03-29",
 	"observability": {
 		"enabled": true
 	},
-	"routes": [
+	"workflows": [
 		{
-			"pattern": "oshibana.cards",
-			"custom_domain": true
+			"name": "scryfall-pull-cron-trigger",
+			"binding": "SCRYFALL_PULL",
+			"class_name": "ScryfallPull"
 		}
 	],
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "oshibana-db",
-			"database_id": "dfe60f6d-7a92-4de7-b6fd-f9a48274f426",
-			"migrations_dir": "migrations"
-		}
+	"upload_source_maps": true,
+	"compatibility_flags": [
+		"nodejs_compat"
 	],
-	"send_email": [
-		{
-			"name": "NOREPLY_EMAIL",
-			"allowed_sender_addresses": [
-				"no-reply@oshibana.cards"
-			]
-		}
-	],
+	"triggers": {
+		"crons": [
+			"0 3 * * *"
+		]
+	}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
-	"placement": {  "mode": "smart" }
+	// "placement": {  "mode": "smart" }
 	/**
 	 * Bindings
 	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
@@ -55,6 +44,11 @@
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
 	// "vars": {  "MY_VARIABLE": "production_value" }
+	/**
+	 * Static Assets
+	 * https://developers.cloudflare.com/workers/static-assets/binding/
+	 */
+	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
