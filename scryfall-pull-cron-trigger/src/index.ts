@@ -28,6 +28,16 @@ export class ScryfallPull extends WorkflowEntrypoint<Env, null> {
 		await step.do("trigger container to fetch and load scryfall bulk data", async () => {
 			console.info("trigger cloudflare container here");
 			return 0;
+			// Replace with the actual URL of your scryfall-pull-container deployment
+			// This Worker is part of the same project, but usually, we call via 
+			// service binding or public URL.
+			// Let's assume a Service Binding or call it by name.
+			// For testing/simplicity, if we haven't defined a binding yet, we can use a dummy fetch
+			// but we should probably add the service binding to wrangler.jsonc.
+			
+			// We'll use the environment's SC_CONTAINER binding if it exists
+			// This is just a placeholder until we add the binding
+			// return await fetch("https://oshibana-scryfall-pull-container.oshibana.workers.dev/pull");
 		});
 
 		// const files = await step.do("my first step", async () => {
