@@ -3,7 +3,6 @@
     "private": "true",
     "workspaces": [
         "oshibana-web",
-        "scryfall-pull-cron-trigger",
         "scryfall-pull-container"
     ],
     "scripts": {
