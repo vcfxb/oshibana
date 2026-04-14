@@ -13,7 +13,12 @@
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"traces": {
+			"enabled": true,
+			// optional sampling rate (recommended for high-traffic workloads)
+			"head_sampling_rate": 0.05
+		}
 	},
 	"routes": [
 		{
