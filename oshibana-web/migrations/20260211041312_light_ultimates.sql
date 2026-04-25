@@ -1,1 +1,0 @@
-../drizzle/20260211041312_light_ultimates/migration.sql

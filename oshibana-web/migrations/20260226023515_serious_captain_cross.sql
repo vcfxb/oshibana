@@ -1,1 +1,0 @@
-../drizzle/20260226023515_serious_captain_cross/migration.sql

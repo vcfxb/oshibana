@@ -1,1 +1,0 @@
-../drizzle/20260207073635_clever_zombie/migration.sql

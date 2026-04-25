@@ -1,0 +1,10 @@
+[workspace]
+resolver = "3"
+members = [
+    "clients",
+    "schemas"
+]
+
+[workspace.dependencies]
+schemas = { path = "schemas" }
+clients = { path = "clients" }

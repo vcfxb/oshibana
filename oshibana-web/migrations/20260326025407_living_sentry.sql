@@ -1,1 +1,0 @@
-../drizzle/20260326025407_living_sentry/migration.sql
