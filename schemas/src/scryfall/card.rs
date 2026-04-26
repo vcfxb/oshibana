@@ -1,7 +1,7 @@
 use crate::utils::array_to_bitflags::ArrayToBitset;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use url::Url;
@@ -33,7 +33,7 @@ pub mod rarity;
 pub mod related_card;
 pub mod security_stamp;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ScryfallCard<'a> {
     pub arena_id: Option<u64>,
     pub id: Uuid,
@@ -153,7 +153,7 @@ pub struct ScryfallCard<'a> {
     pub variation: bool,
     pub variation_of: Option<Uuid>,
     pub security_stamp: Option<SecurityStamp>,
-    #[serde(borrow)]
+    #[serde(borrow)]    
     pub watermark: Option<Cow<'a, str>>,
 }
 

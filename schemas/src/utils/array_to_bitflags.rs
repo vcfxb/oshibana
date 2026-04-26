@@ -1,8 +1,9 @@
 use enumflags2::{BitFlag, BitFlags};
 use serde::de::{Error, SeqAccess, Unexpected, Visitor};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Formatter;
 use std::marker::PhantomData;
+use serde::ser::SerializeSeq;
 use strum::IntoEnumIterator;
 
 pub trait ExpectStr {
@@ -30,6 +31,21 @@ where
             .map(|bitflags| ArrayToBitset { bitflags })
     }
 }
+
+impl<T> Serialize for ArrayToBitset<T>
+where T: Serialize + BitFlag + Into<&'static str> + ExpectStr + IntoEnumIterator {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(self.bitflags.len()))?;
+        for flag in self.bitflags.iter() {
+            seq.serialize_element(&flag)?;
+        }
+        seq.end()
+    }
+}
+
 
 struct AnonVisitor<I> {
     _phantom: PhantomData<I>,

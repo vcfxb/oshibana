@@ -1,6 +1,6 @@
 use crate::utils::array_to_bitflags::ArrayToBitset;
 use crate::utils::deserialize_matches::DeserializeMatches;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use url::Url;
@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::scryfall::card::colors::Color;
 use crate::scryfall::card::layout::Layout;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct CardFace<'a> {
     #[serde(borrow)]
     pub artist: Option<Cow<'a, str>>,

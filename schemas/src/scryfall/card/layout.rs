@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Layout {
     Normal,

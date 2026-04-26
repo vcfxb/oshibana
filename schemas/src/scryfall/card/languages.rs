@@ -1,8 +1,8 @@
 use enumflags2::bitflags;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[bitflags]
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 #[repr(u32)]
 #[serde(rename_all = "lowercase")]
 pub enum Language {

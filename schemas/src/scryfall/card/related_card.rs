@@ -1,10 +1,10 @@
 use crate::utils::deserialize_matches::DeserializeMatches;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::borrow::Cow;
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Component {
     Token,
@@ -13,7 +13,7 @@ pub enum Component {
     ComboPiece,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct RelatedCard<'a> {
     pub id: Uuid,
     #[serde(deserialize_with = "deserialize_object_name")]
