@@ -3,23 +3,21 @@
 
 pub mod storage;
 
-use std::{fs, io};
-use std::fs::File;
+use std::fs;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use directories::ProjectDirs;
 use eframe::NativeOptions;
-use log4rs::append::console::{ConsoleAppender, Target};
+use log4rs::append::console::ConsoleAppender;
 use log4rs::append::rolling_file::policy::compound::CompoundPolicy;
-use log4rs::append::rolling_file::policy::compound::roll::delete::DeleteRoller;
 use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller;
 use log4rs::append::rolling_file::policy::compound::trigger::onstartup::OnStartUpTrigger;
-use log4rs::append::rolling_file::policy::compound::trigger::size::SizeTrigger;
 use log4rs::append::rolling_file::RollingFileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use log::LevelFilter;
 use rusqlite::Connection;
+use clients::scryfall::ScryfallClient;
 
 static DIRECTORIES: LazyLock<ProjectDirs> = LazyLock::new(|| {
     ProjectDirs::from("org.vcfxb", "Venus Xeon-Blonde", "Oshibana").unwrap()
@@ -79,6 +77,7 @@ async fn main() -> anyhow::Result<()> {
 struct Oshibana {
     db_path: PathBuf,
     db: rusqlite::Connection,
+    scryfall_client: ScryfallClient,
 }
 
 impl Oshibana {
@@ -91,15 +90,20 @@ impl Oshibana {
 
         Ok(Self {
             db_path,
-            db: db_connection
+            db: db_connection,
+            scryfall_client: ScryfallClient::new(),
         })
     }
 }
 
 impl eframe::App for Oshibana {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        egui::Panel::top("my_panel").show_inside(ui, |ui| {
+            ui.label("Hello World! From `Panel`, that must be before `CentralPanel`!");
+        });
+        
         egui::CentralPanel::default().show_inside(ui, |ui| {
-            ui.heading("Hello World!");
+            ui.label("Hello World!");
         });
     }
 }

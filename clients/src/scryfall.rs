@@ -10,6 +10,7 @@ use std::num::NonZeroU32;
 use std::sync::Arc;
 use thiserror::Error;
 
+#[derive(Clone, Debug)]
 pub struct ScryfallClient {
     client: Client,
     rl: Arc<DefaultDirectRateLimiter>,
