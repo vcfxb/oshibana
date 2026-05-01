@@ -23,6 +23,11 @@ static DIRECTORIES: LazyLock<ProjectDirs> = LazyLock::new(|| {
     ProjectDirs::from("org.vcfxb", "Venus Xeon-Blonde", "Oshibana").unwrap()
 });
 
+static DB_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    DIRECTORIES.data_dir().join("oshibana-db.sqlite")
+});
+
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let stdout_appender = ConsoleAppender::builder()
@@ -60,6 +65,13 @@ async fn main() -> anyhow::Result<()> {
     log4rs::init_config(log4rs_config)?;
     log::info!("started logger (stderr, dir: {})", log_file_dir.display());
 
+    let data_dir = DIRECTORIES.data_dir();
+    log::debug!("creating data dir if doesn't exist");
+    fs::create_dir_all(data_dir)?;
+    let mut db_connection = Connection::open(DB_PATH.as_path())?;
+    log::info!("migrating db");
+    storage::migrations::MIGRATIONS.to_latest(&mut db_connection)?;
+
     let native_options = NativeOptions {
         vsync: true,
         centered: true,
@@ -68,28 +80,21 @@ async fn main() -> anyhow::Result<()> {
     };
 
     eframe::run_native("Oshibana", native_options, Box::new(|cc| {
-        Ok(Box::new(Oshibana::new(cc)?))
+        Ok(Box::new(Oshibana::new(cc, db_connection)?))
     }))?;
 
     Ok(())
 }
 
 struct Oshibana {
-    db_path: PathBuf,
-    db: rusqlite::Connection,
+    db: Connection,
     scryfall_client: ScryfallClient,
 }
 
 impl Oshibana {
-    fn new(_: &eframe::CreationContext<'_>) -> anyhow::Result<Self> {
-        let data_dir = DIRECTORIES.data_dir();
-        log::debug!("creating data dir if doesn't exist");
-        fs::create_dir_all(data_dir)?;
-        let db_path = data_dir.join("oshibana-db.sqlite");
-        let db_connection = Connection::open(&db_path)?;
+    fn new(_: &eframe::CreationContext<'_>, db_connection: Connection) -> anyhow::Result<Self> {
 
         Ok(Self {
-            db_path,
             db: db_connection,
             scryfall_client: ScryfallClient::new(),
         })
@@ -98,10 +103,12 @@ impl Oshibana {
 
 impl eframe::App for Oshibana {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        //
+
         egui::Panel::top("my_panel").show_inside(ui, |ui| {
             ui.label("Hello World! From `Panel`, that must be before `CentralPanel`!");
         });
-        
+
         egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.label("Hello World!");
         });
