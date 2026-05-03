@@ -2,7 +2,6 @@ use crate::utils::array_to_bitflags::ArrayToBitset;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
-use std::borrow::Cow;
 use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;

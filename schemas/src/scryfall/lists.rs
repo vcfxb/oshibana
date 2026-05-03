@@ -1,7 +1,6 @@
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::Deserialize;
 use serde::Deserializer;
-use std::borrow::Cow;
 use url::Url;
 
 #[derive(Deserialize, Debug)]
