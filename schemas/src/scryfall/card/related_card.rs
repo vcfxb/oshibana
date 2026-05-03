@@ -1,6 +1,5 @@
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::{Deserialize, Deserializer, Serialize};
-use std::borrow::Cow;
 use url::Url;
 use uuid::Uuid;
 
@@ -14,15 +13,13 @@ pub enum Component {
 }
 
 #[derive(Deserialize, Debug, Serialize)]
-pub struct RelatedCard<'a> {
+pub struct RelatedCard {
     pub id: Uuid,
     #[serde(deserialize_with = "deserialize_object_name")]
     pub object: &'static str,
     pub component: Component,
-    #[serde(borrow)]
-    pub name: Cow<'a, str>,
-    #[serde(borrow)]
-    pub type_line: Cow<'a, str>,
+    pub name: String,
+    pub type_line: String,
     pub uri: Url,
 }
 

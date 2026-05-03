@@ -35,27 +35,20 @@ pub enum SetType {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ScryfallSet<'a> {
+pub struct ScryfallSet {
     #[serde(deserialize_with = "deserialize_object_name")]
     pub object: &'static str,
     pub id: Uuid,
-    #[serde(borrow)]
-    pub code: Cow<'a, str>,
-    #[serde(borrow)]
-    pub mtgo_code: Option<Cow<'a, str>>,
-    #[serde(borrow)]
-    pub arena_code: Option<Cow<'a, str>>,
+    pub code: String,
+    pub mtgo_code: Option<String>,
+    pub arena_code: Option<String>,
     pub tcgplayer_id: Option<i64>,
-    #[serde(borrow)]
-    pub name: Cow<'a, str>,
+    pub name: String,
     pub set_type: SetType,
     pub released_at: Option<DateTime<Utc>>,
-    #[serde(borrow)]
-    pub block_code: Option<Cow<'a, str>>,
-    #[serde(borrow)]
-    pub block: Option<Cow<'a, str>>,
-    #[serde(borrow)]
-    pub parent_set_code: Option<Cow<'a, str>>,
+    pub block_code: Option<String>,
+    pub block: Option<String>,
+    pub parent_set_code: Option<String>,
     pub card_count: u64,
     pub printed_size: u64,
     pub digital: bool,

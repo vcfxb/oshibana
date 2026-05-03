@@ -5,14 +5,13 @@ use std::borrow::Cow;
 use url::Url;
 
 #[derive(Deserialize, Debug)]
-pub struct ScryfallList<'a, T> {
+pub struct ScryfallList<T> {
     #[serde(deserialize_with = "deserialize_object_name")]
     pub object: &'static str,
     pub data: Vec<T>,
     pub next_page: Option<Url>,
     pub total_cards: Option<u64>,
-    #[serde(borrow)]
-    pub warnings: Vec<Cow<'a, str>>,
+    pub warnings: Vec<String>,
 }
 
 fn deserialize_object_name<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
