@@ -30,7 +30,7 @@ impl ScryfallClient {
 
         headers.insert(
             "User-Agent",
-            format!("moxfield-cli/{}", env!("CARGO_PKG_VERSION"))
+            format!("oshibana/{}", env!("CARGO_PKG_VERSION"))
                 .parse()
                 .unwrap(),
         );
