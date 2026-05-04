@@ -1,8 +1,8 @@
 pub mod scryfall_pull;
 
 use std::sync::{Arc, Mutex};
-use eframe::Frame;
-use egui::{containers::menu::MenuBar, Context, Key, KeyboardShortcut, Modifiers, Panel, ViewportCommand};
+use eframe::{icon_data, Frame};
+use egui::{containers::menu::MenuBar, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, Theme, ViewportCommand};
 use rusqlite::Connection;
 use clients::scryfall::ScryfallClient;
 use crate::app::scryfall_pull::ScryfallPullStatus;
@@ -16,7 +16,7 @@ pub struct Oshibana {
 }
 
 impl Oshibana {
-    pub fn new(_: &eframe::CreationContext<'_>, db_connection: Connection) -> anyhow::Result<Self> {
+    pub fn new(ctx: &eframe::CreationContext<'_>, db_connection: Connection) -> anyhow::Result<Self> {
         Ok(Self {
             db: db_connection,
             scryfall_client: ScryfallClient::new(),

@@ -10,6 +10,8 @@ use std::path::PathBuf;
 use std::sync::{LazyLock, Mutex};
 use directories::ProjectDirs;
 use eframe::NativeOptions;
+use egui::{IconData, Theme, ViewportBuilder};
+use image::GenericImageView;
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::rolling_file::policy::compound::CompoundPolicy;
 use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller;
@@ -74,10 +76,28 @@ async fn main() -> anyhow::Result<()> {
     log::info!("migrating db");
     storage::migrations::MIGRATIONS.to_latest(&mut db_connection)?;
 
+    let icon_data = {
+        let png_bytes: &[u8] = match egui::Context::default().system_theme() {
+            None | Some(Theme::Dark) => include_bytes!("../assets/favicon-light.png"),
+            Some(Theme::Light) => include_bytes!("../assets/favicon-dark.png"),
+        };
+
+        let png = image::load_from_memory(png_bytes).expect("failed to load icon");
+        let (width, height) = png.dimensions();
+
+        IconData {
+            rgba: png.into_rgba8().into_raw(),
+            width,
+            height,
+        }
+    };
+
     let native_options = NativeOptions {
         vsync: true,
         centered: true,
         dithering: true,
+        viewport: ViewportBuilder::default()
+            .with_icon(icon_data),
         .. NativeOptions::default()
     };
 
