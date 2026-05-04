@@ -2,31 +2,63 @@ pub mod scryfall_pull;
 
 use std::sync::{Arc, Mutex};
 use eframe::{icon_data, Frame};
-use egui::{containers::menu::MenuBar, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, Theme, ViewportCommand};
+use egui::{containers::menu::MenuBar, CentralPanel, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
 use rusqlite::Connection;
 use clients::scryfall::ScryfallClient;
 use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
 
 pub struct Oshibana {
-    db: Connection,
+    icon: Arc<IconData>,
+    db: Arc<Mutex<Connection>>,
     scryfall_client: ScryfallClient,
     current_view: View,
     scryfall_pull_status: Arc<Mutex<Option<ScryfallPullStatus>>>,
 }
 
 impl Oshibana {
-    pub fn new(ctx: &eframe::CreationContext<'_>, db_connection: Connection) -> anyhow::Result<Self> {
+    pub fn new(_: &eframe::CreationContext<'_>, db_connection: Connection, icon: Arc<IconData>) -> anyhow::Result<Self> {
         Ok(Self {
-            db: db_connection,
+            icon,
+            db: Arc::new(Mutex::new(db_connection)),
             scryfall_client: ScryfallClient::new(),
             current_view: View::Home,
             scryfall_pull_status: Arc::new(Mutex::new(None)),
         })
     }
 
-    fn tigger_scryfall_pull(&self, ctx: Context) {
+    fn tigger_scryfall_pull(&self) {
+        log::info!("Scryfall pull triggered");
+        let mut lock = self.scryfall_pull_status.lock().unwrap();
 
+        if lock.is_none() {
+            *lock = Some(ScryfallPullStatus::default());
+        }
+
+        let status = lock.as_mut().unwrap();
+
+        // Don't start a new task if we're already in progress
+        if status.in_progress {
+            return;
+        }
+
+        status.in_progress = true;
+        drop(lock);
+
+        let conn_clone = self.db.clone();
+        let scryfall_client_clone = self.scryfall_client.clone();
+
+        tokio::spawn(async move {
+            let bulk_data = match scryfall_client_clone.bulk_data().await {
+                Ok(bulk_data) => bulk_data,
+                Err(err) => {
+                    log::error!("Failed to get bulk data: {err}");
+                    return;
+                }
+            };
+
+
+        });
     }
 
     // fn run_search(&self, ctx: egui::Context) {
@@ -58,13 +90,12 @@ impl Oshibana {
 
 
 impl eframe::App for Oshibana {
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut Frame) {
         Panel::top("menu_bar_panel").show_inside(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Pull latest scryfall data").clicked() {
-
+                        self.tigger_scryfall_pull();
                     }
 
                     ui.separator();

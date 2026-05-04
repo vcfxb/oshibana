@@ -1,7 +1,8 @@
 
+#[derive(Default)]
 pub struct ScryfallPullStatus {
-    total_bytes: usize,
-    read_bytes: usize,
-    card_records_read: usize,
+    pub in_progress: bool,
+    pub total_bytes: usize,
+    pub read_bytes: usize,
+    pub card_records_read: usize,
 }
-

@@ -7,7 +7,7 @@ pub mod app;
 
 use std::fs;
 use std::path::PathBuf;
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use directories::ProjectDirs;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
@@ -91,18 +91,20 @@ async fn main() -> anyhow::Result<()> {
             height,
         }
     };
+    
+    let icon_data_arc = Arc::new(icon_data);
 
     let native_options = NativeOptions {
         vsync: true,
         centered: true,
         dithering: true,
         viewport: ViewportBuilder::default()
-            .with_icon(icon_data),
+            .with_icon(icon_data_arc.clone()),
         .. NativeOptions::default()
     };
 
     eframe::run_native("Oshibana", native_options, Box::new(|cc| {
-        Ok(Box::new(Oshibana::new(cc, db_connection)?))
+        Ok(Box::new(Oshibana::new(cc, db_connection, icon_data_arc)?))
     }))?;
 
     Ok(())

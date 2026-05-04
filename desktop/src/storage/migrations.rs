@@ -27,6 +27,13 @@ const MIGRATION_SLICE: &[M] = &[
         ALTER TABLE scryfall_data DROP COLUMN type_line;
         ALTER TABLE scryfall_data DROP COLUMN lang;
     "#),
+
+    M::up(r#"CREATE TABLE kv_store (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    );"#).down("DROP TABLE kv_store;"),
+
+
 ];
 
 pub const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATION_SLICE);
