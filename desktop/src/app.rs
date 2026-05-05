@@ -3,24 +3,21 @@ pub mod scryfall_pull;
 use std::sync::{Arc, Mutex};
 use eframe::{icon_data, Frame};
 use egui::{containers::menu::MenuBar, CentralPanel, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
-use rusqlite::Connection;
 use clients::scryfall::ScryfallClient;
 use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
 
 pub struct Oshibana {
     icon: Arc<IconData>,
-    db: Arc<Mutex<Connection>>,
     scryfall_client: ScryfallClient,
     current_view: View,
     scryfall_pull_status: Arc<Mutex<Option<ScryfallPullStatus>>>,
 }
 
 impl Oshibana {
-    pub fn new(_: &eframe::CreationContext<'_>, db_connection: Connection, icon: Arc<IconData>) -> anyhow::Result<Self> {
+    pub fn new(_: &eframe::CreationContext<'_>, icon: Arc<IconData>) -> anyhow::Result<Self> {
         Ok(Self {
             icon,
-            db: Arc::new(Mutex::new(db_connection)),
             scryfall_client: ScryfallClient::new(),
             current_view: View::Home,
             scryfall_pull_status: Arc::new(Mutex::new(None)),
@@ -45,7 +42,6 @@ impl Oshibana {
         status.in_progress = true;
         drop(lock);
 
-        let conn_clone = self.db.clone();
         let scryfall_client_clone = self.scryfall_client.clone();
 
         tokio::spawn(async move {

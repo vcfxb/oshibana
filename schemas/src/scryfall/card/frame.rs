@@ -1,4 +1,3 @@
-use crate::utils::array_to_bitflags::ExpectStr;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
@@ -32,8 +31,4 @@ pub enum FrameEffect {
     FanDfc,
     UpsideDownDfc,
     Spree,
-}
-
-impl ExpectStr for FrameEffect {
-    const EXPECT_STR: &'static str = "frame effect";
 }

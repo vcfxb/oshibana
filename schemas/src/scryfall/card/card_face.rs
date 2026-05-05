@@ -1,4 +1,3 @@
-use crate::utils::array_to_bitflags::ArrayToBitset;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
@@ -9,12 +8,11 @@ use crate::scryfall::card::layout::Layout;
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct CardFace {
-    
     pub artist: Option<String>,
     pub artist_id: Option<Uuid>,
     pub cmc: Option<f32>,
-    pub color_indicator: Option<ArrayToBitset<Color>>,
-    pub colors: Option<ArrayToBitset<Color>>,
+    pub color_indicator: Option<Vec<Color>>,
+    pub colors: Option<Vec<Color>>,
     
     pub defense: Option<String>,
     

@@ -1,4 +1,3 @@
-use crate::utils::array_to_bitflags::ArrayToBitset;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -59,9 +58,9 @@ pub struct ScryfallCard {
     
     pub card_faces: Option<Vec<CardFace>>,
     pub cmc: f32,
-    pub color_identity: ArrayToBitset<Color>,
-    pub color_indicator: Option<ArrayToBitset<Color>>,
-    pub colors: Option<ArrayToBitset<Color>>,
+    pub color_identity: Vec<Color>,
+    pub color_indicator: Option<Vec<Color>>,
+    pub colors: Option<Vec<Color>>,
     
     pub defense: Option<String>,
     pub edhrec_rank: Option<u64>,
@@ -85,7 +84,7 @@ pub struct ScryfallCard {
     pub penny_rank: Option<u64>,
     
     pub power: Option<String>,
-    pub produced_mana: Option<ArrayToBitset<Color>>,
+    pub produced_mana: Option<Vec<Color>>,
     pub reserved: bool,
     
     pub toughness: Option<String>,
@@ -109,11 +108,11 @@ pub struct ScryfallCard {
     pub flavor_name: Option<String>,
     
     pub flavor_text: Option<String>,
-    pub frame_effects: Option<ArrayToBitset<FrameEffect>>,
+    pub frame_effects: Option<Vec<FrameEffect>>,
     
     pub frame: String,
     pub full_art: bool,
-    pub games: ArrayToBitset<Game>,
+    pub games: Vec<Game>,
     pub highres_image: bool,
     pub illustration_id: Option<Uuid>,
     pub image_status: ImageStatus,

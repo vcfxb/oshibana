@@ -20,24 +20,15 @@ use log4rs::append::rolling_file::RollingFileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use log::LevelFilter;
-use rusqlite::Connection;
 use crate::app::Oshibana;
-
-static DIRECTORIES: LazyLock<ProjectDirs> = LazyLock::new(|| {
-    ProjectDirs::from("org.vcfxb", "Venus Xeon-Blonde", "Oshibana").unwrap()
-});
-
-static DB_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    DIRECTORIES.data_dir().join("oshibana-db.sqlite")
-});
-
+use crate::storage::{DIRECTORIES, LOGS_DIR};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let stdout_appender = ConsoleAppender::builder()
         .build();
 
-    let log_file_dir = DIRECTORIES.cache_dir();
+    let log_file_dir = LOGS_DIR.as_path();
 
     // create log file cache path if it doesn't exist
     eprintln!("Creating {} if it doesn't exist to store logs.", log_file_dir.display());
@@ -72,9 +63,6 @@ async fn main() -> anyhow::Result<()> {
     let data_dir = DIRECTORIES.data_dir();
     log::info!("creating data dir if doesn't exist: {}", data_dir.display());
     fs::create_dir_all(data_dir)?;
-    let mut db_connection = Connection::open(DB_PATH.as_path())?;
-    log::info!("migrating db");
-    storage::migrations::MIGRATIONS.to_latest(&mut db_connection)?;
 
     let icon_data = {
         let png_bytes: &[u8] = match egui::Context::default().system_theme() {
@@ -104,7 +92,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     eframe::run_native("Oshibana", native_options, Box::new(|cc| {
-        Ok(Box::new(Oshibana::new(cc, db_connection, icon_data_arc)?))
+        Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
     }))?;
 
     Ok(())

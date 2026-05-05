@@ -1,4 +1,3 @@
-use crate::utils::array_to_bitflags::ExpectStr;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
@@ -14,8 +13,4 @@ pub enum Game {
     Mtgo,
     Astral,
     Sega,
-}
-
-impl ExpectStr for Game {
-    const EXPECT_STR: &'static str = "game variant";
 }
