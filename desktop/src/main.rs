@@ -70,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     log::info!("started logger (stderr, dir: {})", log_file_dir.display());
 
     let data_dir = DIRECTORIES.data_dir();
-    log::debug!("creating data dir if doesn't exist");
+    log::info!("creating data dir if doesn't exist: {}", data_dir.display());
     fs::create_dir_all(data_dir)?;
     let mut db_connection = Connection::open(DB_PATH.as_path())?;
     log::info!("migrating db");
