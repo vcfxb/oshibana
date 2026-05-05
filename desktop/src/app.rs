@@ -1,6 +1,7 @@
 pub mod scryfall_pull;
 
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
 use eframe::{icon_data, Frame};
 use egui::{containers::menu::MenuBar, CentralPanel, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
 use clients::scryfall::ScryfallClient;
@@ -8,6 +9,7 @@ use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
 
 pub struct Oshibana {
+    autosave: AtomicBool,
     icon: Arc<IconData>,
     scryfall_client: ScryfallClient,
     current_view: View,
@@ -17,6 +19,7 @@ pub struct Oshibana {
 impl Oshibana {
     pub fn new(_: &eframe::CreationContext<'_>, icon: Arc<IconData>) -> anyhow::Result<Self> {
         Ok(Self {
+            autosave: AtomicBool::new(true),
             icon,
             scryfall_client: ScryfallClient::new(),
             current_view: View::Home,
@@ -92,6 +95,20 @@ impl eframe::App for Oshibana {
                 ui.menu_button("File", |ui| {
                     if ui.button("Pull latest scryfall data").clicked() {
                         self.tigger_scryfall_pull();
+                    }
+
+                    ui.separator();
+
+                    if ui.button("Save").clicked() {
+                        todo!()
+                    }
+
+                    let mut current_autosave = self.autosave.load(Ordering::Acquire);
+                    let toggle_autosave = ui.toggle_value(&mut current_autosave, "Autosave");
+
+                    if toggle_autosave.clicked() {
+                        self.autosave.store(current_autosave, Ordering::Release);
+                        todo!()
                     }
 
                     ui.separator();
