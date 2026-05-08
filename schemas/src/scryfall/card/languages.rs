@@ -1,8 +1,10 @@
+use enum_ordinalize::Ordinalize;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
+use typename::TypeName;
 
 #[bitflags]
-#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
+#[derive(Deserialize, Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Ordinalize, TypeName)]
 #[repr(u32)]
 #[serde(rename_all = "lowercase")]
 pub enum Language {

@@ -1,9 +1,11 @@
+use enum_ordinalize::Ordinalize;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::{Deserialize, Deserializer, Serialize};
+use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize)]
+#[derive(Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, TypeName, Ordinalize)]
 #[serde(rename_all = "snake_case")]
 pub enum Component {
     Token,
@@ -15,8 +17,6 @@ pub enum Component {
 #[derive(Deserialize, Debug, Serialize)]
 pub struct RelatedCard {
     pub id: Uuid,
-    #[serde(deserialize_with = "deserialize_object_name")]
-    pub object: &'static str,
     pub component: Component,
     pub name: String,
     pub type_line: String,

@@ -2,3 +2,4 @@
 
 pub mod scryfall;
 mod utils;
+pub mod oshibana;

@@ -87,7 +87,8 @@ async fn main() -> anyhow::Result<()> {
         centered: true,
         dithering: true,
         viewport: ViewportBuilder::default()
-            .with_icon(icon_data_arc.clone()),
+            .with_icon(icon_data_arc.clone())
+            .with_active(true),
         .. NativeOptions::default()
     };
 

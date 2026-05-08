@@ -1,14 +1,23 @@
 //! Scryfall client
 
+use std::collections::VecDeque;
+use std::io;
+use std::io::ErrorKind;
 use schemas::scryfall::bulk_data::BulkData;
 use governor::clock::{Clock, DefaultClock};
 use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use reqwest::header::HeaderMap;
-use reqwest::{Client, Method};
+use reqwest::{Client, IntoUrl, Method, Url};
 use serde::de::DeserializeOwned;
 use std::num::NonZeroU32;
 use std::sync::Arc;
+use futures::{stream, Stream, StreamExt};
+use reqwest_streams::{JsonStreamResponse, StreamBodyResult};
 use thiserror::Error;
+use tokio_util::io::{StreamReader, SyncIoBridge};
+use schemas::scryfall::card::ScryfallCard;
+use schemas::scryfall::lists::ScryfallList;
+use schemas::scryfall::set::ScryfallSet;
 
 #[derive(Clone, Debug)]
 pub struct ScryfallClient {
@@ -46,10 +55,10 @@ impl ScryfallClient {
         }
     }
 
-    async fn call<T: DeserializeOwned>(
+    async fn call_raw<T: DeserializeOwned>(
         &self,
         method: Method,
-        route: impl AsRef<str>,
+        url: impl IntoUrl,
     ) -> reqwest::Result<T> {
         if let Err(not_until) = self.rl.check() {
             let now = DefaultClock::default().now();
@@ -61,14 +70,67 @@ impl ScryfallClient {
         }
 
         self.client
-            .request(method, format!("{}/{}", Self::ROOT_URL, route.as_ref()))
+            .request(method, url)
             .send()
             .await?
             .json()
             .await
     }
 
+    async fn call<T: DeserializeOwned>(
+        &self,
+        method: Method,
+        route: impl AsRef<str>,
+    ) -> reqwest::Result<T> {
+        self.call_raw(method, format!("{}/{}", Self::ROOT_URL, route.as_ref())).await
+    }
+
     pub async fn bulk_data(&self) -> reqwest::Result<BulkData> {
         self.call(Method::GET, "bulk-data").await
+    }
+
+    /// Fetch the latest bulk data info and pull the scryfall cards json, returned as a stream.
+    pub async fn all_cards(&self) -> reqwest::Result<impl Stream<Item = StreamBodyResult<ScryfallCard>>> {
+        let bulk_data = self.bulk_data().await?;
+        let all_cards = bulk_data.data.iter()
+            .find(|item| item.r#type == "all_cards")
+            .expect("bulk data should always have an all_cards item");
+
+        let all_cards_stream = self.client
+            .get(all_cards.download_uri.clone())
+            .send()
+            .await?
+            .json_array_stream(usize::MAX);
+
+        Ok(all_cards_stream)
+    }
+
+    pub async fn all_sets(&self) -> reqwest::Result<ScryfallList<ScryfallSet>> {
+        self.call(Method::GET, "sets").await
+    }
+
+    /// Get a [Stream] over all scryfall sets printed. Discards any warnings attached to the
+    /// returned [ScryfallList].
+    pub async fn all_sets_stream(self) -> reqwest::Result<impl Stream<Item = reqwest::Result<ScryfallSet>>> {
+        let init_list_object = self.all_sets().await?;
+
+        Ok(stream::try_unfold(init_list_object, move |mut list_object| {
+            let client = self.clone();
+            async move {
+                // as long as we can pull from the current list object, do that.
+                if list_object.data.len() > 0 {
+                    let next = list_object.data.remove(0);
+                    Ok(Some((next, list_object)))
+                } else if let Some(next_page) = list_object.next_page {
+                    let mut new_list_object: ScryfallList<ScryfallSet> =
+                        client.call_raw(Method::GET, next_page).await?;
+
+                    let next = new_list_object.data.remove(0);
+                    Ok(Some((next, new_list_object)))
+                } else {
+                    Ok(None)
+                }
+            }
+        }))
     }
 }

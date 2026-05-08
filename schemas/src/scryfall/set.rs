@@ -1,11 +1,16 @@
 use crate::utils::deserialize_matches::DeserializeMatches;
 use chrono::{DateTime, Utc};
+use enum_ordinalize::Ordinalize;
+use enumflags2::bitflags;
 use serde::{Deserialize, Deserializer, Serialize};
+use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[bitflags]
+#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Ordinalize, TypeName)]
 #[serde(rename_all = "snake_case")]
+#[repr(u32)]
 pub enum SetType {
     Core,
     Expansion,
@@ -35,8 +40,8 @@ pub enum SetType {
 
 #[derive(Deserialize, Debug)]
 pub struct ScryfallSet {
-    #[serde(deserialize_with = "deserialize_object_name")]
-    pub object: &'static str,
+    // #[serde(deserialize_with = "deserialize_object_name")]
+    // pub object: &'static str,
     pub id: Uuid,
     pub code: String,
     pub mtgo_code: Option<String>,
@@ -59,9 +64,9 @@ pub struct ScryfallSet {
     pub search_uri: Url,
 }
 
-fn deserialize_object_name<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_str(DeserializeMatches("set"))
-}
+// fn deserialize_object_name<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+//     deserializer.deserialize_str(DeserializeMatches("set"))
+// }
