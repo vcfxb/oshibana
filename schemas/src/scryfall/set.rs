@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use enum_ordinalize::Ordinalize;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
@@ -16,7 +15,6 @@ use uuid::Uuid;
     Eq,
     PartialEq,
     Serialize,
-    Ordinalize,
     TypeName,
     IntoStaticStr,
     EnumIter,

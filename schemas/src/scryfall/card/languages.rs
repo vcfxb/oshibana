@@ -1,4 +1,3 @@
-use enum_ordinalize::Ordinalize;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
@@ -16,7 +15,6 @@ use typename::TypeName;
     PartialOrd,
     Hash,
     Serialize,
-    Ordinalize,
     TypeName,
     IntoStaticStr,
     EnumIter,

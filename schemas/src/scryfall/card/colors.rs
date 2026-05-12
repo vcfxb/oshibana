@@ -1,4 +1,3 @@
-use enum_ordinalize::Ordinalize;
 use enumflags2::bitflags;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
@@ -17,7 +16,6 @@ use typename::TypeName;
     EnumIter,
     IntoStaticStr,
     Serialize,
-    Ordinalize,
     TypeName,
 )]
 #[repr(u8)]

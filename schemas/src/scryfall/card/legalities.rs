@@ -1,4 +1,3 @@
-use enum_ordinalize::Ordinalize;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
@@ -12,7 +11,6 @@ use typename::TypeName;
     Eq,
     PartialEq,
     Serialize,
-    Ordinalize,
     TypeName,
     IntoStaticStr,
     EnumIter,

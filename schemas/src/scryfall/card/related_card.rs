@@ -1,5 +1,3 @@
-use crate::utils::deserialize_matches::DeserializeMatches;
-use enum_ordinalize::Ordinalize;
 use serde::{Deserialize, Deserializer, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
@@ -16,7 +14,6 @@ use uuid::Uuid;
     Hash,
     Serialize,
     TypeName,
-    Ordinalize,
     EnumIter,
     IntoStaticStr,
 )]
@@ -36,11 +33,4 @@ pub struct RelatedCard {
     pub name: String,
     pub type_line: String,
     pub uri: Url,
-}
-
-fn deserialize_object_name<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    deserializer.deserialize_str(DeserializeMatches("related_card"))
 }
