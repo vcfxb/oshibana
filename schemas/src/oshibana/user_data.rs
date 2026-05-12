@@ -52,6 +52,7 @@ pub static DECK_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
     let global_categorical = DataType::Categorical(global_cats, mapping);
 
     Schema::from_iter(vec![
+        field("deck", global_categorical.clone()),
         field("card_id", DataType::UInt128),
         field("quantity", DataType::UInt32),
         field("tags", list(global_categorical.clone())),
@@ -66,6 +67,7 @@ pub static DECK_HISTORY_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
     let global_categorical = DataType::Categorical(global_cats, mapping);
 
     Schema::from_iter(vec![
+        field("deck", global_categorical.clone()),
         field("card_id", DataType::UInt128),
         field("quantity", DataType::UInt32),
         field("action", enum_to_dt_enum::<DeckAction>()),

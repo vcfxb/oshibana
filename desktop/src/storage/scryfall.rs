@@ -15,4 +15,8 @@ pub struct ScryfallStorage {
     lazy_frame: LazyFrame,
 }
 
-impl ScryfallStorage {}
+impl ScryfallStorage {
+    pub fn open() -> Option<Self> {
+        todo!()
+    }
+}
