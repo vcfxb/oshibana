@@ -17,19 +17,11 @@ pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
     let layout_enum = enum_to_dt_enum::<Layout>();
     let legality_enum = enum_to_dt_enum::<Legality>();
 
-    let set_name_cat = Categories::new(
-        "set_names".into(),
-        "sets".into(),
-        CategoricalPhysical::U32
-    );
+    let set_name_cat = Categories::new("set_names".into(), "sets".into(), CategoricalPhysical::U32);
 
     let set_name_dt = DataType::Categorical(set_name_cat.clone(), set_name_cat.mapping());
 
-    let set_code_cat = Categories::new(
-        "set_codes".into(),
-        "sets".into(),
-        CategoricalPhysical::U32
-    );
+    let set_code_cat = Categories::new("set_codes".into(), "sets".into(), CategoricalPhysical::U32);
 
     let set_code_dt = DataType::Categorical(set_code_cat.clone(), set_code_cat.mapping());
 
