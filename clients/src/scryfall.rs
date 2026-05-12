@@ -21,7 +21,7 @@ use schemas::scryfall::set::ScryfallSet;
 
 #[derive(Clone, Debug)]
 pub struct ScryfallClient {
-    client: Client,
+    pub client: Client,
     rl: Arc<DefaultDirectRateLimiter>,
 }
 
@@ -87,22 +87,6 @@ impl ScryfallClient {
 
     pub async fn bulk_data(&self) -> reqwest::Result<BulkData> {
         self.call(Method::GET, "bulk-data").await
-    }
-
-    /// Fetch the latest bulk data info and pull the scryfall cards json, returned as a stream.
-    pub async fn all_cards(&self) -> reqwest::Result<impl Stream<Item = StreamBodyResult<ScryfallCard>>> {
-        let bulk_data = self.bulk_data().await?;
-        let all_cards = bulk_data.data.iter()
-            .find(|item| item.r#type == "all_cards")
-            .expect("bulk data should always have an all_cards item");
-
-        let all_cards_stream = self.client
-            .get(all_cards.download_uri.clone())
-            .send()
-            .await?
-            .json_array_stream(usize::MAX);
-
-        Ok(all_cards_stream)
     }
 
     pub async fn all_sets(&self) -> reqwest::Result<ScryfallList<ScryfallSet>> {

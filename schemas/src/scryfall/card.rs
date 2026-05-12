@@ -52,7 +52,6 @@ pub struct ScryfallCard {
     pub scryfall_uri: Url,
     pub uri: Url,
 
-    
     pub all_parts: Option<Vec<RelatedCard>>,
     
     pub card_faces: Option<Vec<CardFace>>,
@@ -72,43 +71,31 @@ pub struct ScryfallCard {
     pub legalities: HashMap<String, Legality>,
     
     pub life_modifier: Option<String>,
-    
     pub loyalty: Option<String>,
-    
     pub mana_cost: Option<String>,
-    
     pub name: String,
-    
     pub oracle_text: Option<String>,
     pub penny_rank: Option<u64>,
     
     pub power: Option<String>,
     pub produced_mana: Option<Vec<Color>>,
     pub reserved: bool,
-    
     pub toughness: Option<String>,
-    
     pub type_line: String,
-
     
     pub artist: Option<String>,
     pub artist_ids: Option<Vec<Uuid>>,
     pub attraction_lights: Option<Vec<u8>>,
     pub booster: bool,
-    
     pub border_color: String,
     pub card_back_id: Uuid,
-    
     pub collector_number: String,
     pub content_warning: Option<bool>,
     pub digital: bool,
     pub finishes: Vec<Finish>,
-    
     pub flavor_name: Option<String>,
-    
     pub flavor_text: Option<String>,
     pub frame_effects: Option<Vec<FrameEffect>>,
-    
     pub frame: String,
     pub full_art: bool,
     pub games: Vec<Game>,

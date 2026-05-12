@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-chrono = { version = "0.4.44", features = ["serde"] }
 enumflags2 = { version = "0.7.12", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 url = { version = "2.5.8", features = ["serde"] }
@@ -12,3 +11,7 @@ uuid = { version = "1.23.1", features = ["serde"] }
 strum = { version = "0.28.0", features = ["derive"] }
 enum-ordinalize = "4.3.2"
 typename = "0.1.2"
+polars = { version = "0.53.0", features = ["full"] }
+
+# Workspace deps
+chrono = { workspace = true, features = ["serde"] }

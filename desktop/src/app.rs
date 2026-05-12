@@ -1,61 +1,44 @@
 pub mod scryfall_pull;
+pub mod autosave;
+pub mod save;
 
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicBool, Ordering};
-use eframe::{icon_data, Frame};
-use egui::{containers::menu::MenuBar, CentralPanel, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
+use std::sync::{Arc};
+use std::sync::atomic::{Ordering};
+use eframe::{Frame};
+use egui::{containers::menu::MenuBar, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
 use clients::scryfall::ScryfallClient;
 use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
 
 pub struct Oshibana {
-    autosave: AtomicBool,
+    // autosave: AutoSaveState,
     icon: Arc<IconData>,
     scryfall_client: ScryfallClient,
     current_view: View,
-    scryfall_pull_status: Arc<Mutex<Option<ScryfallPullStatus>>>,
+    scryfall_pull_status: Arc<ScryfallPullStatus>,
 }
 
 impl Oshibana {
     pub fn new(_: &eframe::CreationContext<'_>, icon: Arc<IconData>) -> anyhow::Result<Self> {
         Ok(Self {
-            autosave: AtomicBool::new(true),
+            // user_data: storage::load_user_data()?,
             icon,
             scryfall_client: ScryfallClient::new(),
             current_view: View::Home,
-            scryfall_pull_status: Arc::new(Mutex::new(None)),
+            scryfall_pull_status: Arc::new(ScryfallPullStatus::default()),
         })
     }
 
     fn tigger_scryfall_pull(&self) {
         log::info!("Scryfall pull triggered");
-        let mut lock = self.scryfall_pull_status.lock().unwrap();
-
-        if lock.is_none() {
-            *lock = Some(ScryfallPullStatus::default());
-        }
-
-        let status = lock.as_mut().unwrap();
 
         // Don't start a new task if we're already in progress
-        if status.in_progress {
-            return;
-        }
-
-        status.in_progress = true;
-        drop(lock);
+        let atomic = &self.scryfall_pull_status.in_progress;
 
         let scryfall_client_clone = self.scryfall_client.clone();
 
+        todo!();
         tokio::spawn(async move {
-            let bulk_data = match scryfall_client_clone.bulk_data().await {
-                Ok(bulk_data) => bulk_data,
-                Err(err) => {
-                    log::error!("Failed to get bulk data: {err}");
-                    return;
-                }
-            };
-
 
         });
     }
@@ -89,6 +72,19 @@ impl Oshibana {
 
 
 impl eframe::App for Oshibana {
+    fn logic(&mut self, ctx: &Context, _frame: &mut Frame) {
+        static QUIT_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Q);
+
+        // avoid deadlocking here by calling send_viewport_command outside
+        let should_quit = ctx.input_mut(|input_state| {
+            input_state.consume_shortcut(&QUIT_SHORTCUT)
+        });
+
+        if should_quit {
+            ctx.send_viewport_cmd(ViewportCommand::Close);
+        }
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut Frame) {
         Panel::top("menu_bar_panel").show_inside(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
@@ -103,13 +99,13 @@ impl eframe::App for Oshibana {
                         todo!()
                     }
 
-                    let mut current_autosave = self.autosave.load(Ordering::Acquire);
-                    let toggle_autosave = ui.toggle_value(&mut current_autosave, "Autosave");
+                    // let mut current_autosave = self.autosave.load(Ordering::Acquire);
+                    // let toggle_autosave = ui.toggle_value(&mut current_autosave, "Autosave");
 
-                    if toggle_autosave.clicked() {
-                        self.autosave.store(current_autosave, Ordering::Release);
-                        todo!()
-                    }
+                    // if toggle_autosave.clicked() {
+                    //     self.autosave.store(current_autosave, Ordering::Release);
+                    //     todo!()
+                    // }
 
                     ui.separator();
 
@@ -206,19 +202,6 @@ impl eframe::App for Oshibana {
         //     //     }
         //     // }
         // });
-    }
-
-    fn logic(&mut self, ctx: &Context, _frame: &mut Frame) {
-        static QUIT_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Q);
-
-        // avoid deadlocking here by calling send_viewport_command outside
-        let should_quit = ctx.input_mut(|input_state| {
-            input_state.consume_shortcut(&QUIT_SHORTCUT)
-        });
-
-        if should_quit {
-            ctx.send_viewport_cmd(ViewportCommand::Close);
-        }
     }
 }
 

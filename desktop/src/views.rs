@@ -1,6 +1,5 @@
 //! Different views that the application uses,
 
-use std::sync::{Arc, Mutex};
 use schemas::scryfall::card::ScryfallCard;
 
 pub enum SearchState {

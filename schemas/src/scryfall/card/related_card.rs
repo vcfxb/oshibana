@@ -1,12 +1,25 @@
 use enum_ordinalize::Ordinalize;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::{Deserialize, Deserializer, Serialize};
+use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
 
-#[derive(Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, TypeName, Ordinalize)]
+#[derive(
+    Deserialize,
+    Copy, Clone, 
+    Debug, 
+    Eq, PartialEq, 
+    Hash, 
+    Serialize, 
+    TypeName, 
+    Ordinalize,
+    EnumIter,
+    IntoStaticStr
+)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum Component {
     Token,
     MeldPart,

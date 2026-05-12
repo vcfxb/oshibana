@@ -6,9 +6,7 @@ pub mod views;
 pub mod app;
 
 use std::fs;
-use std::path::PathBuf;
-use std::sync::{Arc, LazyLock, Mutex};
-use directories::ProjectDirs;
+use std::sync::Arc;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
 use image::GenericImageView;

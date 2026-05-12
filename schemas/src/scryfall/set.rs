@@ -1,15 +1,25 @@
-use crate::utils::deserialize_matches::DeserializeMatches;
 use chrono::{DateTime, Utc};
 use enum_ordinalize::Ordinalize;
 use enumflags2::bitflags;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
+use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
 
 #[bitflags]
-#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Ordinalize, TypeName)]
+#[derive(
+    Copy, Clone,
+    Debug,
+    Deserialize,
+    Eq, PartialEq,
+    Serialize,
+    Ordinalize,
+    TypeName,
+    IntoStaticStr, EnumIter
+)]
 #[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 #[repr(u32)]
 pub enum SetType {
     Core,
@@ -63,10 +73,3 @@ pub struct ScryfallSet {
     pub icon_svg_uri: Url,
     pub search_uri: Url,
 }
-
-// fn deserialize_object_name<'de, D>(deserializer: D) -> Result<&'static str, D::Error>
-// where
-//     D: Deserializer<'de>,
-// {
-//     deserializer.deserialize_str(DeserializeMatches("set"))
-// }

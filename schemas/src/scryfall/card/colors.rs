@@ -6,7 +6,12 @@ use typename::TypeName;
 
 #[bitflags]
 #[derive(
-    Copy, Clone, Debug, Deserialize, Eq, PartialEq, Ord, PartialOrd, EnumIter, IntoStaticStr,
+    Copy, Clone,
+    Debug, 
+    Deserialize,
+    Eq, PartialEq, 
+    Ord, PartialOrd, 
+    EnumIter, IntoStaticStr,
     Serialize, Ordinalize, TypeName
 )]
 #[repr(u8)]

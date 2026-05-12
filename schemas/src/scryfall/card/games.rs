@@ -3,7 +3,13 @@ use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use strum::IntoStaticStr;
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Copy, Clone, EnumIter, IntoStaticStr)]
+#[derive(
+    Serialize, Deserialize, 
+    Debug, 
+    Eq, PartialEq, 
+    Copy, Clone, 
+    EnumIter, IntoStaticStr
+)]
 #[serde(rename_all = "lowercase")]
 #[bitflags]
 #[repr(u32)]
