@@ -1,9 +1,3 @@
-use crate::utils::deserialize_matches::DeserializeMatches;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::HashMap;
-use url::Url;
-use uuid::Uuid;
 use crate::scryfall::card::card_face::CardFace;
 use crate::scryfall::card::colors::Color;
 use crate::scryfall::card::finishes::Finish;
@@ -17,6 +11,11 @@ use crate::scryfall::card::rarity::Rarity;
 use crate::scryfall::card::related_card::RelatedCard;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::HashMap;
+use url::Url;
+use uuid::Uuid;
 
 pub mod card_face;
 pub mod colors;
@@ -82,7 +81,7 @@ pub struct ScryfallCard {
     pub reserved: bool,
     pub toughness: Option<String>,
     pub type_line: String,
-    
+
     pub artist: Option<String>,
     pub artist_ids: Option<Vec<Uuid>>,
     pub attraction_lights: Option<Vec<u8>>,
