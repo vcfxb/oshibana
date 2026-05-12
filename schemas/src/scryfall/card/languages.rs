@@ -10,14 +10,16 @@ use typename::TypeName;
     Debug,
     Copy,
     Clone,
-    Eq, PartialEq,
-    Ord, PartialOrd,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
     Hash,
     Serialize,
     Ordinalize,
     TypeName,
     IntoStaticStr,
-    EnumIter
+    EnumIter,
 )]
 #[repr(u32)]
 #[serde(rename_all = "lowercase")]

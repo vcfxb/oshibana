@@ -7,15 +7,17 @@ use typename::TypeName;
 #[bitflags]
 #[derive(
     Deserialize,
-    Copy, Clone,
+    Copy,
+    Clone,
     Debug,
-    Eq, PartialEq,
+    Eq,
+    PartialEq,
     Hash,
     Serialize,
     Ordinalize,
     TypeName,
     EnumIter,
-    IntoStaticStr
+    IntoStaticStr,
 )]
 #[serde(rename_all = "snake_case")]
 #[repr(u8)]

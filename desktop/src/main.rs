@@ -1,51 +1,54 @@
-
 // #![windows_subsystem = "windows"]
 
+pub mod app;
 pub mod storage;
 pub mod views;
-pub mod app;
 
-use std::fs;
-use std::sync::Arc;
+use crate::app::Oshibana;
+use crate::storage::{DIRECTORIES, LOGS_DIR};
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
 use image::GenericImageView;
+use log::LevelFilter;
 use log4rs::append::console::ConsoleAppender;
+use log4rs::append::rolling_file::RollingFileAppender;
 use log4rs::append::rolling_file::policy::compound::CompoundPolicy;
 use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller;
 use log4rs::append::rolling_file::policy::compound::trigger::onstartup::OnStartUpTrigger;
-use log4rs::append::rolling_file::RollingFileAppender;
 use log4rs::config::{Appender, Logger, Root};
 use log4rs::filter::threshold::ThresholdFilter;
-use log::LevelFilter;
-use crate::app::Oshibana;
-use crate::storage::{DIRECTORIES, LOGS_DIR};
+use std::fs;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let stdout_appender = ConsoleAppender::builder()
-        .build();
+    let stdout_appender = ConsoleAppender::builder().build();
 
     let log_file_dir = LOGS_DIR.as_path();
 
     // create log file cache path if it doesn't exist
-    eprintln!("Creating {} if it doesn't exist to store logs.", log_file_dir.display());
+    eprintln!(
+        "Creating {} if it doesn't exist to store logs.",
+        log_file_dir.display()
+    );
     fs::create_dir_all(log_file_dir)?;
 
     let archive_pattern = log_file_dir.join("archived-oshibana-{}.log");
 
-    let rolling_log_policy = Box::new(
-        CompoundPolicy::new(
-            Box::new(OnStartUpTrigger::new(0)),
-            Box::new(FixedWindowRoller::builder().build(archive_pattern.to_str().unwrap(), 3)?),
-        )
-    );
+    let rolling_log_policy = Box::new(CompoundPolicy::new(
+        Box::new(OnStartUpTrigger::new(0)),
+        Box::new(FixedWindowRoller::builder().build(archive_pattern.to_str().unwrap(), 3)?),
+    ));
 
     let rolling_file_appender = RollingFileAppender::builder()
         .build(log_file_dir.join("oshibana.log"), rolling_log_policy)?;
 
     let log4rs_config = log4rs::Config::builder()
-        .appender(Appender::builder().filter(Box::new(ThresholdFilter::new(LevelFilter::Info))).build("stdout", Box::new(stdout_appender)))
+        .appender(
+            Appender::builder()
+                .filter(Box::new(ThresholdFilter::new(LevelFilter::Info)))
+                .build("stdout", Box::new(stdout_appender)),
+        )
         .appender(Appender::builder().build("file", Box::new(rolling_file_appender)))
         // silence lots of spurious logs for other crates
         .logger(Logger::builder().build("wgpu_hal", LevelFilter::Warn))
@@ -53,7 +56,11 @@ async fn main() -> anyhow::Result<()> {
         .logger(Logger::builder().build("naga", LevelFilter::Info))
         .logger(Logger::builder().build("eframe", LevelFilter::Info))
         .logger(Logger::builder().build("egui_wgpu", LevelFilter::Warn))
-        .build(Root::builder().appenders(["stdout", "file"]).build(LevelFilter::Debug))?;
+        .build(
+            Root::builder()
+                .appenders(["stdout", "file"])
+                .build(LevelFilter::Debug),
+        )?;
 
     log4rs::init_config(log4rs_config)?;
     log::info!("started logger (stderr, dir: {})", log_file_dir.display());
@@ -77,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
             height,
         }
     };
-    
+
     let icon_data_arc = Arc::new(icon_data);
 
     let native_options = NativeOptions {
@@ -87,12 +94,14 @@ async fn main() -> anyhow::Result<()> {
         viewport: ViewportBuilder::default()
             .with_icon(icon_data_arc.clone())
             .with_active(true),
-        .. NativeOptions::default()
+        ..NativeOptions::default()
     };
 
-    eframe::run_native("Oshibana", native_options, Box::new(|cc| {
-        Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
-    }))?;
+    eframe::run_native(
+        "Oshibana",
+        native_options,
+        Box::new(|cc| Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))),
+    )?;
 
     Ok(())
 }

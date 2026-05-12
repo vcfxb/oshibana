@@ -1,14 +1,17 @@
-pub mod scryfall_pull;
 pub mod autosave;
 pub mod save;
+pub mod scryfall_pull;
 
-use std::sync::{Arc};
-use std::sync::atomic::{Ordering};
-use eframe::{Frame};
-use egui::{containers::menu::MenuBar, Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId};
-use clients::scryfall::ScryfallClient;
 use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
+use clients::scryfall::ScryfallClient;
+use eframe::Frame;
+use egui::{
+    Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme,
+    ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar,
+};
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 pub struct Oshibana {
     // autosave: AutoSaveState,
@@ -38,9 +41,7 @@ impl Oshibana {
         let scryfall_client_clone = self.scryfall_client.clone();
 
         todo!();
-        tokio::spawn(async move {
-
-        });
+        tokio::spawn(async move {});
     }
 
     // fn run_search(&self, ctx: egui::Context) {
@@ -70,15 +71,12 @@ impl Oshibana {
     // }
 }
 
-
 impl eframe::App for Oshibana {
     fn logic(&mut self, ctx: &Context, _frame: &mut Frame) {
         static QUIT_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Q);
 
         // avoid deadlocking here by calling send_viewport_command outside
-        let should_quit = ctx.input_mut(|input_state| {
-            input_state.consume_shortcut(&QUIT_SHORTCUT)
-        });
+        let should_quit = ctx.input_mut(|input_state| input_state.consume_shortcut(&QUIT_SHORTCUT));
 
         if should_quit {
             ctx.send_viewport_cmd(ViewportCommand::Close);
@@ -204,4 +202,3 @@ impl eframe::App for Oshibana {
         // });
     }
 }
-

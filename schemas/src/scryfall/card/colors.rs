@@ -6,13 +6,19 @@ use typename::TypeName;
 
 #[bitflags]
 #[derive(
-    Copy, Clone,
-    Debug, 
+    Copy,
+    Clone,
+    Debug,
     Deserialize,
-    Eq, PartialEq, 
-    Ord, PartialOrd, 
-    EnumIter, IntoStaticStr,
-    Serialize, Ordinalize, TypeName
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    EnumIter,
+    IntoStaticStr,
+    Serialize,
+    Ordinalize,
+    TypeName,
 )]
 #[repr(u8)]
 pub enum Color {

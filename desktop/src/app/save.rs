@@ -3,7 +3,5 @@
 use crate::app::Oshibana;
 
 impl Oshibana {
-    async fn save(&self) {
-        
-    }
+    async fn save(&self) {}
 }

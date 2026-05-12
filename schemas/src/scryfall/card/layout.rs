@@ -6,8 +6,10 @@ use typename::TypeName;
 #[derive(
     Deserialize,
     Debug,
-    Copy, Clone,
-    Eq, PartialEq,
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
     Hash,
     Serialize,
     Ordinalize,

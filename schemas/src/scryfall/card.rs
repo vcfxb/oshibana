@@ -38,7 +38,7 @@ pub struct ScryfallCard {
     pub mtgo_id: Option<u64>,
     pub mtgo_foil_id: Option<u64>,
     pub multiverse_ids: Option<Vec<u64>>,
-    
+
     pub resource_id: Option<String>,
     pub tcgplayer_id: Option<u64>,
     pub tcgplayer_etched_id: Option<u64>,
@@ -52,30 +52,30 @@ pub struct ScryfallCard {
     pub uri: Url,
 
     pub all_parts: Option<Vec<RelatedCard>>,
-    
+
     pub card_faces: Option<Vec<CardFace>>,
     pub cmc: f32,
     pub color_identity: Vec<Color>,
     pub color_indicator: Option<Vec<Color>>,
     pub colors: Option<Vec<Color>>,
-    
+
     pub defense: Option<String>,
     pub edhrec_rank: Option<u64>,
     pub game_changer: Option<bool>,
-    
+
     pub hand_modifier: Option<String>,
-    
+
     pub keywords: Vec<String>,
-    
+
     pub legalities: HashMap<String, Legality>,
-    
+
     pub life_modifier: Option<String>,
     pub loyalty: Option<String>,
     pub mana_cost: Option<String>,
     pub name: String,
     pub oracle_text: Option<String>,
     pub penny_rank: Option<u64>,
-    
+
     pub power: Option<String>,
     pub produced_mana: Option<Vec<Color>>,
     pub reserved: bool,
@@ -101,34 +101,34 @@ pub struct ScryfallCard {
     pub highres_image: bool,
     pub illustration_id: Option<Uuid>,
     pub image_status: ImageStatus,
-    
+
     pub image_uris: Option<HashMap<String, Url>>,
     pub oversized: bool,
-    
+
     pub prices: HashMap<String, f32>,
-    
+
     pub printed_name: Option<String>,
-    
+
     pub printed_text: Option<String>,
-    
+
     pub printed_type_line: Option<String>,
     pub promo: bool,
-    
+
     pub promo_types: Option<Vec<String>>,
-    
+
     pub purchase_uris: Option<HashMap<String, Url>>,
     pub rarity: Rarity,
-    
+
     pub related_uris: HashMap<String, Url>,
     pub released_at: DateTime<Utc>,
     pub reprint: bool,
     pub scryfall_set_uri: Url,
-    
+
     pub set_name: String,
     pub set_search_uri: Url,
     pub set_type: SetType,
     pub set_uri: Url,
-    
+
     pub set: String,
     pub set_id: Uuid,
     pub story_spotlight: bool,
@@ -136,6 +136,6 @@ pub struct ScryfallCard {
     pub variation: bool,
     pub variation_of: Option<Uuid>,
     pub security_stamp: Option<SecurityStamp>,
-        
+
     pub watermark: Option<String>,
 }

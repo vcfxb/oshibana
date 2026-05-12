@@ -1,5 +1,5 @@
-use enum_ordinalize::Ordinalize;
 use crate::utils::deserialize_matches::DeserializeMatches;
+use enum_ordinalize::Ordinalize;
 use serde::{Deserialize, Deserializer, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
@@ -8,15 +8,17 @@ use uuid::Uuid;
 
 #[derive(
     Deserialize,
-    Copy, Clone, 
-    Debug, 
-    Eq, PartialEq, 
-    Hash, 
-    Serialize, 
-    TypeName, 
+    Copy,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    Hash,
+    Serialize,
+    TypeName,
     Ordinalize,
     EnumIter,
-    IntoStaticStr
+    IntoStaticStr,
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]

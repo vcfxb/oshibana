@@ -9,14 +9,17 @@ use uuid::Uuid;
 
 #[bitflags]
 #[derive(
-    Copy, Clone,
+    Copy,
+    Clone,
     Debug,
     Deserialize,
-    Eq, PartialEq,
+    Eq,
+    PartialEq,
     Serialize,
     Ordinalize,
     TypeName,
-    IntoStaticStr, EnumIter
+    IntoStaticStr,
+    EnumIter,
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]

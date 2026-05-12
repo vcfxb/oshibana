@@ -1,10 +1,10 @@
+use crate::scryfall::card::colors::Color;
+use crate::scryfall::card::layout::Layout;
 use crate::utils::deserialize_matches::DeserializeMatches;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
-use crate::scryfall::card::colors::Color;
-use crate::scryfall::card::layout::Layout;
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct CardFace {
@@ -13,37 +13,37 @@ pub struct CardFace {
     pub cmc: Option<f32>,
     pub color_indicator: Option<Vec<Color>>,
     pub colors: Option<Vec<Color>>,
-    
+
     pub defense: Option<String>,
-    
+
     pub flavor_text: Option<String>,
     pub illustration_id: Option<Uuid>,
-    
+
     pub image_uris: Option<HashMap<String, Url>>,
     pub layout: Option<Layout>,
-    
+
     pub loyalty: Option<String>,
-    
+
     pub mana_cost: String,
-    
+
     pub name: String,
-    
+
     pub oracle_id: Option<Uuid>,
-    
+
     pub oracle_text: Option<String>,
-    
+
     pub power: Option<String>,
-    
+
     pub printed_name: Option<String>,
-    
+
     pub printed_text: Option<String>,
-    
+
     pub printed_type_line: Option<String>,
-    
+
     pub toughness: Option<String>,
-    
+
     pub type_line: Option<String>,
-    
+
     pub watermark: Option<String>,
 }
 

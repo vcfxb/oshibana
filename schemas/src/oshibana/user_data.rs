@@ -1,17 +1,12 @@
-use std::sync::LazyLock;
-use polars::prelude::{Categories, DataType, TimeUnit, TimeZone};
-use polars::prelude::Schema;
-use strum::{EnumIter, IntoStaticStr};
 use crate::oshibana::{enum_to_dt_enum, field, list};
 use crate::scryfall::card::finishes::Finish;
 use crate::scryfall::card::languages::Language;
+use polars::prelude::Schema;
+use polars::prelude::{Categories, DataType, TimeUnit, TimeZone};
+use std::sync::LazyLock;
+use strum::{EnumIter, IntoStaticStr};
 
-#[derive(
-    Copy, Clone,
-    Debug,
-    Default,
-    EnumIter, IntoStaticStr
-)]
+#[derive(Copy, Clone, Debug, Default, EnumIter, IntoStaticStr)]
 #[strum(serialize_all = "snake_case")]
 pub enum CardCondition {
     Mint,
@@ -20,19 +15,14 @@ pub enum CardCondition {
     LightlyPlayed,
     MediumPlay,
     HeavyPlay,
-    Damaged
+    Damaged,
 }
 
-#[derive(
-    Debug,
-    Copy, Clone,
-    PartialEq, Eq,
-    EnumIter, IntoStaticStr
-)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, EnumIter, IntoStaticStr)]
 #[strum(serialize_all = "lowercase")]
 pub enum DeckAction {
     Add,
-    Remove
+    Remove,
 }
 
 pub static COLLECTION_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
@@ -79,6 +69,9 @@ pub static DECK_HISTORY_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
         field("card_id", DataType::UInt128),
         field("quantity", DataType::UInt32),
         field("action", enum_to_dt_enum::<DeckAction>()),
-        field("timestamp", DataType::Datetime(TimeUnit::Milliseconds, Some(TimeZone::UTC))),
+        field(
+            "timestamp",
+            DataType::Datetime(TimeUnit::Milliseconds, Some(TimeZone::UTC)),
+        ),
     ])
 });

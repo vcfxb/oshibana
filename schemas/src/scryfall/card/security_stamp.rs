@@ -4,14 +4,17 @@ use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 
 #[derive(
-    Copy, Clone,
+    Copy,
+    Clone,
     Debug,
     Deserialize,
-    Eq, PartialEq,
+    Eq,
+    PartialEq,
     Serialize,
     Ordinalize,
     TypeName,
-    IntoStaticStr, EnumIter
+    IntoStaticStr,
+    EnumIter,
 )]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
