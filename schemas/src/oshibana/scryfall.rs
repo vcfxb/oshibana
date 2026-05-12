@@ -9,13 +9,29 @@ use crate::scryfall::card::rarity::Rarity;
 use crate::scryfall::card::related_card::Component;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
-use polars::prelude::{DataType, Schema, TimeUnit, TimeZone};
+use polars::prelude::{CategoricalPhysical, Categories, DataType, Schema, TimeUnit, TimeZone};
 use std::sync::LazyLock;
 
 /// UInt128s here are generally UUIDs, some of the fields are also bitflags.
 pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
     let layout_enum = enum_to_dt_enum::<Layout>();
     let legality_enum = enum_to_dt_enum::<Legality>();
+
+    let set_name_cat = Categories::new(
+        "set_names".into(),
+        "sets".into(),
+        CategoricalPhysical::U32
+    );
+
+    let set_name_dt = DataType::Categorical(set_name_cat.clone(), set_name_cat.mapping());
+
+    let set_code_cat = Categories::new(
+        "set_codes".into(),
+        "sets".into(),
+        CategoricalPhysical::U32
+    );
+
+    let set_code_dt = DataType::Categorical(set_code_cat.clone(), set_code_cat.mapping());
 
     let image_uris_field = field(
         "image_uris",
@@ -177,11 +193,11 @@ pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
         field("released_at", datetime.clone()),
         field("reprint", DataType::Boolean),
         field("scryfall_set_uri", DataType::String),
-        field("set_name", DataType::String),
+        field("set_name", set_name_dt.clone()),
         field("set_search_uri", DataType::String),
         field("set_type", enum_to_dt_enum::<SetType>()),
         field("set_uri", DataType::String),
-        field("set", DataType::String),
+        field("set", set_code_dt.clone()),
         field("set_id", DataType::UInt128),
         field("story_spotlight", DataType::Boolean),
         field("textless", DataType::Boolean),

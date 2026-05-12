@@ -51,8 +51,6 @@ pub enum SetType {
 
 #[derive(Deserialize, Debug)]
 pub struct ScryfallSet {
-    // #[serde(deserialize_with = "deserialize_object_name")]
-    // pub object: &'static str,
     pub id: Uuid,
     pub code: String,
     pub mtgo_code: Option<String>,
