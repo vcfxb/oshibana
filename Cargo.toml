@@ -14,3 +14,4 @@ version = "0.1.0"
 schemas = { path = "schemas" }
 clients = { path = "clients" }
 chrono  = { version = "0.4.41" }
+polars  = { version = "0.53.0", features = ["full"] }

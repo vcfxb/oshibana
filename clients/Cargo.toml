@@ -9,7 +9,9 @@ governor = "0.10.4"
 log = "0.4.29"
 reqwest = { version = "0.13.2", features = ["json", "stream"] }
 reqwest-streams = { version = "0.16.0", features = ["json"] }
-schemas.workspace = true
 serde = "1.0.228"
 thiserror = "2.0.18"
 tokio-util = { version = "0.7.18", features = ["full"] }
+
+# Workspace deps
+schemas.workspace = true
