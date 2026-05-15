@@ -9,11 +9,11 @@ use crate::scryfall::card::rarity::Rarity;
 use crate::scryfall::card::related_card::Component;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
-use polars::prelude::{CategoricalPhysical, Categories, DataType, Schema, TimeUnit, TimeZone};
-use std::sync::LazyLock;
+use polars::prelude::{CategoricalPhysical, Categories, DataType, Schema, SchemaRef, TimeUnit, TimeZone};
+use std::sync::{Arc, LazyLock};
 
 /// UInt128s here are generally UUIDs, some of the fields are also bitflags.
-pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
+pub static SCRYFALL_SCHEMA: LazyLock<SchemaRef> = LazyLock::new(|| {
     let layout_enum = enum_to_dt_enum::<Layout>();
     let legality_enum = enum_to_dt_enum::<Legality>();
 
@@ -39,7 +39,7 @@ pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
 
     let datetime = DataType::Datetime(TimeUnit::Milliseconds, Some(TimeZone::UTC));
 
-    Schema::from_iter(vec![
+    let schema = Schema::from_iter(vec![
         field("id", DataType::UInt128),
         field("arena_id", DataType::UInt64),
         field("language", enum_to_dt_enum::<Language>()),
@@ -197,5 +197,7 @@ pub static SCRYFALL_SCHEMA: LazyLock<Schema> = LazyLock::new(|| {
         field("variation_of", DataType::UInt128),
         field("security_stamp", enum_to_dt_enum::<SecurityStamp>()),
         field("watermark", DataType::String),
-    ])
+    ]);
+    
+    Arc::new(schema)
 });
