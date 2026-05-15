@@ -8,6 +8,7 @@ use eframe::Frame;
 use egui::{Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ViewportCommand, containers::menu::MenuBar};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
 use crate::storage::scryfall::{ScryfallStorage, SyncState};
 
 pub struct Oshibana {
@@ -42,42 +43,65 @@ impl Oshibana {
             ui.vertical_centered(|ui| {
                 ui.add_space(ui.available_height() / 3.0);
                 ui.heading("Syncing Scryfall Data");
+                ui.add_space(20.0);
 
                 let total = self.scryfall_storage.sync_size.load(Ordering::SeqCst);
-                let (download, rate) = {
-                    let checkpoints = self.scryfall_storage.sync_checkpoints.lock().unwrap();
-                    let oldest = checkpoints.get(0);
-                    let last = checkpoints.get(checkpoints.len() - 1);
+                let checkpoints_lock = self.scryfall_storage.sync_checkpoints.lock().unwrap();
+                let firt_checkpoint = checkpoints_lock.front().cloned();
+                let last_checkpoint = checkpoints_lock.back().cloned();
+                let checkpoint_count = checkpoints_lock.len();
+                drop(checkpoints_lock);
+                let downloaded = last_checkpoint.map(|(_, d)| d).unwrap_or(0);
 
-                    if let (Some((start, initial)), Some((_, r#final))) = (oldest, last) {
-                        let delta = start.elapsed();
-                        let bytes = r#final - initial;
-                        if bytes == 0 {
-                            (*r#final, 0.0)
-                        } else {
-                            (*r#final, bytes as f64 / delta.as_secs_f64())
-                        }
+                let rate = if checkpoint_count >= 2 {
+                    let (start, initial_download) = firt_checkpoint.unwrap();
+                    let (end, last_download) = last_checkpoint.unwrap();
+                    let duration = end.duration_since(start).as_secs_f64();
+
+                    if duration > 0.0 {
+                        (last_download - initial_download) as f64 / duration
                     } else {
-                        (0, 0.0)
+                        0.0
                     }
-                };
-
-                let progress = if total > 0 {
-                    download as f32 / total as f32
                 } else {
                     0.0
                 };
 
-                let state = *self.scryfall_storage.sync_state.lock().unwrap();
-                let text = match state {
-                    SyncState::Downloading => {
-                         format!("Downloading {:.2} MB / {:.2} MB", download as f32 / 1_000_000.0, total as f32 / 1_000_000.0)
-                    }
-                    SyncState::FsWrite => "Processing data (this may take a minute)...".to_string(),
-                    _ => "Waiting...".to_string(),
+                let progress = if total > 0 {
+                    downloaded as f32 / total as f32
+                } else {
+                    0.0
                 };
 
-                ui.add(egui::ProgressBar::new(progress).text(text));
+
+                ui.horizontal(|ui| {
+                    let width = ui.available_width();
+                    ui.label("Downloading");
+                    
+                    let progress_bar = egui::ProgressBar::new(progress)
+                        .show_percentage();
+                    
+                    ui.add_sized([width - 40.0, 20.0], progress_bar);
+                });
+
+                let format_options = FormatSizeOptions::default()
+                    .decimal_places(2)
+                    .kilo(Kilo::Decimal);
+
+                let rate_text = format_size_i(rate, &format_options);
+
+                ui.label(format!(
+                    "{}/{} ({}/s)",
+                    format_size(downloaded, &format_options),
+                    format_size(total, &format_options),
+                    rate_text
+                ));
+
+                let state = self.scryfall_storage.sync_state.lock().unwrap().clone();
+                if state == SyncState::FsWrite {
+                    ui.label("Processing data (this may take a minute)...");
+                }
+
                 ui.add_space(10.0);
                 ui.spinner();
             });
@@ -115,7 +139,7 @@ impl eframe::App for Oshibana {
         Panel::top("menu_bar_panel").show_inside(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("Sync latest scryfall data").clicked() {
+                    if ui.button("Pull latest scryfall data").clicked() {
                         self.scryfall_storage.trigger_sync();
                     }
 
@@ -130,7 +154,6 @@ impl eframe::App for Oshibana {
 
         egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.heading("Welcome to Oshibana");
-            ui.separator();
             ui.label("Scryfall data is loaded and ready.");
         });
     }

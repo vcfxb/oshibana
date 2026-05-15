@@ -18,4 +18,5 @@ clients.workspace = true
 schemas.workspace = true
 polars.workspace = true
 circular-buffer = "1.2.0"
+humansize = "2.1.3"
 # chrono.workspace = true
