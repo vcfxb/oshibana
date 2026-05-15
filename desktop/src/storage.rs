@@ -3,7 +3,7 @@
 pub mod scryfall;
 
 use directories::ProjectDirs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 pub static DIRECTORIES: LazyLock<ProjectDirs> =
@@ -11,5 +11,4 @@ pub static DIRECTORIES: LazyLock<ProjectDirs> =
 
 pub static LOGS_DIR: LazyLock<PathBuf> = LazyLock::new(|| DIRECTORIES.cache_dir().join("logs"));
 
-pub static USER_DATA_PATH: LazyLock<PathBuf> =
-    LazyLock::new(|| DIRECTORIES.data_dir().join("user-data.redb"));
+pub static DATA_DIR: LazyLock<&Path> = LazyLock::new(|| DIRECTORIES.data_dir());
