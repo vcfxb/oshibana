@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
     log4rs::init_config(log4rs_config)?;
     log::info!("started logger (stderr, dir: {})", log_file_dir.display());
 
-    let data_dir = DIRECTORIES.data_dir();
+    let data_dir = *storage::DATA_DIR;
     log::info!("creating data dir if doesn't exist: {}", data_dir.display());
     fs::create_dir_all(data_dir)?;
 

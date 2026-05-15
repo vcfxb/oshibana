@@ -6,15 +6,12 @@ use crate::app::scryfall_pull::ScryfallPullStatus;
 use crate::views::View;
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
-use egui::{
-    Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme,
-    ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar,
-};
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
+use egui::{Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ProgressBar, Theme, ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar, Button};
+use std::sync::{Arc, Once};
+use crate::storage::scryfall::ScryfallStorage;
 
 pub struct Oshibana {
-    // autosave: AutoSaveState,
+    scryfall_storage: Option<ScryfallStorage>,
     icon: Arc<IconData>,
     scryfall_client: ScryfallClient,
     current_view: View,
@@ -23,8 +20,15 @@ pub struct Oshibana {
 
 impl Oshibana {
     pub fn new(_: &eframe::CreationContext<'_>, icon: Arc<IconData>) -> anyhow::Result<Self> {
+        let scryfall_storage = ScryfallStorage::open();
+        if let Err(err) = &scryfall_storage {
+            log::warn!("scryfall storage couldn't be opened and will be regenerated: {err}");
+        }
+
+        log::info!("constructing application state");
+
         Ok(Self {
-            // user_data: storage::load_user_data()?,
+            scryfall_storage: scryfall_storage.ok(),
             icon,
             scryfall_client: ScryfallClient::new(),
             current_view: View::Home,
@@ -84,12 +88,26 @@ impl eframe::App for Oshibana {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut Frame) {
+        static FIRST_FRAME: Once = Once::new();
+
+        FIRST_FRAME.call_once(|| {
+            log::info!("drawing first frame");
+        });
+
         Panel::top("menu_bar_panel").show_inside(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
-                    if ui.button("Pull latest scryfall data").clicked() {
-                        self.tigger_scryfall_pull();
-                    }
+                    // Scryfall pull
+                    ui.group(|ui| {
+                        if self.scryfall_storage.is_none() {
+                            ui.disable();
+                        }
+
+                        if ui.button("Pull latest scryfall data").clicked() {
+                            self.scryfall_storage = None;
+                        }
+
+                    });
 
                     ui.separator();
 
