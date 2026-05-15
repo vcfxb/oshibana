@@ -17,4 +17,5 @@ image = { version = "0.25.10", default-features = false, features = ["png"] }
 clients.workspace = true
 schemas.workspace = true
 polars.workspace = true
+circular-buffer = "1.2.0"
 # chrono.workspace = true
