@@ -5,7 +5,7 @@ use egui::{Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ViewportC
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
-use crate::storage::scryfall::{ScryfallStorage, SyncState};
+use crate::storage::scryfall::{ScryfallStorage, pull_handler::SyncState};
 
 pub struct Oshibana {
     scryfall_storage: ScryfallStorage,
@@ -42,7 +42,7 @@ impl Oshibana {
                 ui.add_space(20.0);
 
                 let total = self.scryfall_storage.sync_size.load(Ordering::Relaxed);
-                let downloaded = self.scryfall_storage.displayed_downloaded.load(Ordering::Relaxed);
+                let downloaded = self.scryfall_storage.pull_handler.displayed_downloaded.load(Ordering::Relaxed);
                 let progress = downloaded as f32 / total.max(1) as f32;
 
                 let width = ui.available_width();
@@ -57,7 +57,7 @@ impl Oshibana {
                     .decimal_places(2)
                     .kilo(Kilo::Decimal);
 
-                let rate = self.scryfall_storage.displayed_rate.load(Ordering::Relaxed);
+                let rate = self.scryfall_storage.pull_handler.displayed_rate.load(Ordering::Relaxed);
                 let rate_text = format_size_i(rate, &format_options);
 
                 ui.label(format!(
@@ -67,7 +67,7 @@ impl Oshibana {
                     rate_text
                 ));
 
-                let state = self.scryfall_storage.sync_state.lock().unwrap().clone();
+                let state = self.scryfall_storage.pull_handler.sync_state.lock().unwrap().clone();
                 if state == SyncState::FsWrite {
                     ui.label("Processing data (this may take a minute)");
                 } else if state == SyncState::Downloading {
@@ -90,7 +90,7 @@ impl eframe::App for Oshibana {
             ctx.send_viewport_cmd(ViewportCommand::Close);
         }
 
-        let current_sync_state = *self.scryfall_storage.sync_state.lock().unwrap();
+        let current_sync_state = *self.scryfall_storage.pull_handler.sync_state.lock().unwrap();
         if self.last_sync_state != SyncState::Idle && current_sync_state == SyncState::Idle {
             // Sync just finished, try to load data
             self.scryfall_storage.try_reload();

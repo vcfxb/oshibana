@@ -1,4 +1,6 @@
 pub mod pull_handler;
+pub mod ingestion;
+pub mod callback_reader;
 
 use crate::storage::DATA_DIR;
 use polars::prelude::Column;

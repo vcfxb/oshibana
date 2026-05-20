@@ -1,6 +1,5 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
-use std::borrow::Cow;
 use std::fs::File;
 use std::io;
 use std::io::Read;
@@ -16,6 +15,7 @@ use polars::series::Series;
 use struson::reader::{JsonReader, JsonStreamReader};
 use url::Url;
 use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
+use crate::storage::scryfall::callback_reader::CallbackReader;
 use crate::storage::scryfall::SCRYFALL_DATA_FILE_PATH;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
@@ -36,35 +36,21 @@ pub struct PullHandler {
     last_tick: Arc<AtomicInstant>,
 }
 
-struct ReadWrapper<F: Fn(usize), R: Read> {
-    read_bytes: usize,
-    cb: F,
-    reader: R,
-}
-
-impl<F: Fn(usize), R: Read> Read for ReadWrapper<F, R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let count = self.reader.read(buf)?;
-        self.read_bytes += count;
-        (self.cb)(self.read_bytes);
-        Ok(count)
-    }
-}
 
 struct ScryfallDfBuilder {
-    arena_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    id_vec: PrimitiveChunkedBuilder<UInt128Type>,
-    lang_vec: CategoricalChunkedBuilder<Categorical8Type>,
-    mtgo_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    mtgo_foil_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    multiverse_ids_vec: ListPrimitiveChunkedBuilder<UInt64Type>,
-    resource_id_vec: StringChunkedBuilder,
-    tcgplayer_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    tcgplayer_etched_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    cardmarket_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
-    layout_vec: CategoricalChunkedBuilder<Categorical8Type>,
-    oracle_id_vec: PrimitiveChunkedBuilder<UInt128Type>,
-    prints_search_uri_vec: StringChunkedBuilder,
+    // arena_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // id_vec: PrimitiveChunkedBuilder<UInt128Type>,
+    // lang_vec: CategoricalChunkedBuilder<Categorical8Type>,
+    // mtgo_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // mtgo_foil_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // multiverse_ids_vec: ListPrimitiveChunkedBuilder<UInt64Type>,
+    // resource_id_vec: StringChunkedBuilder,
+    // tcgplayer_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // tcgplayer_etched_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // cardmarket_id_vec: PrimitiveChunkedBuilder<UInt64Type>,
+    // layout_vec: CategoricalChunkedBuilder<Categorical8Type>,
+    // oracle_id_vec: PrimitiveChunkedBuilder<UInt128Type>,
+    // prints_search_uri_vec: StringChunkedBuilder,
     // rulings_uri,
     // scryfall_uri,
     // uri,
@@ -139,26 +125,26 @@ struct ScryfallDfBuilder {
 }
 
 impl ScryfallDfBuilder {
-    fn new() -> Self {
-        ScryfallDfBuilder {
-            arena_id_vec: PrimitiveChunkedBuilder::new(
-                SCRYFALL_SCHEMA.get_field("arena_id").unwrap().name,
-                0
-            ),
-            id_vec: (),
-            lang_vec: (),
-            mtgo_id_vec: (),
-            mtgo_foil_id_vec: (),
-            multiverse_ids_vec: (),
-            resource_id_vec: (),
-            tcgplayer_id_vec: (),
-            tcgplayer_etched_id_vec: (),
-            cardmarket_id_vec: (),
-            layout_vec: (),
-            oracle_id_vec: (),
-            prints_search_uri_vec: (),
-        }
-    }
+    // fn new() -> Self {
+    //     ScryfallDfBuilder {
+    //         // arena_id_vec: PrimitiveChunkedBuilder::new(
+    //         //     SCRYFALL_SCHEMA.get_field("arena_id").unwrap().name,
+    //         //     0
+    //         // ),
+    //         // id_vec: (),
+    //         // lang_vec: (),
+    //         // mtgo_id_vec: (),
+    //         // mtgo_foil_id_vec: (),
+    //         // multiverse_ids_vec: (),
+    //         // resource_id_vec: (),
+    //         // tcgplayer_id_vec: (),
+    //         // tcgplayer_etched_id_vec: (),
+    //         // cardmarket_id_vec: (),
+    //         // layout_vec: (),
+    //         // oracle_id_vec: (),
+    //         // prints_search_uri_vec: (),
+    //     }
+    // }
 
     fn push(&mut self, card: ScryfallCard) {
         let ScryfallCard {
@@ -248,52 +234,52 @@ impl ScryfallDfBuilder {
             watermark
         } = card;
 
-        self.id_vec.push(id.as_u128());
-        self.arena_id_vec.push(arena_id);
-        self.lang_vec.push(lang.into());
-        self.mtgo_id_vec.push(mtgo_id);
-        self.mtgo_foil_id_vec.push(mtgo_foil_id);
-        self.multiverse_ids_vec.push(multiverse_ids);
-        self.resource_id_vec.push(resource_id);
-        self.tcgplayer_id_vec.push(tcgplayer_id);
-        self.tcgplayer_etched_id_vec.push(tcgplayer_etched_id);
-        self.cardmarket_id_vec.push(cardmarket_id);
-        self.layout_vec.push(layout.into());
+        // self.id_vec.push(id.as_u128());
+        // self.arena_id_vec.push(arena_id);
+        // self.lang_vec.push(lang.into());
+        // self.mtgo_id_vec.push(mtgo_id);
+        // self.mtgo_foil_id_vec.push(mtgo_foil_id);
+        // self.multiverse_ids_vec.push(multiverse_ids);
+        // self.resource_id_vec.push(resource_id);
+        // self.tcgplayer_id_vec.push(tcgplayer_id);
+        // self.tcgplayer_etched_id_vec.push(tcgplayer_etched_id);
+        // self.cardmarket_id_vec.push(cardmarket_id);
+        // self.layout_vec.push(layout.into());
 
     }
 
-    fn into_dataframe(self) -> PolarsResult<DataFrame> {
-        let lang_series = ChunkedArray::from_iter(self.lang_vec)
-            .cast(&SCRYFALL_SCHEMA.get_field("language").unwrap().dtype)?;
-
-        let layout_series = ChunkedArray::from_iter(self.layout_vec)
-            .cast(&SCRYFALL_SCHEMA.get_field("layout").unwrap().dtype)?;
-
-        polars::df! {
-            "arena_id" => self.arena_id_vec,
-            "id" => self.id_vec,
-            "language" => lang_series,
-            "mtgo_id" => self.mtgo_id_vec,
-            "mtgo_foil_id" => self.mtgo_foil_id_vec,
-
-            "multiverse_ids" => self.multiverse_ids_vec
-                .into_iter()
-                .map(|ids| match ids {
-                    None => AnyValue::Null,
-                    Some(list) => AnyValue::List(
-                        Series::from_iter(list)
-                    )
-                })
-                .collect::<Vec<_>>(),
-
-            "resource_id" => self.resource_id_vec,
-            "tcgplayer_id" => self.tcgplayer_id_vec,
-            "tcgplayer_etched_id" => self.tcgplayer_etched_id_vec,
-            "cardmarket_id" => self.cardmarket_id_vec,
-            "layout" => layout_series,
-
-        }
-    }
+    // fn into_dataframe(self) -> PolarsResult<DataFrame> {
+    //     let lang_series = ChunkedArray::from_iter(self.lang_vec)
+    //         .cast(&SCRYFALL_SCHEMA.get_field("language").unwrap().dtype)?;
+    //
+    //     let layout_series = ChunkedArray::from_iter(self.layout_vec)
+    //         .cast(&SCRYFALL_SCHEMA.get_field("layout").unwrap().dtype)?;
+    //
+    //     polars::df! {
+    //         "arena_id" => self.arena_id_vec,
+    //         "id" => self.id_vec,
+    //         "language" => lang_series,
+    //         "mtgo_id" => self.mtgo_id_vec,
+    //         "mtgo_foil_id" => self.mtgo_foil_id_vec,
+    //
+    //         // "multiverse_ids" => self.multiverse_ids_vec
+    //         //     .into_iter()
+    //         //     .map(|ids| match ids {
+    //         //         None => AnyValue::Null,
+    //         //         Some(list) => AnyValue::List(
+    //         //             Series::from_iter(list)
+    //         //         )
+    //         //     })
+    //         //     .collect::<Vec<_>>(),
+    //
+    //         // "resource_id" => self.resource_id_vec,
+    //         // "tcgplayer_id" => self.tcgplayer_id_vec,
+    //         // "tcgplayer_etched_id" => self.tcgplayer_etched_id_vec,
+    //         // "cardmarket_id" => self.cardmarket_id_vec,
+    //         // "layout" => layout_series,
+    //
+    //     }
+    // }
 }
 
 impl PullHandler {
@@ -332,7 +318,7 @@ impl PullHandler {
                 }
             };
 
-            let wrapped_reader = ReadWrapper {
+            let wrapped_reader = CallbackReader {
                 read_bytes: 0,
                 cb: wrapper_cb,
                 reader: response,
@@ -342,25 +328,25 @@ impl PullHandler {
 
             json_reader.begin_array()?;
 
-            let mut collector = ColumnHolder::default();
+            // let mut collector = ColumnHolder::default();
 
             while json_reader.has_next()? {
                 let card = json_reader.deserialize_next::<ScryfallCard>()?;
-                collector.push(card);
+                // collector.push(card);
                 cards_transformed.fetch_add(1, Ordering::Relaxed);
             }
 
             json_reader.end_array()?;
-            let mut df = collector.into_dataframe()?;
+            // let mut df = collector.into_dataframe()?;
 
-            assert_eq!(
-                df.schema(),
-                &*SCRYFALL_SCHEMA,
-                "dataframe does not match desired schema"
-            );
+            // assert_eq!(
+            //     // df.schema(),
+            //     &*SCRYFALL_SCHEMA,
+            //     "dataframe does not match desired schema"
+            // );
 
             let mut file = File::create(&*SCRYFALL_DATA_FILE_PATH)?;
-            ParquetWriter::new(&mut file).finish(&mut df)?;
+            // ParquetWriter::new(&mut file).finish(&mut df)?;
             Ok(())
         }).await?
     }
