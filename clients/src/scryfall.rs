@@ -5,7 +5,6 @@ use governor::clock::{Clock, DefaultClock};
 use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use reqwest::header::HeaderMap;
 use reqwest::{Client, IntoUrl, Method, Url};
-use reqwest_streams::{JsonStreamResponse, StreamBodyResult};
 use schemas::scryfall::bulk_data::BulkData;
 use schemas::scryfall::card::ScryfallCard;
 use schemas::scryfall::lists::ScryfallList;

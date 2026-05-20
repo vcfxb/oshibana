@@ -13,5 +13,10 @@ version = "0.1.0"
 [workspace.dependencies]
 schemas = { path = "schemas" }
 clients = { path = "clients" }
-chrono  = { version = "0.4.41" }
-polars  = { version = "0.53.0", features = ["full"] }
+chrono  = { version = "0.4.41", features = ["serde"] }
+polars  = { version = "0.53.0", features = ["full", "rows", "serde"] }
+futures = "0.3.32"
+reqwest = { version = "0.13.2", features = ["json", "stream", "blocking"] }
+bytes = "1.11.1"
+tokio-util = { version = "0.7.18", features = ["full"] }
+url = { version = "2.5.8", features = ["serde"] }

@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use crate::scryfall::card::card_face::CardFace;
 use crate::scryfall::card::colors::Color;
 use crate::scryfall::card::finishes::Finish;
@@ -31,7 +32,7 @@ pub mod related_card;
 pub mod security_stamp;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ScryfallCard {
+pub struct ScryfallCard<'a> {
     pub arena_id: Option<u64>,
     pub id: Uuid,
     pub lang: Language,
@@ -39,7 +40,8 @@ pub struct ScryfallCard {
     pub mtgo_foil_id: Option<u64>,
     pub multiverse_ids: Option<Vec<u64>>,
 
-    pub resource_id: Option<String>,
+    #[serde(borrow)]
+    pub resource_id: Option<Cow<'a, str>>,
     pub tcgplayer_id: Option<u64>,
     pub tcgplayer_etched_id: Option<u64>,
     pub cardmarket_id: Option<u64>,
@@ -51,85 +53,115 @@ pub struct ScryfallCard {
     pub scryfall_uri: Url,
     pub uri: Url,
 
-    pub all_parts: Option<Vec<RelatedCard>>,
+    #[serde(borrow)]
+    pub all_parts: Option<Vec<RelatedCard<'a>>>,
 
-    pub card_faces: Option<Vec<CardFace>>,
+    #[serde(borrow)]
+    pub card_faces: Option<Vec<CardFace<'a>>>,
     pub cmc: f32,
     pub color_identity: Vec<Color>,
     pub color_indicator: Option<Vec<Color>>,
     pub colors: Option<Vec<Color>>,
 
-    pub defense: Option<String>,
+    #[serde(borrow)]
+    pub defense: Option<Cow<'a, str>>,
     pub edhrec_rank: Option<u64>,
     pub game_changer: Option<bool>,
 
-    pub hand_modifier: Option<String>,
+    #[serde(borrow)]
+    pub hand_modifier: Option<Cow<'a, str>>,
 
-    pub keywords: Vec<String>,
+    #[serde(borrow)]
+    pub keywords: Vec<Cow<'a, str>>,
 
-    pub legalities: HashMap<String, Legality>,
+    #[serde(borrow)]
+    pub legalities: HashMap<Cow<'a, str>, Legality>,
 
-    pub life_modifier: Option<String>,
-    pub loyalty: Option<String>,
-    pub mana_cost: Option<String>,
-    pub name: String,
-    pub oracle_text: Option<String>,
+    #[serde(borrow)]
+    pub life_modifier: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub loyalty: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub mana_cost: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub oracle_text: Option<Cow<'a, str>>,
     pub penny_rank: Option<u64>,
 
-    pub power: Option<String>,
+    #[serde(borrow)]
+    pub power: Option<Cow<'a, str>>,
     pub produced_mana: Option<Vec<Color>>,
     pub reserved: bool,
-    pub toughness: Option<String>,
-    pub type_line: String,
+    #[serde(borrow)]
+    pub toughness: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub type_line: Cow<'a, str>,
 
-    pub artist: Option<String>,
+    #[serde(borrow)]
+    pub artist: Option<Cow<'a, str>>,
     pub artist_ids: Option<Vec<Uuid>>,
     pub attraction_lights: Option<Vec<u8>>,
     pub booster: bool,
-    pub border_color: String,
+    #[serde(borrow)]
+    pub border_color: Cow<'a, str>,
     pub card_back_id: Uuid,
-    pub collector_number: String,
+    #[serde(borrow)]
+    pub collector_number: Cow<'a, str>,
     pub content_warning: Option<bool>,
     pub digital: bool,
     pub finishes: Vec<Finish>,
-    pub flavor_name: Option<String>,
-    pub flavor_text: Option<String>,
+    #[serde(borrow)]
+    pub flavor_name: Option<Cow<'a, str>>,
+    #[serde(borrow)]
+    pub flavor_text: Option<Cow<'a, str>>,
     pub frame_effects: Option<Vec<FrameEffect>>,
-    pub frame: String,
+    #[serde(borrow)]
+    pub frame: Cow<'a, str>,
     pub full_art: bool,
     pub games: Vec<Game>,
     pub highres_image: bool,
     pub illustration_id: Option<Uuid>,
     pub image_status: ImageStatus,
 
-    pub image_uris: Option<HashMap<String, Url>>,
+    #[serde(borrow)]
+    pub image_uris: Option<HashMap<Cow<'a, str>, Url>>,
     pub oversized: bool,
 
-    pub prices: HashMap<String, f32>,
+    #[serde(borrow)]
+    pub prices: HashMap<Cow<'a, str>, f32>,
 
-    pub printed_name: Option<String>,
+    #[serde(borrow)]
+    pub printed_name: Option<Cow<'a, str>>,
 
-    pub printed_text: Option<String>,
+    #[serde(borrow)]
+    pub printed_text: Option<Cow<'a, str>>,
 
-    pub printed_type_line: Option<String>,
+    #[serde(borrow)]
+    pub printed_type_line: Option<Cow<'a, str>>,
     pub promo: bool,
 
-    pub promo_types: Option<Vec<String>>,
+    #[serde(borrow)]
+    pub promo_types: Option<Vec<Cow<'a, str>>>,
 
-    pub purchase_uris: Option<HashMap<String, Url>>,
+    #[serde(borrow)]
+    pub purchase_uris: Option<HashMap<Cow<'a, str>, Url>>,
     pub rarity: Rarity,
 
-    pub related_uris: HashMap<String, Url>,
+    #[serde(borrow)]
+    pub related_uris: HashMap<Cow<'a, str>, Url>,
     pub released_at: DateTime<Utc>,
     pub reprint: bool,
     pub scryfall_set_uri: Url,
 
-    pub set_name: String,
+    #[serde(borrow)]
+    pub set_name: Cow<'a, str>,
     pub set_search_uri: Url,
     pub set_type: SetType,
     pub set_uri: Url,
 
-    pub set: String,
+    #[serde(borrow)]
+    pub set: Cow<'a, str>,
     pub set_id: Uuid,
     pub story_spotlight: bool,
     pub textless: bool,
@@ -137,5 +169,6 @@ pub struct ScryfallCard {
     pub variation_of: Option<Uuid>,
     pub security_stamp: Option<SecurityStamp>,
 
-    pub watermark: Option<String>,
+    #[serde(borrow)]
+    pub watermark: Option<Cow<'a, str>>,
 }

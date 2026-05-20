@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use serde::{Deserialize, Deserializer, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
@@ -27,10 +28,12 @@ pub enum Component {
 }
 
 #[derive(Deserialize, Debug, Serialize)]
-pub struct RelatedCard {
+pub struct RelatedCard<'a> {
     pub id: Uuid,
     pub component: Component,
-    pub name: String,
-    pub type_line: String,
+    #[serde(borrow)]
+    pub name: Cow<'a, str>,
+    #[serde(borrow)]
+    pub type_line: Cow<'a, str>,
     pub uri: Url,
 }

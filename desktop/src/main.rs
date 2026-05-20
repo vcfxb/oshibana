@@ -20,6 +20,9 @@ use log4rs::filter::threshold::ThresholdFilter;
 use std::fs;
 use std::sync::Arc;
 
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let stdout_appender = ConsoleAppender::builder().build();
