@@ -1,7 +1,12 @@
+use std::sync::LazyLock;
 use enumflags2::bitflags;
+use polars::chunked_array::builder::CategoricalChunkedBuilder;
+use polars::prelude::{Categorical8Type, DataType, PlSmallStr};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
+use crate::enum_to_dt_enum;
+use crate::traits::ChunkedArrayBuilder;
 
 #[bitflags]
 #[derive(
@@ -59,4 +64,22 @@ pub enum Language {
     Ph,
     /// Quenya -- lotr language
     Qya,
+}
+
+pub static LANGUAGE_DT: LazyLock<DataType> = LazyLock::new(|| enum_to_dt_enum::<Language>());
+
+impl ChunkedArrayBuilder for Language {
+    type Builder = CategoricalChunkedBuilder<Categorical8Type>;
+
+    fn dt() -> DataType {
+        LANGUAGE_DT.clone()
+    }
+
+    fn new_builder() -> Self::Builder {
+        CategoricalChunkedBuilder::new(PlSmallStr::EMPTY, LANGUAGE_DT.clone())
+    }
+
+    fn append(builder: &mut Self::Builder, val: Self) {
+        builder.append_str(val.into()).unwrap()
+    }
 }

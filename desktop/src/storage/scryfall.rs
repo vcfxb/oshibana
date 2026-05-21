@@ -19,7 +19,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use clients::scryfall::ScryfallClient;
 use anyhow::anyhow;
-use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
+// use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
 use schemas::scryfall::card::ScryfallCard;
 use crate::storage::scryfall::pull_handler::{PullHandler, SyncState};
 

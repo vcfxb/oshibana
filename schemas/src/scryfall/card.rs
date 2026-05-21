@@ -17,6 +17,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
+use crate::generate_record_builder_and_dt;
 
 pub mod card_face;
 pub mod colors;
@@ -31,30 +32,38 @@ pub mod rarity;
 pub mod related_card;
 pub mod security_stamp;
 
+generate_record_builder_and_dt! {
+    #[derive(Debug, Deserialize, Serialize)]
+    ScryfallCard {
+        arena_id: Option<u64>,
+        id: Uuid,
+        lang: Language,
+        mtgo_id: Option<u64>,
+        mtgo_foil_id: Option<u64>,
+        multiverse_ids: Option<Vec<u64>>,
+        // #[serde(borrow)]
+        resource_id: Option<String>,
+
+        tcgplayer_id: Option<u64>,
+        tcgplayer_etched_id: Option<u64>,
+        cardmarket_id: Option<u64>,
+
+        layout: Layout,
+        oracle_id: Option<Uuid>,
+        prints_search_uri: Url,
+        rulings_uri: Url,
+        scryfall_uri: Url,
+        uri: Url,
+
+        // #[serde(borrow)]
+        all_parts: Option<Vec<RelatedCard>>,
+
+    }
+}
+
+
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ScryfallCard<'a> {
-    pub arena_id: Option<u64>,
-    pub id: Uuid,
-    pub lang: Language,
-    pub mtgo_id: Option<u64>,
-    pub mtgo_foil_id: Option<u64>,
-    pub multiverse_ids: Option<Vec<u64>>,
-
-    #[serde(borrow)]
-    pub resource_id: Option<Cow<'a, str>>,
-    pub tcgplayer_id: Option<u64>,
-    pub tcgplayer_etched_id: Option<u64>,
-    pub cardmarket_id: Option<u64>,
-
-    pub layout: Layout,
-    pub oracle_id: Option<Uuid>,
-    pub prints_search_uri: Url,
-    pub rulings_uri: Url,
-    pub scryfall_uri: Url,
-    pub uri: Url,
-
-    #[serde(borrow)]
-    pub all_parts: Option<Vec<RelatedCard<'a>>>,
+pub struct ScryfallCardOld<'a> {
 
     #[serde(borrow)]
     pub card_faces: Option<Vec<CardFace<'a>>>,
