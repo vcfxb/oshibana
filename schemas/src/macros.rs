@@ -1,7 +1,5 @@
 //! Macros for generating polars schemas + matching rust structs
 
-use polars::datatypes::DataType;
-use crate::traits::ChunkedArrayBuilder;
 
 /// Generate record struct type, ChunkedBuilder type, and polars Schema type
 #[macro_export]
@@ -174,43 +172,6 @@ macro_rules! impl_ca_builder_for_prim {
     }
 }
 
+use polars::datatypes::DataType;
+use crate::traits::ChunkedArrayBuilder;
 impl_ca_builder_for_prim!(u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, f32, f64, );
-
-// macro_rules! impl_ca_builder_for_transformed {
-//     ($a:ty => $b:ty) => {
-//         impl ChunkedArrayBuilder for $a {
-//             type Builder = <$b as ChunkedArrayBuilder>::Builder;
-//
-//             fn new_builder() -> Self::Builder {
-//                 <$b as ChunkedArrayBuilder>::new_builder()
-//             }
-//         }
-//
-//         impl ChunkedArrayBuilder for Option<$a> {
-//             type Builder = <Option<$b> as ChunkedArrayBuilder>::Builder;
-//
-//             fn new_builder() -> Self::Builder {
-//                 <Option<$b> as ChunkedArrayBuilder>::new_builder()
-//             }
-//         }
-//
-//
-//         impl ChunkedArrayBuilder for Vec<$a> {
-//             type Builder = <Vec<$b> as ChunkedArrayBuilder>::Builder;
-//
-//             fn new_builder() -> Self::Builder {
-//                 <Vec<$b> as ChunkedArrayBuilder>::new_builder()
-//             }
-//         }
-//
-//         impl ChunkedArrayBuilder for Option<Vec<$a>> {
-//             type Builder = <Option<Vec<$b>> as ChunkedArrayBuilder>::Builder;
-//
-//             fn new_builder() -> Self::Builder {
-//                 <Option<Vec<$b>> as ChunkedArrayBuilder>::new_builder()
-//             }
-//         }
-//     };
-// }
-//
-// impl_ca_builder_for_transformed!( uuid::Uuid => u128 );
