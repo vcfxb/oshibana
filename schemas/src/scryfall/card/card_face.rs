@@ -16,56 +16,22 @@ generate_record_builder_and_dt! {
         cmc: Option<f32>,
         color_indicator: Option<Vec<Color>>,
         colors: Option<Vec<Color>>,
-
-        // #[serde(borrow)]
         defense: Option<String>,
-
-        // #[serde(borrow)]
         flavor_text: Option<String>,
         illustration_id: Option<Uuid>,
-        
-        // #[serde(borrow)]
         image_uris: Option<ImageUris>,
         layout: Option<Layout>,
-
+        loyalty: Option<String>,
+        mana_cost: String,
+        name: String,
+        oracle_id: Option<Uuid>,
+        oracle_text: Option<String>,
+        power: Option<String>,
+        printed_name: Option<String>,
+        printed_text: Option<String>,
+        printed_type_line: Option<String>,
+        toughness: Option<String>,
+        type_line: Option<String>,
+        watermark: Option<String>,
     }
-}
-#[derive(Deserialize, Debug, Serialize)]
-pub struct CardFaceOld<'a> {
-
-    
-    #[serde(borrow)]
-    pub loyalty: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub mana_cost: Cow<'a, str>,
-
-    #[serde(borrow)]
-    pub name: Cow<'a, str>,
-
-    pub oracle_id: Option<Uuid>,
-
-    #[serde(borrow)]
-    pub oracle_text: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub power: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub printed_name: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub printed_text: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub printed_type_line: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub toughness: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub type_line: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub watermark: Option<Cow<'a, str>>,
 }

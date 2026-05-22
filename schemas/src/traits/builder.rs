@@ -1,9 +1,9 @@
 use crate::traits::map_type::MapPolarsType;
-use polars::chunked_array::builder::AnonymousOwnedListBuilder;
+use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
 use polars::chunked_array::ChunkedArray;
 use polars::datatypes::{PlSmallStr, PolarsNumericType};
 use polars::error::PolarsResult;
-use polars::prelude::ListBuilderTrait;
+use polars::prelude::{ListBuilderTrait, PolarsCategoricalType};
 use polars::prelude::{ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder};
 
 pub trait PolarsBuilder<T: MapPolarsType> {
@@ -112,5 +112,33 @@ where
 
     fn finish(self) -> PolarsResult<Self::ChunkedType> {
         PolarsBuilder::<Vec<T>>::finish(self)
+    }
+}
+
+impl<T, C> PolarsBuilder<Option<T>> for CategoricalChunkedBuilder<C>
+where
+    Self: PolarsBuilder<T>,
+    T: MapPolarsType<Builder = Self>,
+    C: PolarsCategoricalType
+{
+    type ChunkedType = <Self as PolarsBuilder<T>>::ChunkedType;
+
+    fn new() -> Self {
+        <Self as PolarsBuilder<T>>::new()
+    }
+
+    fn append(&mut self, val: Option<T>) -> PolarsResult<()> {
+        match val {
+            Some(v) => <Self as PolarsBuilder<T>>::append(self, v),
+            None => Ok(self.append_null())
+        }
+    }
+
+    fn append_null(&mut self) {
+        <Self as PolarsBuilder<T>>::append_null(self)
+    }
+
+    fn finish(self) -> PolarsResult<Self::ChunkedType> {
+        <Self as PolarsBuilder<T>>::finish(self)
     }
 }

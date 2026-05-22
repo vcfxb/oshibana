@@ -78,7 +78,7 @@ macro_rules! generate_record_builder_and_dt {
 
             fn append_null(&mut self) {
                 $(
-                    $crate::traits::builder::PolarsBuilder::append_null (
+                    $crate::traits::builder::PolarsBuilder::<$rt>::append_null (
                         &mut self. [< $field _chunk_builder >]
                     );
                 )+
