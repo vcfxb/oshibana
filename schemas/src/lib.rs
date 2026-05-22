@@ -4,7 +4,7 @@ use std::sync::Arc;
 use polars::datatypes::{DataType, FrozenCategories};
 use strum::IntoEnumIterator;
 
-pub mod oshibana;
+// pub mod oshibana;
 pub mod scryfall;
 pub mod macros;
 pub mod traits;
@@ -17,3 +17,5 @@ fn enum_to_dt_enum<T: IntoEnumIterator + Into<&'static str>>() -> DataType {
     let mapping = Arc::clone(cats.mapping());
     DataType::Enum(cats, mapping)
 }
+
+

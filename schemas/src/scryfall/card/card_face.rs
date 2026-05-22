@@ -5,26 +5,34 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
+use crate::generate_record_builder_and_dt;
+use crate::scryfall::card::image_uris::ImageUris;
 
+generate_record_builder_and_dt! {
+    #[derive(Deserialize, Debug, Serialize)]
+    CardFace {
+        artist: Option<String>,
+        artist_id: Option<Uuid>,
+        cmc: Option<f32>,
+        color_indicator: Option<Vec<Color>>,
+        colors: Option<Vec<Color>>,
+
+        // #[serde(borrow)]
+        defense: Option<String>,
+
+        // #[serde(borrow)]
+        flavor_text: Option<String>,
+        illustration_id: Option<Uuid>,
+        
+        // #[serde(borrow)]
+        image_uris: Option<ImageUris>,
+        layout: Option<Layout>,
+
+    }
+}
 #[derive(Deserialize, Debug, Serialize)]
-pub struct CardFace<'a> {
-    #[serde(borrow)]
-    pub artist: Option<Cow<'a, str>>,
-    pub artist_id: Option<Uuid>,
-    pub cmc: Option<f32>,
-    pub color_indicator: Option<Vec<Color>>,
-    pub colors: Option<Vec<Color>>,
+pub struct CardFaceOld<'a> {
 
-    #[serde(borrow)]
-    pub defense: Option<Cow<'a, str>>,
-
-    #[serde(borrow)]
-    pub flavor_text: Option<Cow<'a, str>>,
-    pub illustration_id: Option<Uuid>,
-
-    #[serde(borrow)]
-    pub image_uris: Option<HashMap<Cow<'a, str>, Url>>,
-    pub layout: Option<Layout>,
     
     #[serde(borrow)]
     pub loyalty: Option<Cow<'a, str>>,

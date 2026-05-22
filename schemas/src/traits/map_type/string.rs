@@ -1,11 +1,10 @@
 use polars::datatypes::DataType;
 use polars::error::PolarsResult;
 use polars::prelude::{PlSmallStr, StringChunked, StringChunkedBuilder, StringType};
-use url::Url;
 use crate::traits::builder::PolarsBuilder;
 use crate::traits::map_type::MapPolarsType;
 
-impl MapPolarsType for Url {
+impl MapPolarsType for String {
     type StaticPolarsType = StringType;
     type Builder = StringChunkedBuilder;
 
@@ -14,16 +13,15 @@ impl MapPolarsType for Url {
     }
 }
 
-impl PolarsBuilder<Url> for StringChunkedBuilder {
+impl PolarsBuilder<String> for StringChunkedBuilder {
     type ChunkedType = StringChunked;
 
     fn new() -> Self {
         StringChunkedBuilder::new(PlSmallStr::EMPTY, 0)
     }
 
-    fn append(&mut self, val: Url) -> PolarsResult<()> {
-        StringChunkedBuilder::append_value(self, val);
-        Ok(())
+    fn append(&mut self, val: String) -> PolarsResult<()> {
+        Ok(self.append_value(val))
     }
 
     fn append_null(&mut self) {
@@ -31,30 +29,29 @@ impl PolarsBuilder<Url> for StringChunkedBuilder {
     }
 
     fn finish(self) -> PolarsResult<Self::ChunkedType> {
-        Ok(StringChunkedBuilder::finish(self))
+        Ok(self.finish())
     }
 }
 
-
-impl PolarsBuilder<Option<Url>> for StringChunkedBuilder {
+impl PolarsBuilder<Option<String>> for StringChunkedBuilder {
     type ChunkedType = StringChunked;
 
     fn new() -> Self {
-        <Self as PolarsBuilder<Url>>::new()
+        <Self as PolarsBuilder<String>>::new()
     }
 
-    fn append(&mut self, val: Option<Url>) -> PolarsResult<()> {
+    fn append(&mut self, val: Option<String>) -> PolarsResult<()> {
         match val {
-            Some(s) => <Self as PolarsBuilder<Url>>::append(self, s),
+            Some(s) => <Self as PolarsBuilder<String>>::append(self, s),
             None => Ok(self.append_null())
         }
     }
 
     fn append_null(&mut self) {
-        StringChunkedBuilder::append_null(self)
+        self.append_null()
     }
 
     fn finish(self) -> PolarsResult<Self::ChunkedType> {
-        <Self as PolarsBuilder<Url>>::finish(self)
+        <Self as PolarsBuilder<String>>::finish(self)
     }
 }

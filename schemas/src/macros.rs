@@ -1,15 +1,14 @@
-//! Macros for generating polars schemas + matching rust structs
+//! Macros for generating polars type mapping + matching rust structs
 
-
-/// Generate record struct type, ChunkedBuilder type, and polars Schema type
+/// Generate record struct type, polars builder type, and polars type mapping
 #[macro_export]
 macro_rules! generate_record_builder_and_dt {
     {
         $(#[derive($( $derives:ident ),*)])?
         $name:ident $( < $( $gen:tt ),* > )? {
             $(
-                $( #[serde($serde:tt)] )?
-                $field:ident: $t:ty
+                // $( #[serde($serde:tt)] )?
+                $field:ident: $rt:ty
             ),+
             $(,)?
         }
@@ -17,47 +16,84 @@ macro_rules! generate_record_builder_and_dt {
         $( #[derive( $( $derives ),* )] )?
         pub struct $name $( < $( $gen ),* > )? {
             $(
-                $( #[serde( $serde )] )?
-                pub $field: $t,
+                // $( #[serde( $serde )] )?
+                pub $field: $rt,
             )+
+        }
+
+        pub static [< $name:snake:upper _STRUCT_DT >] : ::std::sync::LazyLock<polars::prelude::DataType> = ::std::sync::LazyLock::new(|| {
+            use ::polars::prelude::*;
+
+            DataType::Struct(vec![
+                $(
+                    Field::new(
+                        PlSmallStr::from_static( stringify!( $field ) ),
+                        <$rt as $crate::traits::map_type::MapPolarsType>::dt()
+                    ),
+                )+
+            ])
+        });
+
+        impl $crate::traits::map_type::MapPolarsType for $name {
+            type StaticPolarsType = ::polars::datatypes::StructType;
+            type Builder = [< $name Builder >] ;
+
+            fn dt() -> ::polars::prelude::DataType {
+                [< $name:snake:upper _STRUCT_DT >] .clone()
+            }
         }
 
         pub struct [< $name Builder >] {
             $(
-                pub [< $field _chunk_builder >]: <$t as $crate::traits::ChunkedArrayBuilder>::Builder,
+                // pub [< $field _chunk_builder >]: $crate::traits::builder::PolarsBuilder< $rt >,
+                pub [< $field _chunk_builder >]: <$rt as $crate::traits::map_type::MapPolarsType>::Builder,
+
             )+
         }
 
-        impl [< $name Builder >] {
-            pub fn new() -> Self {
+        impl $crate::traits::builder::PolarsBuilder< $name > for [< $name Builder >] {
+            type ChunkedType = ::polars::chunked_array::StructChunked;
+
+            fn new() -> Self {
                 Self {
                     $(
-                        [< $field _chunk_builder >] : <$t as $crate::traits::ChunkedArrayBuilder>::new_builder(),
+                        [< $field _chunk_builder >] : <
+                            <$rt as $crate::traits::map_type::MapPolarsType>::Builder
+                            as $crate::traits::builder::PolarsBuilder<$rt>
+                        >::new(),
                     )+
                 }
             }
 
-            pub fn append(&mut self, val: $name) {
+            fn append(&mut self, val: $name) -> ::polars::prelude::PolarsResult<()> {
                 $(
-                    $crate::traits::ChunkedArrayBuilder::append (
+                    $crate::traits::builder::PolarsBuilder::append (
                         &mut self. [< $field _chunk_builder >] ,
                         val. $field
+                    )?;
+                )+
+
+                Ok(())
+            }
+
+            fn append_null(&mut self) {
+                $(
+                    $crate::traits::builder::PolarsBuilder::append_null (
+                        &mut self. [< $field _chunk_builder >]
                     );
                 )+
             }
 
-            pub fn finish(mut self)
-                -> Result<
-                    ::polars::prelude::ChunkedArray<::polars::prelude::StructType>,
-                    ::polars::prelude::PolarsError
-                >
+            fn finish(self)
+                -> ::polars::prelude::PolarsResult<::polars::chunked_array::StructChunked>
             {
                 use ::polars::prelude::*;
                 use ::polars::chunked_array::StructChunked;
+                use $crate::traits::builder::PolarsBuilder;
 
                 let series = vec![
                     $(
-                        self. [< $field _chunk_builder >] .finish().into_series(),
+                        PolarsBuilder::<$rt>::finish( self. [< $field _chunk_builder >] )?.into_series(),
                     )+
                 ];
 
@@ -71,107 +107,32 @@ macro_rules! generate_record_builder_and_dt {
             }
         }
 
-        pub static [< $name:snake:upper _STRUCT_DT >] : ::std::sync::LazyLock<polars::prelude::DataType> = ::std::sync::LazyLock::new(|| {
-            use ::polars::prelude::*;
 
-            DataType::Struct(vec![
-                $(
-                    Field::new(
-                        PlSmallStr::from_static( stringify!( $field ) ),
-                        <$t as $crate::traits::ChunkedArrayBuilder>::dt()
-                    ),
-                )+
-            ])
-        });
+        impl $crate::traits::builder::PolarsBuilder<Option< $name >> for [< $name Builder >] {
+            type ChunkedType = <Self as $crate::traits::builder::PolarsBuilder< $name >>::ChunkedType;
+
+            fn new() -> Self {
+                use $crate::traits::builder::PolarsBuilder;
+                <Self as PolarsBuilder< $name >>::new()
+            }
+
+            fn append(&mut self, val: Option< $name >) -> ::polars::prelude::PolarsResult<()> {
+                use $crate::traits::builder::PolarsBuilder;
+                match val {
+                    Some(v) => <Self as PolarsBuilder< $name >>::append(self, v),
+                    None => Ok(<Self as PolarsBuilder< $name >>::append_null(self))
+                }
+            }
+
+            fn append_null(&mut self) {
+                use $crate::traits::builder::PolarsBuilder;
+                <Self as PolarsBuilder< $name >>::append_null(self)
+            }
+
+            fn finish(self) -> ::polars::prelude::PolarsResult<Self::ChunkedType> {
+                use $crate::traits::builder::PolarsBuilder;
+                <Self as PolarsBuilder< $name >>::finish(self)
+            }
+        }
     }};
 }
-
-macro_rules! impl_ca_builder_for_prim {
-    ($t:ty) => {
-        impl ChunkedArrayBuilder for $t {
-            type Builder = polars::prelude::PrimitiveChunkedBuilder<<$t as polars::prelude::NumericNative>::PolarsType>;
-
-            fn dt() -> ::polars::prelude::DataType {
-                use polars::prelude::*;
-                <<$t as NumericNative>::PolarsType as PolarsDataType>::get_static_dtype()
-            }
-
-            fn new_builder() -> Self::Builder {
-                use polars::prelude::*;
-                PrimitiveChunkedBuilder::new(PlSmallStr::EMPTY, 0)
-            }
-
-            fn append(builder: &mut Self::Builder, val: Self) {
-                use polars::prelude::ChunkedBuilder;
-                builder.append_value(val)
-            }
-        }
-
-        impl ChunkedArrayBuilder for Option<$t> {
-            type Builder = <$t as ChunkedArrayBuilder>::Builder;
-
-            fn dt() -> DataType {
-                <$t as ChunkedArrayBuilder>::dt()
-            }
-
-            fn new_builder() -> Self::Builder {
-                <$t as ChunkedArrayBuilder>::new_builder()
-            }
-
-            fn append(builder: &mut Self::Builder, val: Self) {
-                use polars::prelude::ChunkedBuilder;
-                builder.append_option(val)
-            }
-        }
-
-        impl ChunkedArrayBuilder for Vec<$t> {
-            type Builder = polars::prelude::ListPrimitiveChunkedBuilder<<$t as polars::prelude::NumericNative>::PolarsType>;
-
-            fn dt() -> DataType {
-                use polars::prelude::*;
-                DataType::List(Box::new(<$t as ChunkedArrayBuilder>::dt()))
-            }
-
-            fn new_builder() -> Self::Builder {
-                use polars::prelude::*;
-
-                let dt = <<$t as NumericNative>::PolarsType as PolarsDataType>::get_static_dtype();
-
-                ListPrimitiveChunkedBuilder::new(
-                    PlSmallStr::EMPTY,
-                    0,
-                    0,
-                    dt
-                )
-            }
-
-            fn append(builder: &mut Self::Builder, val: Self) {
-                builder.append_slice(val.as_slice())
-            }
-        }
-
-        impl ChunkedArrayBuilder for Option<Vec<$t>> {
-            type Builder = <Vec<$t> as ChunkedArrayBuilder>::Builder;
-
-            fn dt() -> DataType {
-                <Vec<$t> as ChunkedArrayBuilder>::dt()
-            }
-
-            fn new_builder() -> Self::Builder {
-                <Vec<$t> as ChunkedArrayBuilder>::new_builder()
-            }
-
-            fn append(builder: &mut Self::Builder, val: Self) {
-                builder.append_opt_slice(val.as_ref().map(Vec::as_slice))
-            }
-        }
-    };
-
-    ($($t:ty,)+) => {
-        $( impl_ca_builder_for_prim!($t); )+
-    }
-}
-
-use polars::datatypes::DataType;
-use crate::traits::ChunkedArrayBuilder;
-impl_ca_builder_for_prim!(u8, i8, u16, i16, u32, i32, u64, i64, u128, i128, f32, f64, );

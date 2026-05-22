@@ -1,12 +1,15 @@
 use std::sync::LazyLock;
 use enumflags2::bitflags;
 use polars::chunked_array::builder::CategoricalChunkedBuilder;
-use polars::prelude::{Categorical8Type, DataType, PlSmallStr};
+use polars::chunked_array::ChunkedArray;
+use polars::error::PolarsResult;
+use polars::prelude::{Categorical8Type, CategoricalChunked, DataType, PlSmallStr};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use crate::enum_to_dt_enum;
-use crate::traits::ChunkedArrayBuilder;
+use crate::traits::builder::PolarsBuilder;
+use crate::traits::map_type::MapPolarsType;
 
 #[bitflags]
 #[derive(
@@ -68,18 +71,31 @@ pub enum Language {
 
 pub static LANGUAGE_DT: LazyLock<DataType> = LazyLock::new(|| enum_to_dt_enum::<Language>());
 
-impl ChunkedArrayBuilder for Language {
+impl MapPolarsType for Language {
+    type StaticPolarsType = Categorical8Type;
     type Builder = CategoricalChunkedBuilder<Categorical8Type>;
 
     fn dt() -> DataType {
         LANGUAGE_DT.clone()
     }
+}
 
-    fn new_builder() -> Self::Builder {
+impl PolarsBuilder<Language> for CategoricalChunkedBuilder<Categorical8Type> {
+    type ChunkedType = CategoricalChunked<Categorical8Type>;
+    
+    fn new() -> Self {
         CategoricalChunkedBuilder::new(PlSmallStr::EMPTY, LANGUAGE_DT.clone())
     }
 
-    fn append(builder: &mut Self::Builder, val: Self) {
-        builder.append_str(val.into()).unwrap()
+    fn append(&mut self, val: Language) -> PolarsResult<()> {
+        self.append_str(val.into())
+    }
+
+    fn append_null(&mut self) {
+        self.append_null()
+    }
+
+    fn finish(self) -> PolarsResult<CategoricalChunked<Categorical8Type>> {
+        Ok(self.finish())
     }
 }

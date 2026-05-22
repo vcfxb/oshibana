@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "clients",
     "desktop",
+    "macros",
     "schemas"
 ]
 
@@ -13,6 +14,7 @@ version = "0.1.0"
 [workspace.dependencies]
 schemas = { path = "schemas" }
 clients = { path = "clients" }
+macros  = { path = "macros" }
 chrono  = { version = "0.4.41", features = ["serde"] }
 polars  = { version = "0.53.0", features = ["full", "rows", "serde"] }
 futures = "0.3.32"

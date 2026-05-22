@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use crate::generate_record_builder_and_dt;
 use crate::scryfall::card::card_face::CardFace;
 use crate::scryfall::card::colors::Color;
 use crate::scryfall::card::finishes::Finish;
@@ -13,11 +13,11 @@ use crate::scryfall::card::related_card::RelatedCard;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
-use crate::generate_record_builder_and_dt;
 
 pub mod card_face;
 pub mod colors;
@@ -31,6 +31,7 @@ pub mod legalities;
 pub mod rarity;
 pub mod related_card;
 pub mod security_stamp;
+mod image_uris;
 
 generate_record_builder_and_dt! {
     #[derive(Debug, Deserialize, Serialize)]
@@ -61,12 +62,11 @@ generate_record_builder_and_dt! {
     }
 }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ScryfallCardOld<'a> {
 
-    #[serde(borrow)]
-    pub card_faces: Option<Vec<CardFace<'a>>>,
+    // #[serde(borrow)]
+    pub card_faces: Option<Vec<CardFace>>,
     pub cmc: f32,
     pub color_identity: Vec<Color>,
     pub color_indicator: Option<Vec<Color>>,
