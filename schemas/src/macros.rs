@@ -136,3 +136,57 @@ macro_rules! generate_record_builder_and_dt {
         }
     }};
 }
+
+#[macro_export]
+macro_rules! generate_enum_dt_map_and_builder_impl {
+    ($name:ident => $cat_ty:ty) => {
+
+        paste::paste! {
+            pub static [< $name:snake:upper _DT >] : ::std::sync::LazyLock<::polars::prelude::DataType>
+                = ::std::sync::LazyLock::new(|| $crate::enum_to_dt_enum::< $name >() );
+        }
+
+        impl $crate::traits::map_type::MapPolarsType for $name {
+            type StaticPolarsType = $cat_ty;
+            type Builder = ::polars::chunked_array::builder::CategoricalChunkedBuilder<$cat_ty>;
+
+            fn dt() -> ::polars::prelude::DataType {
+                paste::paste! {
+                    [< $name:snake:upper _DT >] .clone()
+                }
+            }
+        }
+        
+        
+        impl $crate::traits::builder::PolarsBuilder<$name> for 
+            ::polars::chunked_array::builder::CategoricalChunkedBuilder<$cat_ty>
+        {
+            type ChunkedType = ::polars::prelude::CategoricalChunked<$cat_ty>;
+        
+            fn new() -> Self {
+                use polars::chunked_array::builder::CategoricalChunkedBuilder;
+                use polars::prelude::*;
+                
+                paste::paste! {
+                    CategoricalChunkedBuilder::new(
+                        PlSmallStr::EMPTY, 
+                        [< $name:snake:upper _DT >] .clone()
+                    )
+                }
+            }
+        
+            fn append(&mut self, val: $name) -> ::polars::prelude::PolarsResult<()> {
+                self.append_str(val.into())
+            }
+        
+            fn append_null(&mut self) {
+                self.append_null()
+            }
+        
+            fn finish(self) -> ::polars::prelude::PolarsResult<Self::ChunkedType> {
+                Ok(self.finish())
+            }
+        }
+        
+    };
+}

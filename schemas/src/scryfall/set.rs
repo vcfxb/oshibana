@@ -1,10 +1,12 @@
 use chrono::{DateTime, Utc};
 use enumflags2::bitflags;
+use polars::prelude::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
+use crate::generate_enum_dt_map_and_builder_impl;
 
 #[bitflags]
 #[derive(
@@ -39,6 +41,8 @@ pub enum SetType {
     Memorabilia,
     Minigame,
 }
+
+generate_enum_dt_map_and_builder_impl!(SetType => Categorical8Type);
 
 #[derive(Deserialize, Debug)]
 pub struct ScryfallSet {

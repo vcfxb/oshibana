@@ -1,5 +1,7 @@
+use polars::prelude::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
+use crate::generate_enum_dt_map_and_builder_impl;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize, EnumIter, IntoStaticStr)]
 #[serde(rename_all = "lowercase")]
@@ -12,3 +14,5 @@ pub enum Rarity {
     Mythic,
     Bonus,
 }
+
+generate_enum_dt_map_and_builder_impl!(Rarity => Categorical8Type);

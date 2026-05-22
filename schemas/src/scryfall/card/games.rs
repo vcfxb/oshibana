@@ -1,4 +1,8 @@
+use crate::generate_enum_dt_map_and_builder_impl;
+use crate::traits::builder::PolarsBuilder;
 use enumflags2::bitflags;
+use polars::chunked_array::builder::CategoricalChunkedBuilder;
+use polars::datatypes::{Categorical8Type, PlSmallStr};
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use strum::IntoStaticStr;
@@ -14,3 +18,5 @@ pub enum Game {
     Astral,
     Sega,
 }
+
+generate_enum_dt_map_and_builder_impl!( Game => Categorical8Type );
