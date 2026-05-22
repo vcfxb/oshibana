@@ -56,6 +56,7 @@ impl PullHandler {
 
         tokio::task::spawn_blocking::<_, anyhow::Result<()>>(move || {
             let start = Instant::now();
+            log::info!("pulling scryfall card data from {uri}");
             let response = reqwest::blocking::get(uri)?;
 
             let wrapper_cb = |total_read: usize| {

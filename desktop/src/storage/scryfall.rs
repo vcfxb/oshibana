@@ -72,7 +72,7 @@ impl ScryfallStorage {
                     .ok_or_else(|| anyhow!("No all_cards bulk data found"))?;
 
                 sync_size.store(all_cards.size as usize, Ordering::Relaxed);
-                pull_handler.pull(all_cards.uri).await?;
+                pull_handler.pull(all_cards.download_uri).await?;
 
                 Ok::<(), anyhow::Error>(())
             }
