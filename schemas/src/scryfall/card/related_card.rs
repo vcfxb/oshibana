@@ -1,15 +1,10 @@
-use std::sync::LazyLock;
-use polars::chunked_array::builder::CategoricalChunkedBuilder;
-use polars::error::PolarsResult;
-use polars::prelude::{Categorical8Type, CategoricalChunked, DataType, PlSmallStr};
+use polars::prelude::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
-use crate::{enum_to_dt_enum, generate_record_builder_and_dt};
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
+use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 
 #[derive(
     Deserialize,
@@ -33,36 +28,7 @@ pub enum Component {
     ComboPiece,
 }
 
-pub static COMPONENT_DT: LazyLock<DataType> = LazyLock::new(|| enum_to_dt_enum::<Component>());
-
-impl MapPolarsType for Component {
-    type StaticPolarsType = Categorical8Type;
-    type Builder = CategoricalChunkedBuilder<Categorical8Type>;
-
-    fn dt() -> DataType {
-        COMPONENT_DT.clone()
-    }
-}
-
-impl PolarsBuilder<Component> for CategoricalChunkedBuilder<Categorical8Type> {
-    type ChunkedType = CategoricalChunked<Categorical8Type>;
-
-    fn new() -> Self {
-        CategoricalChunkedBuilder::new(PlSmallStr::EMPTY, COMPONENT_DT.clone())
-    }
-
-    fn append(&mut self, val: Component) -> PolarsResult<()> {
-        self.append_str(val.into())
-    }
-
-    fn append_null(&mut self) {
-        self.append_null()
-    }
-
-    fn finish(self) -> PolarsResult<Self::ChunkedType> {
-        Ok(self.finish())
-    }
-}
+generate_enum_dt_map_and_builder_impl!(Component => Categorical8Type);
 
 generate_record_builder_and_dt! {
     #[derive(Deserialize, Debug, Serialize)]
