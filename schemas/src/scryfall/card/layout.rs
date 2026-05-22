@@ -1,14 +1,8 @@
-use std::sync::LazyLock;
-use polars::chunked_array::builder::CategoricalChunkedBuilder;
-use polars::datatypes::{Categorical8Type, DataType, PlSmallStr};
-use polars::error::PolarsResult;
-use polars::prelude::CategoricalChunked;
+use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
-use crate::enum_to_dt_enum;
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
+use crate::generate_enum_dt_map_and_builder_impl;
 
 #[derive(
     Deserialize,
@@ -53,33 +47,5 @@ pub enum Layout {
     ReversibleCard,
 }
 
-pub static LAYOUT_DT: LazyLock<DataType> = LazyLock::new(|| enum_to_dt_enum::<Layout>());
 
-impl MapPolarsType for Layout {
-    type StaticPolarsType = Categorical8Type;
-    type Builder = CategoricalChunkedBuilder<Categorical8Type>;
-
-    fn dt() -> DataType {
-        LAYOUT_DT.clone()
-    }
-}
-
-impl PolarsBuilder<Layout> for CategoricalChunkedBuilder<Categorical8Type> {
-    type ChunkedType = CategoricalChunked<Categorical8Type>;
-
-    fn new() -> Self {
-        CategoricalChunkedBuilder::new(PlSmallStr::EMPTY, LAYOUT_DT.clone())
-    }
-
-    fn append(&mut self, val: Layout) -> PolarsResult<()> {
-        self.append_str(val.into())
-    }
-
-    fn append_null(&mut self) {
-        self.append_null()
-    }
-
-    fn finish(self) -> PolarsResult<Self::ChunkedType> {
-        Ok(self.finish())
-    }
-}
+generate_enum_dt_map_and_builder_impl!(Layout => Categorical8Type);
