@@ -5,7 +5,7 @@ pub mod storage;
 pub mod views;
 
 use crate::app::Oshibana;
-use crate::storage::{DIRECTORIES, LOGS_DIR};
+use crate::storage::LOGS_DIR;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
 use image::GenericImageView;

@@ -1,8 +1,6 @@
 use crate::generate_enum_dt_map_and_builder_impl;
-use crate::traits::builder::PolarsBuilder;
 use enumflags2::bitflags;
-use polars::chunked_array::builder::CategoricalChunkedBuilder;
-use polars::datatypes::{Categorical8Type, PlSmallStr};
+use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use strum::IntoStaticStr;

@@ -7,21 +7,22 @@ use crate::scryfall::card::games::Game;
 use crate::scryfall::card::image_status::ImageStatus;
 use crate::scryfall::card::languages::Language;
 use crate::scryfall::card::layout::Layout;
-use crate::scryfall::card::legalities::{Legalities, Legality};
+use crate::scryfall::card::legalities::Legalities;
 use crate::scryfall::card::rarity::Rarity;
 use crate::scryfall::card::related_card::RelatedCard;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
 use chrono::{DateTime, Utc};
+use polars::chunked_array::StructChunked;
+use polars::prelude::{DataFrame, PolarsResult};
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
 use crate::scryfall::card::image_uris::ImageUris;
 use crate::scryfall::card::prices::Prices;
 use crate::scryfall::card::purchase_uris::PurchaseUris;
 use crate::scryfall::card::related_uris::RelatedUris;
+use crate::traits::builder::PolarsBuilder;
 
 mod card_face;
 mod colors;
@@ -142,3 +143,11 @@ generate_record_builder_and_dt! {
     }
 }
 
+impl ScryfallCardBuilder {
+    /// Finishes this builder and then breaks out the fields into columns of a [`DataFrame`].
+    pub fn finish_into_dataframe(self) -> PolarsResult<DataFrame> {
+        let chunked: StructChunked = PolarsBuilder::<ScryfallCard>::finish(self)?;
+        let cols = chunked.fields_as_columns();
+        DataFrame::new_infer_height(cols)
+    }
+}

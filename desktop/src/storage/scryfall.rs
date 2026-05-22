@@ -1,26 +1,17 @@
 pub mod pull_handler;
-pub mod ingestion;
 pub mod callback_reader;
 
 use crate::storage::DATA_DIR;
-use polars::prelude::Column;
-use polars::prelude::DataFrame;
 use polars::prelude::LazyFrame;
-use polars::prelude::NamedFrom;
 use polars::prelude::PlRefPath;
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
 use polars::prelude::ScanArgsParquet;
-use polars::prelude::SchemaExt;
-use polars::prelude::Series;
 use std::path::PathBuf;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::{Duration, Instant};
 use clients::scryfall::ScryfallClient;
 use anyhow::anyhow;
-// use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
-use schemas::scryfall::card::ScryfallCard;
 use crate::storage::scryfall::pull_handler::{PullHandler, SyncState};
 
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =

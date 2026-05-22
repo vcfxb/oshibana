@@ -91,11 +91,19 @@ macro_rules! generate_record_builder_and_dt {
                 use ::polars::chunked_array::StructChunked;
                 use $crate::traits::builder::PolarsBuilder;
 
-                let series = vec![
+                let mut series = vec![
                     $(
                         PolarsBuilder::<$rt>::finish( self. [< $field _chunk_builder >] )?.into_series(),
                     )+
                 ];
+
+                let mut i = 0;
+
+                // rename all series
+                $(
+                    series[i].rename(PlSmallStr::from_static( stringify!( $field ) ));
+                    i += 1;
+                )+
 
                 let len = series[0].len();
 
@@ -156,37 +164,37 @@ macro_rules! generate_enum_dt_map_and_builder_impl {
                 }
             }
         }
-        
-        
-        impl $crate::traits::builder::PolarsBuilder<$name> for 
+
+
+        impl $crate::traits::builder::PolarsBuilder<$name> for
             ::polars::chunked_array::builder::CategoricalChunkedBuilder<$cat_ty>
         {
             type ChunkedType = ::polars::prelude::CategoricalChunked<$cat_ty>;
-        
+
             fn new() -> Self {
                 use polars::chunked_array::builder::CategoricalChunkedBuilder;
                 use polars::prelude::*;
-                
+
                 paste::paste! {
                     CategoricalChunkedBuilder::new(
-                        PlSmallStr::EMPTY, 
+                        PlSmallStr::EMPTY,
                         [< $name:snake:upper _DT >] .clone()
                     )
                 }
             }
-        
+
             fn append(&mut self, val: $name) -> ::polars::prelude::PolarsResult<()> {
                 self.append_str(val.into())
             }
-        
+
             fn append_null(&mut self) {
                 self.append_null()
             }
-        
+
             fn finish(self) -> ::polars::prelude::PolarsResult<Self::ChunkedType> {
                 Ok(self.finish())
             }
         }
-        
+
     };
 }

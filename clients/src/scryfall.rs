@@ -1,22 +1,17 @@
 //! Scryfall client
 
-use futures::{Stream, StreamExt, stream};
+use futures::{Stream, stream};
 use governor::clock::{Clock, DefaultClock};
 use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use reqwest::header::HeaderMap;
-use reqwest::{Client, IntoUrl, Method, Url};
+use reqwest::{Client, IntoUrl, Method};
 use schemas::scryfall::bulk_data::BulkData;
-use schemas::scryfall::card::ScryfallCard;
 use schemas::scryfall::lists::ScryfallList;
 use schemas::scryfall::set::ScryfallSet;
 use serde::de::DeserializeOwned;
-use std::collections::VecDeque;
-use std::io;
-use std::io::ErrorKind;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use thiserror::Error;
-use tokio_util::io::{StreamReader, SyncIoBridge};
 
 #[derive(Clone, Debug)]
 pub struct ScryfallClient {

@@ -1,6 +1,6 @@
 //! Different views that the application uses,
 
-use schemas::scryfall::card::ScryfallCard;
+// use schemas::scryfall::card::ScryfallCard;
 //
 // pub enum SearchState {
 //     Idle,

@@ -9,7 +9,9 @@ use crate::storage::scryfall::{ScryfallStorage, pull_handler::SyncState};
 
 pub struct Oshibana {
     scryfall_storage: ScryfallStorage,
+    #[expect(dead_code)]
     icon: Arc<IconData>,
+    #[expect(dead_code)]
     current_view: View,
     last_sync_state: SyncState,
 }
@@ -28,7 +30,7 @@ impl Oshibana {
 
         Ok(Self {
             scryfall_storage,
-            icon,
+            icon: icon,
             current_view: View::Home,
             last_sync_state: SyncState::Idle,
         })
@@ -45,7 +47,7 @@ impl Oshibana {
                 let downloaded = self.scryfall_storage.pull_handler.displayed_downloaded.load(Ordering::Relaxed);
                 let progress = downloaded as f32 / total.max(1) as f32;
 
-                let width = ui.available_width();
+                // let width = ui.available_width();
 
                 let progress_bar = egui::ProgressBar::new(progress)
                     .show_percentage()
