@@ -1,8 +1,10 @@
-use polars::datatypes::DataType;
-use polars::error::PolarsResult;
-use polars::prelude::{BooleanChunked, BooleanChunkedBuilder, BooleanType, ChunkedBuilder, PlSmallStr};
 use crate::traits::builder::PolarsBuilder;
 use crate::traits::map_type::MapPolarsType;
+use polars::datatypes::DataType;
+use polars::error::PolarsResult;
+use polars::prelude::{
+    BooleanChunked, BooleanChunkedBuilder, BooleanType, ChunkedBuilder, PlSmallStr,
+};
 
 impl MapPolarsType for bool {
     type StaticPolarsType = BooleanType;

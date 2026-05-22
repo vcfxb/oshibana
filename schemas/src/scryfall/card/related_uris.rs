@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use crate::generate_record_builder_and_dt;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 generate_record_builder_and_dt! {

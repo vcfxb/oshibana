@@ -1,14 +1,14 @@
 //! Trait to map rust types to polars types
 
+mod boolean;
 mod primitive;
 mod string;
-mod boolean;
 mod time;
 
+use crate::traits::builder::PolarsBuilder;
 use polars::chunked_array::builder::AnonymousOwnedListBuilder;
 use polars::datatypes::{DataType, PolarsDataType};
 use polars::prelude::ListType;
-use crate::traits::builder::PolarsBuilder;
 
 pub trait MapPolarsType: Sized {
     type StaticPolarsType: PolarsDataType;
@@ -20,7 +20,7 @@ pub trait MapPolarsType: Sized {
 impl<T> MapPolarsType for Option<T>
 where
     T: MapPolarsType,
-    <T as MapPolarsType>::Builder: PolarsBuilder<Option<T>>
+    <T as MapPolarsType>::Builder: PolarsBuilder<Option<T>>,
 {
     type StaticPolarsType = T::StaticPolarsType;
     type Builder = T::Builder;

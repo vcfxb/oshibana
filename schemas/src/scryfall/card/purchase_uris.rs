@@ -1,6 +1,6 @@
-use url::Url;
 use crate::generate_record_builder_and_dt;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use url::Url;
 
 generate_record_builder_and_dt! {
     #[derive(Debug, Serialize, Deserialize)]

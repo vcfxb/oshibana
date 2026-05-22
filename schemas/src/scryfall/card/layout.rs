@@ -1,8 +1,8 @@
+use crate::generate_enum_dt_map_and_builder_impl;
 use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
-use crate::generate_enum_dt_map_and_builder_impl;
 
 #[derive(
     Deserialize,
@@ -46,6 +46,5 @@ pub enum Layout {
     ArtSeries,
     ReversibleCard,
 }
-
 
 generate_enum_dt_map_and_builder_impl!(Layout => Categorical8Type);

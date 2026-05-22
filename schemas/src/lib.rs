@@ -1,14 +1,14 @@
 //! Schemas for our various input and output formats
 
-use std::sync::Arc;
 use polars::datatypes::{DataType, FrozenCategories};
+use std::sync::Arc;
 use strum::IntoEnumIterator;
 
 // pub mod oshibana;
-pub mod scryfall;
-pub mod macros;
-pub mod traits;
 pub mod chunked_builders;
+pub mod macros;
+pub mod scryfall;
+pub mod traits;
 
 /// Utility function to generate a [polars] categorical datatype for an enum.
 fn enum_to_dt_enum<T: IntoEnumIterator + Into<&'static str>>() -> DataType {
@@ -17,5 +17,3 @@ fn enum_to_dt_enum<T: IntoEnumIterator + Into<&'static str>>() -> DataType {
     let mapping = Arc::clone(cats.mapping());
     DataType::Enum(cats, mapping)
 }
-
-

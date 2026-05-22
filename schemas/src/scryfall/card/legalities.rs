@@ -1,8 +1,8 @@
+use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
-use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 
 #[derive(
     Deserialize,

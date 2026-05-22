@@ -1,9 +1,12 @@
+use crate::traits::builder::PolarsBuilder;
+use crate::traits::map_type::MapPolarsType;
 use chrono::{DateTime, Utc};
 use polars::datatypes::DataType;
 use polars::error::PolarsResult;
-use polars::prelude::{ChunkedBuilder, DatetimeChunked, DatetimeType, Int64Type, PlSmallStr, PrimitiveChunkedBuilder, TimeUnit, TimeZone};
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
+use polars::prelude::{
+    ChunkedBuilder, DatetimeChunked, DatetimeType, Int64Type, PlSmallStr, PrimitiveChunkedBuilder,
+    TimeUnit, TimeZone,
+};
 
 impl MapPolarsType for DateTime<Utc> {
     type StaticPolarsType = DatetimeType;

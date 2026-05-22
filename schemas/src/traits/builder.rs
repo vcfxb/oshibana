@@ -1,10 +1,10 @@
 use crate::traits::map_type::MapPolarsType;
-use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
 use polars::chunked_array::ChunkedArray;
+use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
 use polars::datatypes::{PlSmallStr, PolarsNumericType};
 use polars::error::PolarsResult;
-use polars::prelude::{ListBuilderTrait, PolarsCategoricalType};
 use polars::prelude::{ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder};
+use polars::prelude::{ListBuilderTrait, PolarsCategoricalType};
 
 pub trait PolarsBuilder<T: MapPolarsType> {
     type ChunkedType: IntoSeries;
@@ -25,7 +25,7 @@ where
     <T as MapPolarsType>::StaticPolarsType: PolarsNumericType,
     // Do Not reintroduce the ChunkedBuilder bound, it breaks trait inference in strange and
     // confusing ways.
-    Self: PolarsBuilder<T> // + ChunkedBuilder<T, <T as MapPolarsType>::StaticPolarsType>
+    Self: PolarsBuilder<T>, // + ChunkedBuilder<T, <T as MapPolarsType>::StaticPolarsType>
 {
     type ChunkedType = ChunkedArray<<Option<T> as MapPolarsType>::StaticPolarsType>;
 
@@ -55,16 +55,12 @@ where
 impl<T> PolarsBuilder<Vec<T>> for AnonymousOwnedListBuilder
 where
     T: MapPolarsType,
-    Vec<T>: MapPolarsType
+    Vec<T>: MapPolarsType,
 {
     type ChunkedType = ListChunked;
 
     fn new() -> Self {
-        AnonymousOwnedListBuilder::new(
-            PlSmallStr::EMPTY,
-            0,
-            Some(T::dt())
-        )
+        AnonymousOwnedListBuilder::new(PlSmallStr::EMPTY, 0, Some(T::dt()))
     }
 
     fn append(&mut self, val: Vec<T>) -> PolarsResult<()> {
@@ -101,9 +97,7 @@ where
 
     fn append(&mut self, val: Option<Vec<T>>) -> PolarsResult<()> {
         match val {
-            Some(t) => {
-                PolarsBuilder::<Vec<T>>::append(self, t)
-            },
+            Some(t) => PolarsBuilder::<Vec<T>>::append(self, t),
 
             None => {
                 ListBuilderTrait::append_null(self);
@@ -125,7 +119,7 @@ impl<T, C> PolarsBuilder<Option<T>> for CategoricalChunkedBuilder<C>
 where
     Self: PolarsBuilder<T>,
     T: MapPolarsType<Builder = Self>,
-    C: PolarsCategoricalType
+    C: PolarsCategoricalType,
 {
     type ChunkedType = <Self as PolarsBuilder<T>>::ChunkedType;
 

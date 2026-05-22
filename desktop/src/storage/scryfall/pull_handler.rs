@@ -1,19 +1,19 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
 // use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
-use crate::storage::scryfall::callback_reader::CallbackReader;
 use crate::storage::scryfall::SCRYFALL_DATA_FILE_PATH;
+use crate::storage::scryfall::callback_reader::CallbackReader;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
+use polars::prelude::ParquetWriter;
 use schemas::scryfall::card::{ScryfallCard, ScryfallCardBuilder};
+use schemas::traits::builder::PolarsBuilder;
 use std::fs::File;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use polars::prelude::ParquetWriter;
 use struson::reader::{JsonReader, JsonStreamReader};
 use url::Url;
-use schemas::traits::builder::PolarsBuilder;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum SyncState {
@@ -48,10 +48,7 @@ impl PullHandler {
         }
     }
 
-    pub async fn pull(
-        &self,
-        uri: Url
-    ) -> anyhow::Result<()> {
+    pub async fn pull(&self, uri: Url) -> anyhow::Result<()> {
         let displayed_download = Arc::clone(&self.displayed_downloaded);
         let displayed_rate = Arc::clone(&self.displayed_rate);
         let cards_transformed = Arc::clone(&self.cards_transformed);
@@ -91,6 +88,7 @@ impl PullHandler {
             let mut file = File::create(&*SCRYFALL_DATA_FILE_PATH)?;
             ParquetWriter::new(&mut file).finish(&mut df)?;
             Ok(())
-        }).await?
+        })
+        .await?
     }
 }

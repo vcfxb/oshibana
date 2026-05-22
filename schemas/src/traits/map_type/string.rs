@@ -1,8 +1,8 @@
+use crate::traits::builder::PolarsBuilder;
+use crate::traits::map_type::MapPolarsType;
 use polars::datatypes::DataType;
 use polars::error::PolarsResult;
 use polars::prelude::{PlSmallStr, StringChunked, StringChunkedBuilder, StringType};
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
 
 impl MapPolarsType for String {
     type StaticPolarsType = StringType;

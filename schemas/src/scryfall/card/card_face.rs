@@ -1,9 +1,9 @@
+use crate::generate_record_builder_and_dt;
 use crate::scryfall::card::colors::Color;
+use crate::scryfall::card::image_uris::ImageUris;
 use crate::scryfall::card::layout::Layout;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::generate_record_builder_and_dt;
-use crate::scryfall::card::image_uris::ImageUris;
 
 generate_record_builder_and_dt! {
     #[derive(Deserialize, Debug, Serialize)]

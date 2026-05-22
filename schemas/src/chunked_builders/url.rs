@@ -1,9 +1,9 @@
+use crate::traits::builder::PolarsBuilder;
+use crate::traits::map_type::MapPolarsType;
 use polars::datatypes::DataType;
 use polars::error::PolarsResult;
 use polars::prelude::{PlSmallStr, StringChunked, StringChunkedBuilder, StringType};
 use url::Url;
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
 
 impl MapPolarsType for Url {
     type StaticPolarsType = StringType;
@@ -34,7 +34,6 @@ impl PolarsBuilder<Url> for StringChunkedBuilder {
         Ok(StringChunkedBuilder::finish(self))
     }
 }
-
 
 impl PolarsBuilder<Option<Url>> for StringChunkedBuilder {
     type ChunkedType = StringChunked;

@@ -1,10 +1,10 @@
+use crate::traits::builder::PolarsBuilder;
+use crate::traits::map_type::MapPolarsType;
 use polars::chunked_array::ChunkedArray;
 use polars::datatypes::DataType;
 use polars::error::PolarsResult;
 use polars::prelude::{ChunkedBuilder, PlSmallStr, PrimitiveChunkedBuilder, UInt128Type};
 use uuid::Uuid;
-use crate::traits::builder::PolarsBuilder;
-use crate::traits::map_type::MapPolarsType;
 
 impl MapPolarsType for Uuid {
     type StaticPolarsType = UInt128Type;
@@ -44,4 +44,3 @@ impl PolarsBuilder<Uuid> for PrimitiveChunkedBuilder<UInt128Type> {
         Ok(ChunkedBuilder::finish(self))
     }
 }
-

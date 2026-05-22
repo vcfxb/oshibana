@@ -1,3 +1,4 @@
+use crate::generate_enum_dt_map_and_builder_impl;
 use chrono::{DateTime, Utc};
 use enumflags2::bitflags;
 use polars::prelude::Categorical8Type;
@@ -6,7 +7,6 @@ use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
-use crate::generate_enum_dt_map_and_builder_impl;
 
 #[bitflags]
 #[derive(

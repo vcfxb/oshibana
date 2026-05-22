@@ -1,18 +1,18 @@
-pub mod pull_handler;
 pub mod callback_reader;
+pub mod pull_handler;
 
 use crate::storage::DATA_DIR;
+use crate::storage::scryfall::pull_handler::{PullHandler, SyncState};
+use anyhow::anyhow;
+use clients::scryfall::ScryfallClient;
 use polars::prelude::LazyFrame;
 use polars::prelude::PlRefPath;
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
 use polars::prelude::ScanArgsParquet;
 use std::path::PathBuf;
-use std::sync::{Arc, LazyLock};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use clients::scryfall::ScryfallClient;
-use anyhow::anyhow;
-use crate::storage::scryfall::pull_handler::{PullHandler, SyncState};
+use std::sync::{Arc, LazyLock};
 
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| DATA_DIR.join("scryfall-data.parquet"));
@@ -36,7 +36,9 @@ impl ScryfallStorage {
 
     fn load_lf() -> PolarsResult<LazyFrame> {
         if !SCRYFALL_DATA_FILE_PATH.exists() {
-            return Err(PolarsError::ComputeError("scryfall data file does not exist".into()));
+            return Err(PolarsError::ComputeError(
+                "scryfall data file does not exist".into(),
+            ));
         }
 
         let pl_path_ref = PlRefPath::try_from_path(&SCRYFALL_DATA_FILE_PATH)?;
@@ -71,9 +73,10 @@ impl ScryfallStorage {
 
                 sync_size.store(all_cards.size as usize, Ordering::Relaxed);
                 pull_handler.pull(all_cards.uri).await?;
-                
+
                 Ok::<(), anyhow::Error>(())
-            }.await;
+            }
+            .await;
 
             if let Err(e) = res {
                 log::error!("Scryfall sync failed: {}", e);

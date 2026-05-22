@@ -1,9 +1,9 @@
+use crate::generate_enum_dt_map_and_builder_impl;
 use enumflags2::bitflags;
 use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
-use crate::generate_enum_dt_map_and_builder_impl;
 
 #[bitflags]
 #[derive(

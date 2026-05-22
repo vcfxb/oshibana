@@ -1,5 +1,5 @@
 use crate::generate_record_builder_and_dt;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 generate_record_builder_and_dt! {
     #[derive(Copy, Clone, Debug, Serialize, Deserialize)]

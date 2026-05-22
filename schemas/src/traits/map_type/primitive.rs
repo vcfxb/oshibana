@@ -1,7 +1,4 @@
-use crate::traits::{
-    map_type::MapPolarsType,
-    builder::PolarsBuilder
-};
+use crate::traits::{builder::PolarsBuilder, map_type::MapPolarsType};
 use polars::prelude::*;
 
 macro_rules! impl_map_to_polars_for_prim {
@@ -26,7 +23,7 @@ macro_rules! impl_map_to_polars_for_prim {
                 ChunkedBuilder::append_value(self, val);
                 Ok(())
             }
-            
+
             fn append_null(&mut self) {
                 ChunkedBuilder::append_null(self)
             }
@@ -43,7 +40,7 @@ macro_rules! impl_map_to_polars_for_prim {
     }
 }
 
-impl_map_to_polars_for_prim!(u8, i8, u16, i16, f32, i32, u32, f64, i64, u64, u128, i128, );
+impl_map_to_polars_for_prim!(u8, i8, u16, i16, f32, i32, u32, f64, i64, u64, u128, i128,);
 
 // impl MapPolarsType for u8 {
 //     type StaticPolarsType = UInt8Type;
