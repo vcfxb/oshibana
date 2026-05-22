@@ -36,6 +36,7 @@ pub struct PullHandler {
 impl PullHandler {
     const UPDATE_DISPLAY_INTERVAL: Duration = Duration::from_millis(300);
 
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         PullHandler {
             bytes_received: Arc::new(Default::default()),

@@ -30,7 +30,7 @@ impl Oshibana {
 
         Ok(Self {
             scryfall_storage,
-            icon: icon,
+            icon,
             current_view: View::Home,
             last_sync_state: SyncState::Idle,
         })
@@ -60,16 +60,16 @@ impl Oshibana {
                     .kilo(Kilo::Decimal);
 
                 let rate = self.scryfall_storage.pull_handler.displayed_rate.load(Ordering::Relaxed);
-                let rate_text = format_size_i(rate, &format_options);
+                let rate_text = format_size_i(rate, format_options);
 
                 ui.label(format!(
                     "{}/{} ({}/s)",
-                    format_size(downloaded, &format_options),
-                    format_size(total, &format_options),
+                    format_size(downloaded, format_options),
+                    format_size(total, format_options),
                     rate_text
                 ));
 
-                let state = self.scryfall_storage.pull_handler.sync_state.lock().unwrap().clone();
+                let state = *self.scryfall_storage.pull_handler.sync_state.lock().unwrap();
                 if state == SyncState::FsWrite {
                     ui.label("Processing data (this may take a minute)");
                 } else if state == SyncState::Downloading {

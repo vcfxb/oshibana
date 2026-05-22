@@ -21,7 +21,8 @@ impl PolarsBuilder<String> for StringChunkedBuilder {
     }
 
     fn append(&mut self, val: String) -> PolarsResult<()> {
-        Ok(self.append_value(val))
+        self.append_value(val);
+        Ok(())
     }
 
     fn append_null(&mut self) {
@@ -43,7 +44,10 @@ impl PolarsBuilder<Option<String>> for StringChunkedBuilder {
     fn append(&mut self, val: Option<String>) -> PolarsResult<()> {
         match val {
             Some(s) => <Self as PolarsBuilder<String>>::append(self, s),
-            None => Ok(self.append_null())
+            None => {
+                self.append_null();
+                Ok(())
+            }
         }
     }
 

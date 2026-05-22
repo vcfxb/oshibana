@@ -21,7 +21,8 @@ impl PolarsBuilder<bool> for BooleanChunkedBuilder {
     }
 
     fn append(&mut self, val: bool) -> PolarsResult<()> {
-        Ok(self.append_value(val))
+        self.append_value(val);
+        Ok(())
     }
 
     fn append_null(&mut self) {
@@ -43,7 +44,10 @@ impl PolarsBuilder<Option<bool>> for BooleanChunkedBuilder {
     fn append(&mut self, val: Option<bool>) -> PolarsResult<()> {
         match val {
             Some(v) => <Self as PolarsBuilder<bool>>::append(self, v),
-            None => Ok(<Self as PolarsBuilder<bool>>::append_null(self)),
+            None => {
+                <Self as PolarsBuilder<bool>>::append_null(self);
+                Ok(())
+            }
         }
     }
 

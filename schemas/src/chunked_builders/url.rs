@@ -46,7 +46,10 @@ impl PolarsBuilder<Option<Url>> for StringChunkedBuilder {
     fn append(&mut self, val: Option<Url>) -> PolarsResult<()> {
         match val {
             Some(s) => <Self as PolarsBuilder<Url>>::append(self, s),
-            None => Ok(self.append_null())
+            None => {
+                self.append_null();
+                Ok(())
+            }
         }
     }
 

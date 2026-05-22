@@ -39,7 +39,7 @@ impl ScryfallStorage {
             return Err(PolarsError::ComputeError("scryfall data file does not exist".into()));
         }
 
-        let pl_path_ref = PlRefPath::try_from_path(&*SCRYFALL_DATA_FILE_PATH)?;
+        let pl_path_ref = PlRefPath::try_from_path(&SCRYFALL_DATA_FILE_PATH)?;
         let args = ScanArgsParquet::default();
         LazyFrame::scan_parquet(pl_path_ref, args)
     }

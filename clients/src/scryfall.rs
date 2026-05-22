@@ -28,6 +28,7 @@ pub enum ScryfallClientError {
 impl ScryfallClient {
     const ROOT_URL: &'static str = "https://api.scryfall.com";
 
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let mut headers = HeaderMap::new();
 
@@ -96,7 +97,7 @@ impl ScryfallClient {
                 let client = self.clone();
                 async move {
                     // as long as we can pull from the current list object, do that.
-                    if list_object.data.len() > 0 {
+                    if !list_object.data.is_empty() {
                         let next = list_object.data.remove(0);
                         Ok(Some((next, list_object)))
                     } else if let Some(next_page) = list_object.next_page {

@@ -36,7 +36,10 @@ where
     fn append(&mut self, val: Option<T>) -> PolarsResult<()> {
         match val {
             Some(t) => PolarsBuilder::<T>::append(self, t),
-            None => Ok(ChunkedBuilder::append_null(self))
+            None => {
+                ChunkedBuilder::append_null(self);
+                Ok(())
+            }
         }
     }
 
@@ -102,7 +105,10 @@ where
                 PolarsBuilder::<Vec<T>>::append(self, t)
             },
 
-            None => Ok(ListBuilderTrait::append_null(self))
+            None => {
+                ListBuilderTrait::append_null(self);
+                Ok(())
+            }
         }
     }
 

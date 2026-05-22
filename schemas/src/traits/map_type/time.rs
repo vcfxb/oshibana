@@ -22,7 +22,8 @@ impl PolarsBuilder<DateTime<Utc>> for PrimitiveChunkedBuilder<Int64Type> {
     }
 
     fn append(&mut self, val: DateTime<Utc>) -> PolarsResult<()> {
-        Ok(self.append_value(val.timestamp_millis()))
+        self.append_value(val.timestamp_millis());
+        Ok(())
     }
 
     fn append_null(&mut self) {
