@@ -136,7 +136,10 @@ where
     fn append(&mut self, val: Option<T>) -> PolarsResult<()> {
         match val {
             Some(v) => <Self as PolarsBuilder<T>>::append(self, v),
-            None => Ok(self.append_null())
+            None => {
+                self.append_null();
+                Ok(())
+            }
         }
     }
 
