@@ -1,9 +1,6 @@
-use std::borrow::Cow;
 use crate::scryfall::card::colors::Color;
 use crate::scryfall::card::layout::Layout;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use url::Url;
 use uuid::Uuid;
 use crate::generate_record_builder_and_dt;
 use crate::scryfall::card::image_uris::ImageUris;

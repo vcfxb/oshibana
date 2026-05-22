@@ -1,7 +1,6 @@
 use std::sync::LazyLock;
 use enumflags2::bitflags;
 use polars::chunked_array::builder::CategoricalChunkedBuilder;
-use polars::chunked_array::ChunkedArray;
 use polars::error::PolarsResult;
 use polars::prelude::{Categorical8Type, CategoricalChunked, DataType, PlSmallStr};
 use serde::{Deserialize, Serialize};
