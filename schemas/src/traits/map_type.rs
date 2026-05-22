@@ -3,6 +3,7 @@
 mod primitive;
 mod string;
 mod boolean;
+mod time;
 
 use polars::chunked_array::builder::AnonymousOwnedListBuilder;
 use polars::datatypes::{DataType, PolarsDataType};

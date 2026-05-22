@@ -19,6 +19,9 @@ use std::collections::HashMap;
 use url::Url;
 use uuid::Uuid;
 use crate::scryfall::card::image_uris::ImageUris;
+use crate::scryfall::card::prices::Prices;
+use crate::scryfall::card::purchase_uris::PurchaseUris;
+use crate::scryfall::card::related_uris::RelatedUris;
 
 mod card_face;
 mod colors;
@@ -33,6 +36,9 @@ mod rarity;
 mod related_card;
 mod security_stamp;
 mod image_uris;
+mod prices;
+mod purchase_uris;
+mod related_uris;
 
 generate_record_builder_and_dt! {
     #[derive(Debug, Deserialize, Serialize)]
@@ -105,26 +111,17 @@ generate_record_builder_and_dt! {
     
         image_uris: Option<ImageUris>,
         oversized: bool,
-    
-        // fixme
-        // prices: HashMap<String, f32>,
-    
+        prices: Prices,
         printed_name: Option<String>,
-    
         printed_text: Option<String>,
-    
         printed_type_line: Option<String>,
         promo: bool,
-    
         promo_types: Option<Vec<String>>,
-    
-        // fixme
-        // purchase_uris: Option<HashMap<String, Url>>,
+        purchase_uris: Option<PurchaseUris>,
         rarity: Rarity,
-    
-        // fixme
-        // related_uris: HashMap<String, Url>,
-        // released_at: DateTime<Utc>,
+
+        related_uris: RelatedUris,
+        released_at: DateTime<Utc>,
         reprint: bool,
         scryfall_set_uri: Url,
     
