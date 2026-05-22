@@ -13,4 +13,3 @@ thiserror = "2.0.18"
 schemas.workspace = true
 futures.workspace = true
 reqwest.workspace = true
-tokio-util.workspace = true

@@ -15,4 +15,3 @@ chrono.workspace = true
 polars.workspace = true
 url.workspace = true
 paste = "1.0.15"
-sealed = "0.6.0"

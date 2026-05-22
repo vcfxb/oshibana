@@ -853,7 +853,6 @@ dependencies = [
  "schemas",
  "serde",
  "thiserror 2.0.18",
- "tokio-util",
 ]
 
 [[package]]
@@ -1159,12 +1158,10 @@ dependencies = [
  "anyhow",
  "atomic-time",
  "atomic_float",
- "bytes",
  "clients",
  "directories",
  "eframe",
  "egui",
- "futures",
  "humansize",
  "image",
  "log",
@@ -1173,11 +1170,8 @@ dependencies = [
  "polars",
  "reqwest 0.13.3",
  "schemas",
- "serde",
- "serde_json",
  "struson",
  "tokio",
- "tokio-util",
  "url",
 ]
 
@@ -4940,7 +4934,6 @@ dependencies = [
  "enumflags2",
  "paste",
  "polars",
- "sealed",
  "serde",
  "strum 0.28.0",
  "typename",
@@ -4971,17 +4964,6 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit 0.19.2",
  "tiny-skia",
-]
-
-[[package]]
-name = "sealed"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22f968c5ea23d555e670b449c1c5e7b2fc399fdaec1d304a17cd48e288abc107"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -5718,12 +5700,8 @@ checksum = "9ae9cec805b01e8fc3fd2fe289f89149a9b66dd16786abd8b19cfa7b48cb0098"
 dependencies = [
  "bytes",
  "futures-core",
- "futures-io",
  "futures-sink",
- "futures-util",
- "hashbrown 0.15.5",
  "pin-project-lite",
- "slab",
  "tokio",
 ]
 
