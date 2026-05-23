@@ -17,7 +17,7 @@ use crate::scryfall::card::related_uris::RelatedUris;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
 use crate::traits::builder::PolarsBuilder;
-use chrono::{DateTime, Utc};
+use chrono::NaiveDate;
 use polars::chunked_array::StructChunked;
 use polars::prelude::{DataFrame, PolarsResult};
 use serde::{Deserialize, Serialize};
@@ -95,7 +95,11 @@ generate_record_builder_and_dt! {
         attraction_lights: Option<Vec<u8>>,
         booster: bool,
         border_color: String,
-        card_back_id: Uuid,
+
+        /// The scryfall API docs do not mention that this can be null but in practice
+        /// it actually is for DFCs it seems.
+        card_back_id: Option<Uuid>,
+
         collector_number: String,
         content_warning: Option<bool>,
         digital: bool,
@@ -122,7 +126,7 @@ generate_record_builder_and_dt! {
         rarity: Rarity,
 
         related_uris: RelatedUris,
-        released_at: DateTime<Utc>,
+        released_at: NaiveDate,
         reprint: bool,
         scryfall_set_uri: Url,
 

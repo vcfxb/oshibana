@@ -4,19 +4,19 @@
 #[macro_export]
 macro_rules! generate_record_builder_and_dt {
     {
-        $(#[derive($( $derives:ident ),*)])?
+        $( #[ $( $ty_attrs:tt )* ] )*
         $name:ident $( < $( $gen:tt ),* > )? {
             $(
-                // $( #[serde($serde:tt)] )?
+                $( #[ $( $attrs:tt )* ] )*
                 $field:ident: $rt:ty
             ),+
             $(,)?
         }
     } => { paste::paste! {
-        $( #[derive( $( $derives ),* )] )?
+        $( #[ $( $ty_attrs )* ] )*
         pub struct $name $( < $( $gen ),* > )? {
             $(
-                // $( #[serde( $serde )] )?
+                $( #[ $( $attrs )* ] )*
                 pub $field: $rt,
             )+
         }

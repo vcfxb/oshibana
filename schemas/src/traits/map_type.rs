@@ -4,6 +4,7 @@ mod boolean;
 mod primitive;
 mod string;
 mod time;
+mod date;
 
 use crate::traits::builder::PolarsBuilder;
 use polars::chunked_array::builder::AnonymousOwnedListBuilder;

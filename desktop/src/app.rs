@@ -46,52 +46,86 @@ impl Oshibana {
                 ui.heading("Syncing Scryfall Data");
                 ui.add_space(20.0);
 
-                let total = self.scryfall_storage.sync_size.load(Ordering::Relaxed);
-                let downloaded = self
-                    .scryfall_storage
-                    .pull_handler
-                    .displayed_downloaded
-                    .load(Ordering::Relaxed);
-                let progress = downloaded as f32 / total.max(1) as f32;
+                let state = *self.scryfall_storage.pull_handler.sync_state.lock().unwrap();
+                
+                let total = match state {
+                    SyncState::Downloading | SyncState::Deserializing => {
+                        self.scryfall_storage
+                            .sync_size
+                            .load(Ordering::Relaxed)
+                    }
+                    
+                    // handle fswrite and idle here as well ig
+                    SyncState::Transforming | SyncState::FsWrite | SyncState::Idle => {
+                        self.scryfall_storage
+                            .pull_handler
+                            .total_cards
+                            .load(Ordering::Relaxed)
+                    }
+                };
+                
+                let progress = match state {
+                    SyncState::Downloading | SyncState::Deserializing => {
+                        self.scryfall_storage
+                            .pull_handler
+                            .displayed_bytes
+                            .load(Ordering::Relaxed)
+                    }
+                    
+                    SyncState::Transforming | SyncState::FsWrite | SyncState::Idle => {
+                        self.scryfall_storage
+                            .pull_handler
+                            .displayed_cards_transformed
+                            .load(Ordering::Relaxed)
+                    }
+                };
+                
+                let progress_percent = progress as f32 / total.max(1) as f32;
 
-                // let width = ui.available_width();
-
-                let progress_bar = egui::ProgressBar::new(progress)
+                let progress_bar = egui::ProgressBar::new(progress_percent)
                     .show_percentage()
                     .desired_width(ui.available_width() - 40.0);
 
                 ui.add(progress_bar);
 
-                let format_options = FormatSizeOptions::default()
-                    .decimal_places(2)
-                    .kilo(Kilo::Decimal);
+                match state {
+                    SyncState::Downloading | SyncState::Deserializing => {
+                        let rate = self.scryfall_storage
+                            .pull_handler
+                            .displayed_rate
+                            .load(Ordering::Relaxed);
+                        
+                        let format_options = FormatSizeOptions::default()
+                            .decimal_places(2)
+                            .kilo(Kilo::Decimal);
+                        
+                        let rate_text = format_size_i(rate, format_options);
 
-                let rate = self
-                    .scryfall_storage
-                    .pull_handler
-                    .displayed_rate
-                    .load(Ordering::Relaxed);
-                let rate_text = format_size_i(rate, format_options);
-
-                ui.label(format!(
-                    "{}/{} ({}/s)",
-                    format_size(downloaded, format_options),
-                    format_size(total, format_options),
-                    rate_text
-                ));
-
-                let state = *self
-                    .scryfall_storage
-                    .pull_handler
-                    .sync_state
-                    .lock()
-                    .unwrap();
-                if state == SyncState::FsWrite {
-                    ui.label("Processing data (this may take a minute)");
-                } else if state == SyncState::Downloading {
-                    ui.label("Downloading");
+                        ui.label(format!(
+                            "{}/{} ({}/s)",
+                            format_size(progress, format_options),
+                            format_size(total, format_options),
+                            rate_text
+                        ));
+                    }
+                    
+                    SyncState::Transforming => {
+                        ui.label(format!(
+                            "{progress}/{total}",
+                        ));
+                    }
+                    
+                    _ => {}
                 }
-
+                
+                match state {
+                    SyncState::Downloading => ui.label("Downloading"),
+                    SyncState::Deserializing => ui.label("Deserializing"),
+                    SyncState::Transforming => ui.label("Reformatting Card Data"),
+                    SyncState::FsWrite => ui.label("Writing card data file"),
+                    SyncState::Idle => ui.label("Done!"),
+                };
+                
                 ui.add_space(10.0);
                 ui.spinner();
             });

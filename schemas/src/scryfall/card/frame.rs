@@ -33,6 +33,9 @@ pub enum FrameEffect {
     FanDfc,
     UpsideDownDfc,
     Spree,
+
+    /// Not documented anywhere afaik -- perhaps a bug that some can have this
+    FullArt
 }
 
 generate_enum_dt_map_and_builder_impl!(FrameEffect => Categorical8Type);

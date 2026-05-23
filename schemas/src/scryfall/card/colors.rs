@@ -27,6 +27,13 @@ pub enum Color {
     B,
     R,
     G,
+
+    /// Colorless
+    C,
+
+    /// Some unfinity cards list the "tap" symbol in their produced mana.
+    /// https://scryfall.com/card/unf/154/sole-performer
+    T,
 }
 
 generate_enum_dt_map_and_builder_impl!(Color => Categorical8Type);
