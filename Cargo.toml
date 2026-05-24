@@ -21,6 +21,9 @@ polars  = { version = "0.53.0", features = [
     "dtype-struct",
     "dtype-i128",
     "dtype-u128",
+#    "dtype-array",
+#    "dtype-i8",
+    "dtype-u8",
     "lazy",
     "parquet"
 ]}
