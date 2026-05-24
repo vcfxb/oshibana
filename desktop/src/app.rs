@@ -46,40 +46,15 @@ impl Oshibana {
                 ui.heading("Syncing Scryfall Data");
                 ui.add_space(20.0);
 
-                let state = *self.scryfall_storage.pull_handler.sync_state.lock().unwrap();
+                let total = self.scryfall_storage
+                    .pull_handler
+                    .sync_size
+                    .load(Ordering::Relaxed);
 
-                let total = match state {
-                    SyncState::Downloading => {
-                        self.scryfall_storage
-                            .pull_handler
-                            .sync_size
-                            .load(Ordering::Relaxed)
-                    }
-
-                    // handle fswrite and idle here as well ig
-                    SyncState::Transforming | SyncState::FsWrite | SyncState::Idle => {
-                        self.scryfall_storage
-                            .pull_handler
-                            .total_cards
-                            .load(Ordering::Relaxed)
-                    }
-                };
-
-                let progress = match state {
-                    SyncState::Downloading => {
-                        self.scryfall_storage
-                            .pull_handler
-                            .displayed_bytes
-                            .load(Ordering::Relaxed)
-                    }
-
-                    SyncState::Transforming | SyncState::FsWrite | SyncState::Idle => {
-                        self.scryfall_storage
-                            .pull_handler
-                            .displayed_cards_transformed
-                            .load(Ordering::Relaxed)
-                    }
-                };
+                let progress = self.scryfall_storage
+                    .pull_handler
+                    .displayed_bytes
+                    .load(Ordering::Relaxed);
 
                 let progress_percent = progress as f32 / total.max(1) as f32;
 
@@ -89,39 +64,38 @@ impl Oshibana {
 
                 ui.add(progress_bar);
 
+                let rate = self.scryfall_storage
+                    .pull_handler
+                    .displayed_rate
+                    .load(Ordering::Relaxed);
+
+                let format_options = FormatSizeOptions::default()
+                    .decimal_places(2)
+                    .kilo(Kilo::Decimal);
+
+                ui.label(format!(
+                    "{}/{} ({})",
+                    format_size(progress, format_options),
+                    format_size(total, format_options),
+                    format_size_i(rate, format_options.suffix("/s"))
+                ));
+
+                ui.label(format!(
+                    "{} cards downloaded",
+                    self.scryfall_storage
+                        .pull_handler
+                        .displayed_cards_transformed
+                        .load(Ordering::Relaxed)
+                ));
+
+                let state = *self.scryfall_storage
+                    .pull_handler
+                    .sync_state
+                    .lock()
+                    .unwrap();
+
                 match state {
-                    SyncState::Downloading => {
-                        let rate = self.scryfall_storage
-                            .pull_handler
-                            .displayed_rate
-                            .load(Ordering::Relaxed);
-
-                        let format_options = FormatSizeOptions::default()
-                            .decimal_places(2)
-                            .kilo(Kilo::Decimal);
-
-                        let rate_text = format_size_i(rate, format_options);
-
-                        ui.label(format!(
-                            "{}/{} ({}/s)",
-                            format_size(progress, format_options),
-                            format_size(total, format_options),
-                            rate_text
-                        ));
-                    }
-
-                    SyncState::Transforming => {
-                        ui.label(format!(
-                            "{progress}/{total}",
-                        ));
-                    }
-
-                    _ => {}
-                }
-
-                match state {
-                    SyncState::Downloading => ui.label("Downloading & Deserializing"),
-                    SyncState::Transforming => ui.label("Reformatting Card Data"),
+                    SyncState::Downloading => ui.label("Downloading"),
                     SyncState::FsWrite => ui.label("Writing card data file"),
                     SyncState::Idle => ui.label("Done!"),
                 };
@@ -160,7 +134,7 @@ impl eframe::App for Oshibana {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut Frame) {
-        if self.scryfall_storage.is_syncing() || !self.scryfall_storage.is_ready() {
+        if self.scryfall_storage.is_syncing() {
             self.show_loading_screen(ui);
             return;
         }
