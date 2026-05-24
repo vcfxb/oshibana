@@ -62,7 +62,11 @@ generate_record_builder_and_dt! {
         uri: Url,
         all_parts: Option<Vec<RelatedCard>>,
         card_faces: Option<Vec<CardFace>>,
-        cmc: f32,
+
+        /// This seems to generally be present but on some DFCs, it's not there in practice
+        /// (i.e. https://scryfall.com/card/sld/1556/jinnie-fay-jetmirs-second-jinnie-fay-jetmirs-second?utm_source=api)
+        cmc: Option<f32>,
+
         color_identity: Vec<Color>,
         color_indicator: Option<Vec<Color>>,
         colors: Option<Vec<Color>>,
@@ -88,7 +92,10 @@ generate_record_builder_and_dt! {
         produced_mana: Option<Vec<Color>>,
         reserved: bool,
         toughness: Option<String>,
-        type_line: String,
+
+        /// Similar to [ScryfallCard::cmc] type_line should be on most cards but isn't on
+        /// some DFCs in practice it seems
+        type_line: Option<String>,
 
         artist: Option<String>,
         artist_ids: Option<Vec<Uuid>>,

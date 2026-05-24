@@ -11,7 +11,7 @@ use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
 use polars::prelude::ScanArgsParquet;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, LazyLock};
 
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =
@@ -21,7 +21,6 @@ pub struct ScryfallStorage {
     lf: Option<LazyFrame>,
     client: ScryfallClient,
     pub pull_handler: Arc<PullHandler>,
-    pub sync_size: Arc<AtomicUsize>,
 }
 
 impl ScryfallStorage {
@@ -29,7 +28,6 @@ impl ScryfallStorage {
         Self {
             lf: Self::load_lf().ok(),
             client: client.clone(),
-            sync_size: Arc::new(AtomicUsize::new(0)),
             pull_handler: Arc::new(PullHandler::new()),
         }
     }
@@ -58,7 +56,7 @@ impl ScryfallStorage {
         drop(state);
 
         let sync_state = Arc::clone(&self.pull_handler.sync_state);
-        let sync_size = Arc::clone(&self.sync_size);
+        let sync_size = Arc::clone(&self.pull_handler.sync_size);
         let client = self.client.clone();
         let pull_handler = self.pull_handler.clone();
 
@@ -68,11 +66,11 @@ impl ScryfallStorage {
                 let all_cards = bulk_data
                     .data
                     .into_iter()
-                    .find(|item| item.r#type == "oracle_cards")
+                    .find(|item| item.r#type == "all_cards")
                     .ok_or_else(|| anyhow!("No all_cards bulk data found"))?;
 
                 sync_size.store(all_cards.size as usize, Ordering::Relaxed);
-                pull_handler.pull(all_cards.download_uri, all_cards.size as usize).await?;
+                pull_handler.pull(all_cards.download_uri).await?;
 
                 Ok::<(), anyhow::Error>(())
             }
