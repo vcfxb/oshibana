@@ -1,4 +1,4 @@
-use crate::storage::scryfall::{ScryfallStorage, pull_handler::SyncState};
+use crate::storage::scryfall::ScryfallStorage;
 use crate::views::View;
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
@@ -6,9 +6,7 @@ use egui::{
     Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ViewportCommand,
     containers::menu::MenuBar,
 };
-use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 
 pub struct Oshibana {
     scryfall_storage: ScryfallStorage,
@@ -16,7 +14,6 @@ pub struct Oshibana {
     icon: Arc<IconData>,
     #[expect(dead_code)]
     current_view: View,
-    last_sync_state: SyncState,
 }
 
 impl Oshibana {
@@ -35,75 +32,7 @@ impl Oshibana {
             scryfall_storage,
             icon,
             current_view: View::Home,
-            last_sync_state: SyncState::Idle,
         })
-    }
-
-    fn show_loading_screen(&self, ui: &mut egui::Ui) {
-        egui::CentralPanel::default().show_inside(ui, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(ui.available_height() / 3.0);
-                ui.heading("Syncing Scryfall Data");
-                ui.add_space(20.0);
-
-                let total = self.scryfall_storage
-                    .pull_handler
-                    .sync_size
-                    .load(Ordering::Relaxed);
-
-                let progress = self.scryfall_storage
-                    .pull_handler
-                    .displayed_bytes
-                    .load(Ordering::Relaxed);
-
-                let progress_percent = progress as f32 / total.max(1) as f32;
-
-                let progress_bar = egui::ProgressBar::new(progress_percent)
-                    .show_percentage()
-                    .desired_width(ui.available_width() - 40.0);
-
-                ui.add(progress_bar);
-
-                let rate = self.scryfall_storage
-                    .pull_handler
-                    .displayed_rate
-                    .load(Ordering::Relaxed);
-
-                let format_options = FormatSizeOptions::default()
-                    .decimal_places(2)
-                    .kilo(Kilo::Decimal);
-
-                ui.label(format!(
-                    "{}/{} ({})",
-                    format_size(progress, format_options),
-                    format_size(total, format_options),
-                    format_size_i(rate, format_options.suffix("/s"))
-                ));
-
-                ui.label(format!(
-                    "{} cards downloaded",
-                    self.scryfall_storage
-                        .pull_handler
-                        .displayed_cards_transformed
-                        .load(Ordering::Relaxed)
-                ));
-
-                let state = *self.scryfall_storage
-                    .pull_handler
-                    .sync_state
-                    .lock()
-                    .unwrap();
-
-                match state {
-                    SyncState::Downloading => ui.label("Downloading"),
-                    SyncState::FsWrite => ui.label("Writing card data file"),
-                    SyncState::Idle => ui.label("Done!"),
-                };
-
-                ui.add_space(10.0);
-                ui.spinner();
-            });
-        });
     }
 }
 
@@ -115,27 +44,19 @@ impl eframe::App for Oshibana {
         if should_quit {
             ctx.send_viewport_cmd(ViewportCommand::Close);
         }
-
-        let current_sync_state = *self
-            .scryfall_storage
-            .pull_handler
-            .sync_state
-            .lock()
-            .unwrap();
-        if self.last_sync_state != SyncState::Idle && current_sync_state == SyncState::Idle {
-            // Sync just finished, try to load data
-            self.scryfall_storage.try_reload();
+        
+        if !self.scryfall_storage.is_ready() && !self.scryfall_storage.try_reload() {
+            self.scryfall_storage.trigger_sync();
         }
-        self.last_sync_state = current_sync_state;
 
-        if current_sync_state != SyncState::Idle {
+        if self.scryfall_storage.sync_handler.is_syncing() {
             ctx.request_repaint();
         }
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut Frame) {
-        if self.scryfall_storage.is_syncing() {
-            self.show_loading_screen(ui);
+        if self.scryfall_storage.sync_handler.is_syncing() {
+            self.scryfall_storage.sync_handler.ui(ui);
             return;
         }
 

@@ -1,3 +1,4 @@
+use std::sync::{Arc, LazyLock};
 use crate::generate_record_builder_and_dt;
 use crate::scryfall::card::card_face::CardFace;
 use crate::scryfall::card::colors::Color;
@@ -19,7 +20,7 @@ use crate::scryfall::set::SetType;
 use crate::traits::builder::PolarsBuilder;
 use chrono::NaiveDate;
 use polars::chunked_array::StructChunked;
-use polars::prelude::{DataFrame, PolarsResult};
+use polars::prelude::{DataFrame, DataType, PolarsResult, Schema, SchemaRef};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
@@ -153,6 +154,14 @@ generate_record_builder_and_dt! {
         watermark: Option<String>,
     }
 }
+
+pub static SCRYFALL_CARD_SCHEMA: LazyLock<SchemaRef> = LazyLock::new(|| {
+    let DataType::Struct(fields) = &*SCRYFALL_CARD_STRUCT_DT else {
+        unreachable!("the card struct dt is defined to be a struct");
+    };
+
+    Arc::new(Schema::from_iter(fields.iter().cloned()))
+});
 
 impl ScryfallCardBuilder {
     /// Finishes this builder and then breaks out the fields into columns of a [`DataFrame`].

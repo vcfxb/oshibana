@@ -1,7 +1,6 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
 use crate::storage::scryfall::callback_reader::CallbackReader;
-// use schemas::oshibana::scryfall::SCRYFALL_SCHEMA;
 use crate::storage::scryfall::SCRYFALL_DATA_FILE_PATH;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
@@ -13,7 +12,7 @@ use std::io::BufReader;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use humansize::{format_size, FormatSizeOptions};
+use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
 use struson::reader::{JsonStreamReader, JsonReader};
 use url::Url;
 
@@ -26,7 +25,7 @@ pub enum SyncState {
 }
 
 #[derive(Debug)]
-pub struct PullHandler {
+pub struct SyncHandler {
     pub sync_state: Arc<Mutex<SyncState>>,
     pub displayed_rate: Arc<AtomicF32>,
     pub displayed_bytes: Arc<AtomicUsize>,
@@ -35,12 +34,12 @@ pub struct PullHandler {
     last_tick: Arc<AtomicInstant>,
 }
 
-impl PullHandler {
+impl SyncHandler {
     const UPDATE_DISPLAY_INTERVAL: Duration = Duration::from_millis(300);
 
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        PullHandler {
+        SyncHandler {
             displayed_cards_transformed: Arc::new(Default::default()),
             sync_state: Arc::new(Mutex::new(SyncState::Idle)),
             displayed_bytes: Arc::new(Default::default()),
@@ -48,6 +47,10 @@ impl PullHandler {
             sync_size: Arc::new(Default::default()),
             last_tick: Arc::new(AtomicInstant::now()),
         }
+    }
+
+    pub fn is_syncing(&self) -> bool {
+        *self.sync_state.lock().unwrap() != SyncState::Idle
     }
 
     pub async fn pull(&self, uri: Url) -> anyhow::Result<()> {
@@ -104,5 +107,52 @@ impl PullHandler {
             );
             Ok(())
         }).await?
+    }
+
+    /// Draw the loading bar UI that should appear when syncing from scryfall.
+    pub fn ui(&self, ui: &mut egui::Ui) {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(ui.available_height() / 3.0);
+                ui.heading("Syncing Scryfall Data");
+                ui.add_space(20.0);
+
+                let total = self.sync_size.load(Ordering::Relaxed);
+                let progress = self.displayed_bytes.load(Ordering::Relaxed);
+                let rate = self.displayed_rate.load(Ordering::Relaxed);
+                let progress_percent = progress as f32 / total.max(1) as f32;
+
+                let progress_bar = egui::ProgressBar::new(progress_percent)
+                    .show_percentage()
+                    .desired_width(ui.available_width() - 40.0);
+
+                ui.add(progress_bar);
+
+                let format_options = FormatSizeOptions::default()
+                    .decimal_places(2)
+                    .kilo(Kilo::Decimal);
+
+                ui.label(format!(
+                    "{}/{} ({})",
+                    format_size(progress, format_options),
+                    format_size(total, format_options),
+                    format_size_i(rate, format_options.suffix("/s"))
+                ));
+
+                ui.label(format!(
+                    "{} cards downloaded",
+                    self.displayed_cards_transformed.load(Ordering::Relaxed)
+                ));
+
+                match *self.sync_state.lock().unwrap() {
+                    SyncState::Downloading => ui.label("Downloading"),
+                    SyncState::FsWrite => ui.label("Writing card data file"),
+                    SyncState::Idle => ui.label("Done!"),
+                };
+
+                ui.add_space(10.0);
+                ui.spinner();
+            });
+        });
     }
 }
