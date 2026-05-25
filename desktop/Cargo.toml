@@ -6,7 +6,19 @@ version.workspace = true
 [dependencies]
 anyhow = "1.0.102"
 directories = "6.0.0"
-eframe = "0.34.1"
+
+# Disabling wgpu and using glow speeds up startup significantly (2 seconds).
+# This seems to be due to wgpu taking time to query the OS for gpu adapter data and the host responding too slowly?
+# not sure if this is a wgpu issue or a driver issue or maybe just something on my system, but glow should be fine
+# for most/all usecases regardless
+eframe = { version = "0.34.2", default-features = false, features = [
+    "glow",
+    "wayland",
+    "default_fonts",
+    "x11",
+    "persistence"
+] }
+
 egui = "0.34.1"
 log = "0.4.29"
 log4rs = "1.4.0"

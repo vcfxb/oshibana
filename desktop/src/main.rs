@@ -15,7 +15,7 @@ use log4rs::append::rolling_file::RollingFileAppender;
 use log4rs::append::rolling_file::policy::compound::CompoundPolicy;
 use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller;
 use log4rs::append::rolling_file::policy::compound::trigger::onstartup::OnStartUpTrigger;
-use log4rs::config::{Appender, Logger, Root};
+use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use std::fs;
 use std::sync::Arc;
@@ -54,11 +54,11 @@ async fn main() -> anyhow::Result<()> {
         )
         .appender(Appender::builder().build("file", Box::new(rolling_file_appender)))
         // silence lots of spurious logs for other crates
-        .logger(Logger::builder().build("wgpu_hal", LevelFilter::Warn))
-        .logger(Logger::builder().build("wgpu_core", LevelFilter::Info))
-        .logger(Logger::builder().build("naga", LevelFilter::Info))
-        .logger(Logger::builder().build("eframe", LevelFilter::Info))
-        .logger(Logger::builder().build("egui_wgpu", LevelFilter::Warn))
+        // .logger(Logger::builder().build("wgpu_hal", LevelFilter::Warn))
+        // .logger(Logger::builder().build("wgpu_core", LevelFilter::Info))
+        // .logger(Logger::builder().build("naga", LevelFilter::Info))
+        // .logger(Logger::builder().build("eframe", LevelFilter::Info))
+        // .logger(Logger::builder().build("egui_wgpu", LevelFilter::Warn))
         .build(
             Root::builder()
                 .appenders(["stdout", "file"])
@@ -94,6 +94,8 @@ async fn main() -> anyhow::Result<()> {
         vsync: true,
         centered: true,
         dithering: true,
+        // persist window size and location
+        persist_window: true,
         viewport: ViewportBuilder::default()
             .with_icon(icon_data_arc.clone())
             .with_active(true),
@@ -103,8 +105,10 @@ async fn main() -> anyhow::Result<()> {
     eframe::run_native(
         "Oshibana",
         native_options,
-        Box::new(|cc| Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))),
-    )?;
+        Box::new(|cc| {
+            Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
+        }),
+    ).unwrap();
 
     Ok(())
 }
