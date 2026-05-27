@@ -7,6 +7,7 @@ use egui::{
     containers::menu::MenuBar,
 };
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 pub struct Oshibana {
     scryfall_storage: ScryfallStorage,
@@ -43,6 +44,10 @@ impl eframe::App for Oshibana {
         let should_quit = ctx.input_mut(|input_state| input_state.consume_shortcut(&QUIT_SHORTCUT));
         if should_quit {
             ctx.send_viewport_cmd(ViewportCommand::Close);
+        }
+
+        if ctx.input(|i| i.viewport().close_requested()) {
+            self.scryfall_storage.sync_handler.cancel_requested.store(true, Ordering::Relaxed);
         }
         
         if !self.scryfall_storage.is_ready() && !self.scryfall_storage.try_reload() {

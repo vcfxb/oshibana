@@ -9,7 +9,7 @@ use schemas::scryfall::card::{ScryfallCard, ScryfallCardBuilder};
 use schemas::traits::builder::PolarsBuilder;
 use std::fs::File;
 use std::io::BufReader;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
@@ -32,6 +32,7 @@ pub struct SyncHandler {
     pub displayed_cards_transformed: Arc<AtomicUsize>,
     pub sync_size: Arc<AtomicUsize>,
     last_tick: Arc<AtomicInstant>,
+    pub cancel_requested: Arc<AtomicBool>,
 }
 
 impl SyncHandler {
@@ -46,6 +47,7 @@ impl SyncHandler {
             displayed_rate: Arc::new(Default::default()),
             sync_size: Arc::new(Default::default()),
             last_tick: Arc::new(AtomicInstant::now()),
+            cancel_requested: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -60,12 +62,18 @@ impl SyncHandler {
         let last_tick = Arc::clone(&self.last_tick);
         let sync_state = Arc::clone(&self.sync_state);
         let sync_size = self.sync_size.load(Ordering::Relaxed);
+        let cancel_requested = self.cancel_requested.clone();
+        let atomic_card_count = AtomicUsize::new(0);
+        let mut builder = <ScryfallCardBuilder as PolarsBuilder<ScryfallCard>>::new();
 
         tokio::task::spawn_blocking::<_, anyhow::Result<()>>(move || {
             log::info!("pulling scryfall card data from {uri}");
-            let response = reqwest::blocking::get(uri)?;
-            let atomic_card_count = AtomicUsize::new(0);
-            let mut builder = <ScryfallCardBuilder as PolarsBuilder<ScryfallCard>>::new();
+
+            let client = reqwest::blocking::Client::builder()
+                .connect_timeout(Duration::from_secs(2))
+                .build()?;
+
+            let response = client.get(uri).send()?;
 
             let wrapper_cb = |total_read: usize, elapsed: Duration| {
                 if last_tick.load(Ordering::Acquire).elapsed() > Self::UPDATE_DISPLAY_INTERVAL {
@@ -90,6 +98,11 @@ impl SyncHandler {
                 let card = json_reader.deserialize_next::<ScryfallCard>()?;
                 builder.append(card)?;
                 atomic_card_count.fetch_add(1, Ordering::Release);
+
+                if cancel_requested.load(Ordering::Relaxed) {
+                    log::warn!("Scryfall sync canceled before completion");
+                    return Ok(());
+                }
             }
 
             let card_count = atomic_card_count.load(Ordering::Acquire);

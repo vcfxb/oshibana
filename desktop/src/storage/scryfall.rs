@@ -82,7 +82,7 @@ impl ScryfallStorage {
                     .find(|item| item.r#type == "all_cards")
                     .ok_or_else(|| anyhow!("No all_cards bulk data found"))?;
 
-                sync_size.store(all_cards.size as usize, Ordering::Relaxed);
+                sync_size.store(all_cards.size as usize, Ordering::Release);
                 pull_handler.pull(all_cards.download_uri).await?;
 
                 Ok::<(), anyhow::Error>(())
@@ -99,8 +99,13 @@ impl ScryfallStorage {
     }
 
     pub fn try_reload(&mut self) -> bool {
-        self.lf = Self::load_lf().ok();
-        self.lf.is_some()
+        self.lf = Self::load_lf()
+            .map_err(|err| log::warn!("error loading scryfall data, will retry: {err}"))
+            .ok();
+
+        let success = self.lf.is_some();
+        self.needs_reload.store(!success, Ordering::Release);
+        success
     }
 
     pub fn is_ready(&self) -> bool {
