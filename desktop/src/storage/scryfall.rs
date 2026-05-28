@@ -18,6 +18,7 @@ use schemas::scryfall::card::SCRYFALL_CARD_SCHEMA;
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| DATA_DIR.join("scryfall-data.parquet"));
 
+#[derive(Clone)]
 pub struct ScryfallStorage {
     lf: Option<LazyFrame>,
     client: ScryfallClient,

@@ -2,7 +2,7 @@
 
 pub mod app;
 pub mod storage;
-pub mod views;
+pub mod view;
 
 use crate::app::Oshibana;
 use crate::storage::LOGS_DIR;
