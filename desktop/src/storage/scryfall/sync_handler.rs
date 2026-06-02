@@ -11,6 +11,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
 use struson::reader::{JsonStreamReader, JsonReader};
@@ -78,7 +79,10 @@ impl SyncHandler {
             let wrapper_cb = |total_read: usize, elapsed: Duration| {
                 if last_tick.load(Ordering::Acquire).elapsed() > Self::UPDATE_DISPLAY_INTERVAL {
                     displayed_download.store(total_read, Ordering::Relaxed);
-                    let new_rate = total_read as f32 / elapsed.as_secs_f32();
+                    // fix!! we have to make sure elapsed is > 0, since otherwise we
+                    // get infinity here, and then the ui freezes forever trying to render
+                    // infinity as a size of bytes.
+                    let new_rate = total_read as f32 / elapsed.as_secs_f32().max(0.1);
                     displayed_rate.store(new_rate, Ordering::Relaxed);
                     let card_count = atomic_card_count.load(Ordering::Acquire);
                     displayed_cards_transformed.store(card_count, Ordering::Relaxed);
@@ -130,10 +134,13 @@ impl SyncHandler {
                 ui.heading("Syncing Scryfall Data");
                 ui.add_space(20.0);
 
-                let total = self.sync_size.load(Ordering::Relaxed);
-                let progress = self.displayed_bytes.load(Ordering::Relaxed);
-                let rate = self.displayed_rate.load(Ordering::Relaxed);
-                let progress_percent = progress as f32 / total.max(1) as f32;
+                let total = self.sync_size.load(Ordering::Acquire);
+                let progress = self.displayed_bytes.load(Ordering::Acquire);
+                let rate = self.displayed_rate.load(Ordering::Acquire);
+                let progress_percent = (progress as f32 / total as f32)
+                    // clamp because it seems that if it's too close to 0 (e-6), it might crash the
+                    // ui?
+                    .clamp(0.01, 1.0);
 
                 let progress_bar = egui::ProgressBar::new(progress_percent)
                     .show_percentage()
@@ -149,23 +156,36 @@ impl SyncHandler {
                     "{}/{} ({})",
                     format_size(progress, format_options),
                     format_size(total, format_options),
+                    // if rate is ever infinity, ui freezes.
+                    // sync handler should check this
                     format_size_i(rate, format_options.suffix("/s"))
                 ));
 
                 ui.label(format!(
                     "{} cards downloaded",
-                    self.displayed_cards_transformed.load(Ordering::Relaxed)
+                    self.displayed_cards_transformed.load(Ordering::Acquire)
                 ));
 
-                match *self.sync_state.lock().unwrap() {
-                    SyncState::Downloading => ui.label("Downloading"),
-                    SyncState::FsWrite => ui.label("Writing card data file"),
-                    SyncState::Idle => ui.label("Done!"),
+                let msg = match *self.sync_state.try_lock().unwrap() {
+                    SyncState::Downloading => "Downloading",
+                    SyncState::FsWrite => "Writing card data file",
+                    SyncState::Idle => "Done!",
                 };
 
+                ui.label(msg);
                 ui.add_space(10.0);
                 ui.spinner();
             });
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use humansize::FormatSizeOptions;
+
+    #[test]
+    fn check_humansize_behaviour() {
+        println!("{}", humansize::format_size_i(f32::INFINITY, FormatSizeOptions::default()));
     }
 }

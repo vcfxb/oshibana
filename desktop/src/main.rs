@@ -1,4 +1,6 @@
-// #![windows_subsystem = "windows"]
+
+// release builds don't log / show terminal.
+#![cfg_attr(feature = "prod", windows_subsystem = "windows")]
 
 pub mod app;
 pub mod storage;
@@ -17,13 +19,13 @@ use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWin
 use log4rs::append::rolling_file::policy::compound::trigger::onstartup::OnStartUpTrigger;
 use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
-use std::fs;
+use std::{fs, panic};
 use std::sync::Arc;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
     let stdout_appender = ConsoleAppender::builder().build();
 
@@ -68,6 +70,13 @@ async fn main() -> anyhow::Result<()> {
     log4rs::init_config(log4rs_config)?;
     log::info!("started logger (stderr, dir: {})", log_file_dir.display());
 
+    // override the panic hook to log as well.
+    let panic_hook = panic::take_hook();
+    panic::set_hook(Box::new(move |info| {
+        log::error!("panic: {info}");
+        panic_hook(info);
+    }));
+
     let data_dir = *storage::DATA_DIR;
     log::info!("creating data dir if doesn't exist: {}", data_dir.display());
     fs::create_dir_all(data_dir)?;
@@ -106,6 +115,7 @@ async fn main() -> anyhow::Result<()> {
         "Oshibana",
         native_options,
         Box::new(|cc| {
+            egui_material_icons::initialize(&cc.egui_ctx);
             Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
         }),
     ).unwrap();

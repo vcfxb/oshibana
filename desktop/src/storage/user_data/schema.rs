@@ -1,0 +1,36 @@
+
+use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+use egui::accesskit::Uuid;
+use crate::storage::user_data::collection::Collection;
+use crate::storage::user_data::deck::Deck;
+use crate::storage::user_data::package::Package;
+use crate::storage::user_data::wishlist::WishlistItem;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UserData {
+    pub last_scryfall_sync: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub scryfall_sync_interval: Option<chrono::Duration>,
+    pub decks: Vec<Deck>,
+    pub collection: Collection,
+    pub wishlist: Vec<WishlistItem>,
+    pub packages: Vec<Package>,
+    /// Apply global oracle tags in wishlist, decks, & collection
+    pub global_oracle_tags: HashMap<Uuid, Vec<String>>,
+}
+
+impl Default for UserData {
+    fn default() -> Self {
+        UserData {
+            last_scryfall_sync: None,
+            scryfall_sync_interval: None,
+            decks: vec![],
+            collection: Default::default(),
+            wishlist: vec![],
+            packages: vec![],
+            global_oracle_tags: Default::default(),
+        }
+    }
+}

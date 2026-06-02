@@ -1,6 +1,7 @@
 //! Storage management for oshibana -- handles fs communication etc.
 
 pub mod scryfall;
+pub mod user_data;
 
 use directories::ProjectDirs;
 use std::path::{Path, PathBuf};
