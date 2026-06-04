@@ -89,7 +89,7 @@ impl ScryfallStorage {
                 sync_size.store(all_cards.size as usize, Ordering::Release);
                 pull_handler.pull(all_cards.download_uri).await?;
                 userdata.loaded.write().unwrap().last_scryfall_sync.replace(Utc::now());
-                userdata.has_pending_updates.store(true, Ordering::Relaxed);
+                userdata.trigger_save();
                 Ok::<(), anyhow::Error>(())
             }.await;
 

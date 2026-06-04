@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 use atomic_float::AtomicF32;
+use atomic_time::AtomicInstant;
 use crate::storage::DATA_DIR;
 use crate::storage::user_data::schema::UserData;
 
@@ -20,9 +21,10 @@ pub static USER_DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 
 pub struct UserDataStorage {
     pub loaded: RwLock<UserData>,
-    pub has_pending_updates: AtomicBool,
+    has_pending_updates: AtomicBool,
     pub autosave_interval_secs: AtomicF32,
-    pub currently_saving: AtomicBool,
+    currently_saving: AtomicBool,
+    last_save: AtomicInstant,
 }
 
 impl UserDataStorage {
@@ -45,7 +47,7 @@ impl UserDataStorage {
         log::info!("read user data successfully in {:?}", start.elapsed());
         Ok(data)
     }
-    
+
     pub fn new() -> anyhow::Result<Arc<Self>> {
         if !USER_DATA_PATH.exists() {
             log::info!("no user data file found. creating: {}", USER_DATA_PATH.display());
@@ -67,17 +69,24 @@ impl UserDataStorage {
             has_pending_updates: has_pending_changes,
             autosave_interval_secs: interval,
             currently_saving,
+            last_save: AtomicInstant::now()
         });
 
         let storage_clone = Arc::clone(&storage);
         thread::spawn(move || {
             loop {
+                thread::sleep(Duration::from_millis(200));
+                let last_save = storage_clone.last_save.load(Ordering::Acquire);
                 let interval = storage_clone.autosave_interval_secs.load(Ordering::Relaxed);
-                thread::sleep(Duration::from_secs_f32(interval));
+                if last_save.elapsed().as_secs_f32() < interval {
+                    continue;
+                }
+
                 if storage_clone.has_pending_updates.load(Ordering::Acquire) {
                     // fail-open on saving -- if the save fails, try again next iteration.
                     let _ = storage_clone.save();
                 }
+                storage_clone.last_save.store(Instant::now(), Ordering::Release);
             }
         });
 
@@ -91,15 +100,15 @@ impl UserDataStorage {
 
         impl<'a> Drop for SaveGuard<'a> {
             fn drop(&mut self) {
-                self.currently_saving.store(false, Ordering::Relaxed);
+                self.currently_saving.store(false, Ordering::Release);
             }
         }
 
         let start = Instant::now();
-        self.currently_saving.store(true, Ordering::Relaxed);
+        self.currently_saving.store(true, Ordering::Release);
         // guard drops and turns of "currently saving" at the end of
         // each iteration.
-        let _guard = SaveGuard {
+        let save_guard = SaveGuard {
             currently_saving: &self.currently_saving
         };
 
@@ -133,6 +142,19 @@ impl UserDataStorage {
         })?;
 
         log::info!("Saved successfully in {:?}", start.elapsed());
+        drop(save_guard);
         Ok(())
+    }
+
+    pub fn trigger_save(&self) {
+        self.has_pending_updates.store(true, Ordering::Release);
+    }
+
+    pub fn has_pending_updates(&self) -> bool {
+        self.has_pending_updates.load(Ordering::Acquire)
+    }
+
+    pub fn currently_saving(&self) -> bool {
+        self.currently_saving.load(Ordering::Acquire)
     }
 }
