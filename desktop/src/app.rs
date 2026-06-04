@@ -14,12 +14,14 @@ use egui::{
 use egui_material_icons::icons;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use crate::view::search::{SearchState, SEARCH};
 
 pub struct Oshibana {
     pub scryfall_storage: ScryfallStorage,
     pub user_data_storage: Arc<UserDataStorage>,
     pub icon: Arc<IconData>,
     pub current_view: View,
+    pub search_state: SearchState,
 }
 
 impl Oshibana {
@@ -39,7 +41,8 @@ impl Oshibana {
             scryfall_storage,
             user_data_storage: user_data,
             icon,
-            current_view: crate::view::home::HOME,
+            current_view: HOME,
+            search_state: SearchState::default(),
         })
     }
 }
@@ -85,6 +88,10 @@ impl eframe::App for Oshibana {
                 ui.menu_button("File", |ui| {
                     if ui.button("Home").clicked() {
                         self.current_view = HOME;
+                    }
+
+                    if ui.button("Search").clicked() {
+                        self.current_view = SEARCH;
                     }
 
                     if ui.button("Settings...").clicked() {

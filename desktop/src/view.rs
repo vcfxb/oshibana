@@ -6,6 +6,7 @@ use egui::{Context, Ui};
 
 pub mod home;
 pub mod settings;
+pub mod search;
 
 #[derive(Copy, Clone)]
 pub struct View {

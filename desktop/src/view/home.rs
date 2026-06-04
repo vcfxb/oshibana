@@ -1,7 +1,8 @@
 //! Home View
 
 use crate::app::Oshibana;
-use crate::view::{View, logic_noop, ui_noop};
+use crate::view::search::SEARCH;
+use crate::view::{logic_noop, ui_noop, View};
 use eframe::Frame;
 use egui::Ui;
 
@@ -29,6 +30,10 @@ fn home_ui(app: &mut Oshibana, ui: &mut Ui, _frame: &mut Frame) {
             ui.heading("Welcome to Oshibana");
             ui.label("Scryfall data is loaded");
             ui.label(format!("Last scryfall sync: {last_scryfall_sync}"));
-        })
+            ui.add_space(10.0);
+            if ui.button("Search for Cards").clicked() {
+                app.current_view = SEARCH;
+            }
+        });
     });
 }

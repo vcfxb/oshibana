@@ -115,6 +115,7 @@ async fn main() -> anyhow::Result<()> {
         native_options,
         Box::new(|cc| {
             egui_material_icons::initialize(&cc.egui_ctx);
+            egui_extras::loaders::install_image_loaders(&cc.egui_ctx);
             Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
         }),
     )
