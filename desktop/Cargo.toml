@@ -44,3 +44,4 @@ url.workspace = true
 serde.workspace = true
 chrono.workspace = true
 egui_material_icons = "0.6.0"
+scopeguard = "1.2.0"

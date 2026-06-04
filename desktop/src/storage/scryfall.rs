@@ -3,20 +3,19 @@ pub mod sync_handler;
 
 use crate::storage::DATA_DIR;
 use crate::storage::scryfall::sync_handler::{SyncHandler, SyncState};
+use crate::storage::user_data::UserDataStorage;
 use anyhow::anyhow;
+use chrono::Utc;
 use clients::scryfall::ScryfallClient;
 use polars::prelude::LazyFrame;
 use polars::prelude::PlRefPath;
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
 use polars::prelude::ScanArgsParquet;
+use schemas::scryfall::card::SCRYFALL_CARD_SCHEMA;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, LazyLock, TryLockError, TryLockResult};
-use std::thread;
-use chrono::Utc;
-use schemas::scryfall::card::SCRYFALL_CARD_SCHEMA;
-use crate::storage::user_data::UserDataStorage;
+use std::sync::{Arc, LazyLock};
 
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| DATA_DIR.join("scryfall-data.parquet"));
@@ -52,7 +51,9 @@ impl ScryfallStorage {
         let actual_schema = lf.collect_schema()?;
 
         if actual_schema != *SCRYFALL_CARD_SCHEMA {
-            return Err(PolarsError::SchemaMismatch("file schema does not match expected".into()));
+            return Err(PolarsError::SchemaMismatch(
+                "file schema does not match expected".into(),
+            ));
         }
 
         log::info!("Loaded Scryfall lazyframe successfully");
@@ -88,10 +89,16 @@ impl ScryfallStorage {
 
                 sync_size.store(all_cards.size as usize, Ordering::Release);
                 pull_handler.pull(all_cards.download_uri).await?;
-                userdata.loaded.write().unwrap().last_scryfall_sync.replace(Utc::now());
+                userdata
+                    .loaded
+                    .write()
+                    .unwrap()
+                    .last_scryfall_sync
+                    .replace(Utc::now());
                 userdata.trigger_save();
                 Ok::<(), anyhow::Error>(())
-            }.await;
+            }
+            .await;
 
             if let Err(e) = res {
                 log::error!("Scryfall Sync failed: {}", e);

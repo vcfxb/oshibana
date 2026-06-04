@@ -1,5 +1,5 @@
 use crate::app::Oshibana;
-use crate::view::{logic_noop, ui_noop, View};
+use crate::view::{View, logic_noop, ui_noop};
 use eframe::Frame;
 use egui::{DragValue, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
@@ -11,7 +11,7 @@ pub const SETTINGS: View = View {
     menu: ui_noop,
 };
 
-fn settings_ui(app: &mut Oshibana, ui: &mut Ui, frame: &mut Frame) {
+fn settings_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let available_width = ui.available_width();
     TableBuilder::new(ui)
         .striped(true)
@@ -23,7 +23,8 @@ fn settings_ui(app: &mut Oshibana, ui: &mut Ui, frame: &mut Frame) {
 }
 
 fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
-    let mut value = app.user_data_storage
+    let mut value = app
+        .user_data_storage
         .autosave_interval_secs
         .load(Ordering::Acquire);
 
@@ -32,9 +33,9 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
 
     table.row(14.0, |mut row| {
         row.col(|ui| {
-
-            ui.label("Autosave Interval (cannot be 0)")
-                .on_hover_text("Oshibana can check for changes and autosave everything for you every few seconds");
+            ui.label("Autosave Interval (cannot be 0)").on_hover_text(
+                "Oshibana can check for changes and autosave everything for you every few seconds",
+            );
         });
 
         row.col(|ui| {
@@ -43,11 +44,15 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
                     ui.disable();
                 }
 
-                ui.add(DragValue::new(&mut value).speed(1.0).range(0.2..=60.0*60.0).suffix(" sec"));
+                ui.add(
+                    DragValue::new(&mut value)
+                        .speed(1.0)
+                        .range(0.2..=60.0 * 60.0)
+                        .suffix(" sec"),
+                );
             });
         });
     });
-
 
     table.row(14.0, |mut row| {
         row.col(|ui| {
@@ -61,10 +66,11 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
 
     if disable_autosave {
         value = f32::INFINITY;
-    }
-    else if disable_autosave != original_disable_autosave {
+    } else if disable_autosave != original_disable_autosave {
         value = 2.0;
     }
 
-    app.user_data_storage.autosave_interval_secs.store(value, Ordering::Release);
+    app.user_data_storage
+        .autosave_interval_secs
+        .store(value, Ordering::Release);
 }

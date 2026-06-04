@@ -1,9 +1,10 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
-use crate::storage::scryfall::callback_reader::CallbackReader;
 use crate::storage::scryfall::SCRYFALL_DATA_FILE_PATH;
+use crate::storage::scryfall::callback_reader::CallbackReader;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
+use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
 use polars::prelude::ParquetWriter;
 use schemas::scryfall::card::{ScryfallCard, ScryfallCardBuilder};
 use schemas::traits::builder::PolarsBuilder;
@@ -11,10 +12,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread;
 use std::time::{Duration, Instant};
-use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
-use struson::reader::{JsonStreamReader, JsonReader};
+use struson::reader::{JsonReader, JsonStreamReader};
 use url::Url;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
@@ -123,7 +122,8 @@ impl SyncHandler {
                 format_size(file.metadata()?.len(), FormatSizeOptions::default())
             );
             Ok(())
-        }).await?
+        })
+        .await?
     }
 
     /// Draw the loading bar UI that should appear when syncing from scryfall.
@@ -186,6 +186,9 @@ mod tests {
 
     #[test]
     fn check_humansize_behaviour() {
-        println!("{}", humansize::format_size_i(f32::INFINITY, FormatSizeOptions::default()));
+        println!(
+            "{}",
+            humansize::format_size_i(f32::INFINITY, FormatSizeOptions::default())
+        );
     }
 }

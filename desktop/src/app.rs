@@ -1,17 +1,19 @@
 use crate::storage::scryfall::ScryfallStorage;
-use crate::view::{View, MENU_BAR_ID};
-use clients::scryfall::ScryfallClient;
-use eframe::Frame;
-use egui::{Context, IconData, Key, KeyboardShortcut, Modifiers, Panel, ViewportCommand, containers::menu::MenuBar, RichText, Color32, Label, frame, Margin, Layout, TextFormat, Style, FontSelection, CentralPanel};
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use chrono::{DateTime, Local};
-use eframe::emath::Align;
-use egui::text::LayoutJob;
-use egui_material_icons::{icons, MaterialIcon};
 use crate::storage::user_data::UserDataStorage;
+use crate::view::View;
 use crate::view::home::HOME;
 use crate::view::settings::SETTINGS;
+use chrono::Local;
+use clients::scryfall::ScryfallClient;
+use eframe::Frame;
+use eframe::emath::Align;
+use egui::{
+    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout,
+    Modifiers, Panel, ViewportCommand, containers::menu::MenuBar,
+};
+use egui_material_icons::icons;
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 pub struct Oshibana {
     pub scryfall_storage: ScryfallStorage,
@@ -44,27 +46,25 @@ impl Oshibana {
 
 impl eframe::App for Oshibana {
     fn logic(&mut self, ctx: &Context, frame: &mut Frame) {
-        // static QUIT_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::Q);
         static SAVE_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::S);
 
-        // let should_quit = ctx.input_mut(|input| input.consume_shortcut(&QUIT_SHORTCUT));
         let should_save = ctx.input_mut(|input| input.consume_shortcut(&SAVE_SHORTCUT));
-
-        // if should_quit {
-        //     ctx.send_viewport_cmd(ViewportCommand::Close);
-        // }
 
         if should_save {
             self.user_data_storage.trigger_save();
         }
 
         if ctx.input(|i| i.viewport().close_requested()) {
-            self.scryfall_storage.sync_handler.cancel_requested.store(true, Ordering::Relaxed);
+            self.scryfall_storage
+                .sync_handler
+                .cancel_requested
+                .store(true, Ordering::Relaxed);
             self.user_data_storage.save().expect("saved successfully");
         }
-        
+
         if !self.scryfall_storage.is_ready() && !self.scryfall_storage.try_reload() {
-            self.scryfall_storage.trigger_sync(Arc::clone(&self.user_data_storage));
+            self.scryfall_storage
+                .trigger_sync(Arc::clone(&self.user_data_storage));
         }
 
         if ctx.input(|i| i.viewport().visible()).unwrap_or(true) {
@@ -94,7 +94,8 @@ impl eframe::App for Oshibana {
                     ui.separator();
 
                     if ui.button("Pull latest scryfall data").clicked() {
-                        self.scryfall_storage.trigger_sync(Arc::clone(&self.user_data_storage));
+                        self.scryfall_storage
+                            .trigger_sync(Arc::clone(&self.user_data_storage));
                     }
 
                     ui.separator();
@@ -112,9 +113,7 @@ impl eframe::App for Oshibana {
 
                 ui.menu_button("Window", |ui| {
                     if ui.button("Toggle Fullscreen").clicked() {
-                        let fullscreen_state = ui.input(|input| {
-                            input.viewport().maximized
-                        });
+                        let fullscreen_state = ui.input(|input| input.viewport().maximized);
 
                         if let Some(state) = fullscreen_state {
                             ui.send_viewport_cmd(ViewportCommand::Maximized(!state));
@@ -140,12 +139,17 @@ impl eframe::App for Oshibana {
                 ui.label(Local::now().format("%Y %B %e %r").to_string());
 
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    match is_saving || has_pending {
-                        true => {
+                    match (has_pending, is_saving) {
+                        (_, true) => {
                             ui.spinner();
                             ui.label("Saving");
                         }
-                        false => {
+
+                        (true, false) => {
+                            ui.label("Waiting for autosave");
+                        }
+
+                        (false, false) => {
                             ui.label(icons::ICON_CHECK.rich_text());
                             ui.label("Saved");
                         }

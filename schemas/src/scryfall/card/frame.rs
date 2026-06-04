@@ -3,7 +3,6 @@ use polars::datatypes::Categorical8Type;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoStaticStr};
 
-
 /// Frame effects as described at https://scryfall.com/docs/api/frames.
 ///
 /// There are a few undocumented ones here, which I found in live data on the Scryfall API.
@@ -46,7 +45,7 @@ pub enum FrameEffect {
 
     /// Also undocumented, textless cards from FRA get their own variant it seems.
     /// https://scryfall.com/card/fra/402/bloodline-recollector-ancestral-craving?utm_source=api
-    Textless
+    Textless,
 }
 
 const _: () = const {

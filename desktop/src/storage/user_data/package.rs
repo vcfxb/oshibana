@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use egui::accesskit::Uuid;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Package {

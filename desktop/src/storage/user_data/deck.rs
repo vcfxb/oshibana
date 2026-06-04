@@ -9,9 +9,9 @@ Deck builder views:
 - highlighter: filter by board
  */
 
-use std::collections::HashMap;
 use egui::accesskit::Uuid;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Deck {

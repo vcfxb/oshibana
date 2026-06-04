@@ -1,13 +1,11 @@
 //! Different views that the application uses,
 
-use egui::{Context, MenuBar, Panel, Ui, ViewportCommand};
-use eframe::Frame;
 use crate::app::Oshibana;
+use eframe::Frame;
+use egui::{Context, Ui};
 
 pub mod home;
 pub mod settings;
-
-pub static MENU_BAR_ID: &str = "top_bar";
 
 #[derive(Copy, Clone)]
 pub struct View {

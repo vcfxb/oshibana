@@ -1,4 +1,3 @@
-use std::sync::{Arc, LazyLock};
 use crate::generate_record_builder_and_dt;
 use crate::scryfall::card::card_face::CardFace;
 use crate::scryfall::card::colors::Color;
@@ -22,6 +21,7 @@ use chrono::NaiveDate;
 use polars::chunked_array::StructChunked;
 use polars::prelude::{DataFrame, DataType, PolarsResult, Schema, SchemaRef};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, LazyLock};
 use url::Url;
 use uuid::Uuid;
 

@@ -31,4 +31,3 @@ impl<F: Fn(usize, Duration), R: Read> Read for CallbackReader<F, R> {
         Ok(count)
     }
 }
-

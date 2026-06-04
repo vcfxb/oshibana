@@ -1,10 +1,10 @@
 //! Trait to map rust types to polars types
 
 mod boolean;
+mod date;
 mod primitive;
 mod string;
 mod time;
-mod date;
 
 use crate::traits::builder::PolarsBuilder;
 use polars::chunked_array::builder::AnonymousOwnedListBuilder;

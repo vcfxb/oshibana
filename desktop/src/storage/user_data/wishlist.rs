@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use egui::accesskit::Uuid;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WishlistItem {

@@ -1,4 +1,3 @@
-
 // release builds don't log / show terminal.
 #![cfg_attr(feature = "prod", windows_subsystem = "windows")]
 
@@ -19,8 +18,8 @@ use log4rs::append::rolling_file::policy::compound::roll::fixed_window::FixedWin
 use log4rs::append::rolling_file::policy::compound::trigger::onstartup::OnStartUpTrigger;
 use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
-use std::{fs, panic};
 use std::sync::Arc;
+use std::{fs, panic};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -118,7 +117,8 @@ async fn main() -> anyhow::Result<()> {
             egui_material_icons::initialize(&cc.egui_ctx);
             Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
         }),
-    ).unwrap();
+    )
+    .unwrap();
 
     Ok(())
 }

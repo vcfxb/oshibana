@@ -33,7 +33,7 @@ pub enum Condition {
     LightlyPlayed,
     MediumPlay,
     HeavilyPlayed,
-    Damaged
+    Damaged,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
