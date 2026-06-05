@@ -18,7 +18,7 @@ fn home_ui(app: &mut Oshibana, ui: &mut Ui, _frame: &mut Frame) {
     let last_scryfall_sync = app
         .user_data_storage
         .loaded
-        .read()
+        .lock()
         .unwrap()
         .last_scryfall_sync
         .unwrap_or_default()

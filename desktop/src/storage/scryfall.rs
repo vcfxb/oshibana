@@ -1,5 +1,6 @@
 pub mod callback_reader;
 pub mod sync_handler;
+pub mod search;
 
 use crate::storage::DATA_DIR;
 use crate::storage::scryfall::sync_handler::{SyncHandler, SyncState};
@@ -46,7 +47,11 @@ impl ScryfallStorage {
         }
 
         let pl_path_ref = PlRefPath::try_from_path(&SCRYFALL_DATA_FILE_PATH)?;
-        let args = ScanArgsParquet::default();
+        let args = ScanArgsParquet {
+            // use_statistics: false,
+            ..ScanArgsParquet::default()
+        };
+
         let mut lf = LazyFrame::scan_parquet(pl_path_ref, args)?;
         let actual_schema = lf.collect_schema()?;
 
@@ -91,7 +96,7 @@ impl ScryfallStorage {
                 pull_handler.pull(all_cards.download_uri).await?;
                 userdata
                     .loaded
-                    .write()
+                    .lock()
                     .unwrap()
                     .last_scryfall_sync
                     .replace(Utc::now());

@@ -18,6 +18,20 @@ pub struct UserData {
     pub packages: Vec<Package>,
     /// Apply global oracle tags in wishlist, decks, & collection
     pub global_oracle_tags: HashMap<Uuid, Vec<String>>,
+    #[serde(default = "default_visible_columns")]
+    pub visible_search_columns: Vec<String>,
+}
+
+fn default_visible_columns() -> Vec<String> {
+    [
+        "name",
+        "mana_cost",
+        "type_line",
+        "rarity",
+        "set",
+        "collector_number",
+        "lang",
+    ].map(ToOwned::to_owned).to_vec()
 }
 
 impl Default for UserData {
@@ -30,6 +44,7 @@ impl Default for UserData {
             wishlist: vec![],
             packages: vec![],
             global_oracle_tags: Default::default(),
+            visible_search_columns: default_visible_columns(),
         }
     }
 }

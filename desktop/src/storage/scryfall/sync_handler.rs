@@ -185,6 +185,7 @@ mod tests {
     use humansize::FormatSizeOptions;
 
     #[test]
+    #[ignore = "blocks the thread forever"]
     fn check_humansize_behaviour() {
         println!(
             "{}",

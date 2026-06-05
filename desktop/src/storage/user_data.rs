@@ -4,7 +4,7 @@ use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 use std::{fs, thread};
 
@@ -17,7 +17,7 @@ pub mod wishlist;
 pub static USER_DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("user_data.json"));
 
 pub struct UserDataStorage {
-    pub loaded: RwLock<UserData>,
+    pub loaded: Mutex<UserData>,
     has_pending_updates: AtomicBool,
     manually_triggered: AtomicBool,
     pub autosave_interval_secs: AtomicF32,
@@ -58,7 +58,7 @@ impl UserDataStorage {
             log::info!("wrote user data file");
         }
 
-        let user_data = RwLock::new(Self::load_from_fs()?);
+        let user_data = Mutex::new(Self::load_from_fs()?);
         let interval = AtomicF32::new(2.0);
         let has_pending_changes = AtomicBool::new(false);
         let manually_triggered = AtomicBool::new(false);
@@ -106,14 +106,14 @@ impl UserDataStorage {
 
         let new_save_path = USER_DATA_PATH.with_added_extension(".new");
 
-        let user_data_read_guard = self.loaded.read().unwrap();
+        let user_data_guard = self.loaded.lock().unwrap();
 
-        let mpk_bytes = serde_json::to_vec(&*user_data_read_guard).map_err(|err| {
+        let mpk_bytes = serde_json::to_vec(&*user_data_guard).map_err(|err| {
             log::error!("failed to serialize userdata: {err}");
             err
         })?;
 
-        drop(user_data_read_guard);
+        drop(user_data_guard);
 
         fs::write(&new_save_path, &mpk_bytes).map_err(|err| {
             log::error!("failed to write userdata to file: {err}");
@@ -131,6 +131,10 @@ impl UserDataStorage {
         self.last_save.store(Instant::now(), Ordering::Release);
         log::info!("Saved successfully in {:?}", start.elapsed());
         Ok(())
+    }
+
+    pub fn mark_pending(&self) {
+        self.has_pending_updates.store(true, Ordering::Release);
     }
 
     pub fn trigger_save(&self) {

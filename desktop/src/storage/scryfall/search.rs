@@ -1,0 +1,49 @@
+use crate::storage::scryfall::ScryfallStorage;
+use polars::error::PolarsResult;
+use std::ops::Deref;
+
+impl ScryfallStorage {
+    pub fn search(&self, query: String, cols: impl Deref<Target = [impl Deref<Target = str>]>) -> PolarsResult<()> {
+        let lf = self.lf.as_ref().unwrap().clone();
+
+        // let select = cols.iter()
+        //     .map(|field| col(field.deref()))
+        //     .collect::<Vec<Expr>>();
+        //
+        // let df = lf.select(select)
+        //     .filter()
+        //     .collect()?;
+
+        unimplemented!()
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::storage::scryfall::ScryfallStorage;
+    use clients::scryfall::ScryfallClient;
+    use polars::prelude::{col, lit};
+    use std::time::Instant;
+
+    #[test]
+    fn test_search_by_scryfall_id() {
+        let storage = ScryfallStorage::new(ScryfallClient::new());
+
+        let start = Instant::now();
+        let results = storage.lf.unwrap()
+            .select([col("id")])
+            .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))
+            .collect()
+            .unwrap();
+
+        assert_eq!(
+            results,
+            polars::df! { "id" => [
+                "c14c07d4-6971-483a-add1-f3cdf18feae9"
+            ]}.unwrap()
+        );
+
+        println!("{:?}", start.elapsed());
+    }
+}

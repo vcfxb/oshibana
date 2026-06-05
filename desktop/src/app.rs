@@ -65,7 +65,10 @@ impl eframe::App for Oshibana {
             self.user_data_storage.save().expect("saved successfully");
         }
 
-        if !self.scryfall_storage.is_ready() && !self.scryfall_storage.try_reload() {
+        if !self.scryfall_storage.is_ready() &&
+            !self.scryfall_storage.sync_handler.is_syncing() &&
+            !self.scryfall_storage.try_reload()
+        {
             self.scryfall_storage
                 .trigger_sync(Arc::clone(&self.user_data_storage));
         }
