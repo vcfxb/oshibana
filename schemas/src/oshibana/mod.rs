@@ -42,6 +42,7 @@ pub struct UserData {
 //     .to_vec()
 // }
 
+#[allow(clippy::derivable_impls)]
 impl Default for UserData {
     fn default() -> Self {
         UserData {

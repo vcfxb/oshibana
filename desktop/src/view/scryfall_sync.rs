@@ -17,6 +17,7 @@ pub struct SyncView {
 }
 
 impl SyncView {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         SyncView {
             displayed_cards: AtomicUsize::new(0),

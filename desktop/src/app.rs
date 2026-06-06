@@ -100,7 +100,7 @@ impl eframe::App for Oshibana {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut Frame) {
         if self.scryfall_storage.sync_handler.is_syncing() {
             self.sync_view_state
-                .ui(&*self.scryfall_storage.sync_handler, ui);
+                .ui(&self.scryfall_storage.sync_handler, ui);
             return;
         }
 
