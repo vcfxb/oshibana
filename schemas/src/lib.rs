@@ -7,9 +7,9 @@ use strum::IntoEnumIterator;
 // pub mod oshibana;
 pub mod chunked_builders;
 pub mod macros;
+pub mod oshibana;
 pub mod scryfall;
 pub mod traits;
-pub mod oshibana;
 
 /// Utility function to generate a [polars] categorical datatype for an enum.
 fn enum_to_dt_enum<T: IntoEnumIterator + Into<&'static str>>() -> DataType {

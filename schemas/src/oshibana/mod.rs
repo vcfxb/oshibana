@@ -1,13 +1,13 @@
 //! Oshibana schema, including oshibana compressions of scryfall data stored on disc.
 
-use std::collections::HashMap;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use crate::oshibana::collection::Collection;
 use crate::oshibana::deck::Deck;
 use crate::oshibana::package::Package;
 use crate::oshibana::wishlist::WishlistItem;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
 pub mod collection;
 pub mod deck;
@@ -41,7 +41,6 @@ pub struct UserData {
 //     .map(ToOwned::to_owned)
 //     .to_vec()
 // }
-
 
 impl Default for UserData {
     fn default() -> Self {

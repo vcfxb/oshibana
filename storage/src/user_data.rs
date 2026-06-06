@@ -1,7 +1,7 @@
 use crate::DATA_DIR;
-use schemas::oshibana::UserData;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
+use schemas::oshibana::UserData;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
