@@ -2,13 +2,13 @@
 
 pub mod columns;
 
-use std::sync::{Arc, Mutex};
 use crate::app::Oshibana;
-use crate::view::{logic_noop, View};
+use crate::view::{View, logic_noop};
 use eframe::Frame;
 use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};
 use polars::prelude::DataFrame;
+use std::sync::{Arc, Mutex};
 
 pub const SEARCH: View = View {
     ui: search_ui,
@@ -33,7 +33,6 @@ pub struct SearchState {
     pub search_result: Arc<Mutex<DataFrame>>,
 }
 
-
 fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     ui.menu_button("Search", |ui| {
         ui.menu_button("Layout", |ui| {
@@ -46,10 +45,7 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             }
         });
 
-        let mut user_data_lock = app.user_data_storage
-            .loaded
-            .lock()
-            .unwrap();
+        let mut user_data_lock = app.user_data_storage.loaded.lock().unwrap();
 
         ui.menu_button("Columns", |ui| {
             ScrollArea::vertical().show(ui, |ui| {
@@ -70,13 +66,18 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 }
 
 fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
-    ui.horizontal_top(|ui| ui.vertical_centered(|ui| {
-        let search_bar = TextEdit::singleline(&mut app.search_state.search_text)
-            .desired_width(ui.available_width() - 40.0)
-            .font(FontId { size: 16.0, family: FontFamily::Monospace });
-        ui.add(search_bar);
-        ui.separator();
-    }));
+    ui.horizontal_top(|ui| {
+        ui.vertical_centered(|ui| {
+            let search_bar = TextEdit::singleline(&mut app.search_state.search_text)
+                .desired_width(ui.available_width() - 40.0)
+                .font(FontId {
+                    size: 16.0,
+                    family: FontFamily::Monospace,
+                });
+            ui.add(search_bar);
+            ui.separator();
+        })
+    });
 
     let mut user_data_guard = app.user_data_storage.loaded.lock().unwrap();
     let visible_cols = &user_data_guard.visible_search_columns;
@@ -97,4 +98,3 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             // body.rows(18.0, )
         });
 }
-

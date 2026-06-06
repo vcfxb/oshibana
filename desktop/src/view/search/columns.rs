@@ -17,7 +17,9 @@ pub fn get_possible_columns() -> Vec<String> {
 }
 
 fn unpack_struct(prefix: &str, dt: &DataType) -> Vec<String> {
-    let DataType::Struct(fields) = dt else { panic!("dt is not struct"); };
+    let DataType::Struct(fields) = dt else {
+        panic!("dt is not struct");
+    };
     let mut result = Vec::new();
 
     for field in fields {

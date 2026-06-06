@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use uuid::Uuid;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Collection {

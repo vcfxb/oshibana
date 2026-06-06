@@ -3,7 +3,11 @@ use polars::error::PolarsResult;
 use std::ops::Deref;
 
 impl ScryfallStorage {
-    pub fn search(&self, query: String, cols: impl Deref<Target = [impl Deref<Target = str>]>) -> PolarsResult<()> {
+    pub fn search(
+        &self,
+        query: String,
+        cols: impl Deref<Target = [impl Deref<Target = str>]>,
+    ) -> PolarsResult<()> {
         let lf = self.lf.as_ref().unwrap().clone();
 
         // let select = cols.iter()
@@ -18,7 +22,6 @@ impl ScryfallStorage {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use crate::scryfall::ScryfallStorage;
@@ -31,7 +34,9 @@ mod tests {
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
         let start = Instant::now();
-        let results = storage.lf.unwrap()
+        let results = storage
+            .lf
+            .unwrap()
             .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))
             .select([col("name")])
             .collect()
@@ -41,7 +46,8 @@ mod tests {
             results,
             polars::df! { "name" => [
                 "Wheel of Fortune"
-            ]}.unwrap()
+            ]}
+            .unwrap()
         );
 
         println!("{:?}", start.elapsed());

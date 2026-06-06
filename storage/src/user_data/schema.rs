@@ -31,7 +31,9 @@ fn default_visible_columns() -> Vec<String> {
         "set",
         "collector_number",
         "lang",
-    ].map(ToOwned::to_owned).to_vec()
+    ]
+    .map(ToOwned::to_owned)
+    .to_vec()
 }
 
 impl Default for UserData {

@@ -1,20 +1,20 @@
-use storage::scryfall::ScryfallStorage;
-use storage::user_data::UserDataStorage;
 use crate::view::View;
 use crate::view::home::HOME;
+use crate::view::search::{SEARCH, SearchState};
 use crate::view::settings::SETTINGS;
 use chrono::Local;
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
 use egui::{
-    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout,
-    Modifiers, Panel, ViewportCommand, containers::menu::MenuBar,
+    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel,
+    ViewportCommand, containers::menu::MenuBar,
 };
 use egui_material_icons::icons;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use crate::view::search::{SearchState, SEARCH};
+use storage::scryfall::ScryfallStorage;
+use storage::user_data::UserDataStorage;
 
 pub struct Oshibana {
     pub scryfall_storage: ScryfallStorage,
@@ -65,9 +65,9 @@ impl eframe::App for Oshibana {
             self.user_data_storage.save().expect("saved successfully");
         }
 
-        if !self.scryfall_storage.is_ready() &&
-            !self.scryfall_storage.sync_handler.is_syncing() &&
-            !self.scryfall_storage.try_reload()
+        if !self.scryfall_storage.is_ready()
+            && !self.scryfall_storage.sync_handler.is_syncing()
+            && !self.scryfall_storage.try_reload()
         {
             self.scryfall_storage
                 .trigger_sync(Arc::clone(&self.user_data_storage));

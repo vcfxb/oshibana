@@ -5,9 +5,9 @@ use eframe::Frame;
 use egui::{Context, Ui};
 
 pub mod home;
-pub mod settings;
-pub mod search;
 pub mod scryfall_sync;
+pub mod search;
+pub mod settings;
 
 #[derive(Copy, Clone)]
 pub struct View {

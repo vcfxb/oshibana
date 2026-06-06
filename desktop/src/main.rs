@@ -5,7 +5,6 @@ pub mod app;
 pub mod view;
 
 use crate::app::Oshibana;
-use storage::LOGS_DIR;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
 use image::GenericImageView;
@@ -19,6 +18,7 @@ use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use std::sync::Arc;
 use std::{fs, panic};
+use storage::LOGS_DIR;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;

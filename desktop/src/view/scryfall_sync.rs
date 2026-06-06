@@ -1,10 +1,10 @@
 //! We want scryfall sync to render over the whole window so we don't bother with the usual
 //! View stuff.
 
-use std::sync::atomic::Ordering;
 use egui::Ui;
+use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
+use std::sync::atomic::Ordering;
 use storage::scryfall::sync_handler::{SyncHandler, SyncState};
-use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
 
 /// Draw the loading bar UI that should appear when syncing from scryfall.
 pub fn ui(sync_handler: &SyncHandler, ui: &mut Ui) {
@@ -43,7 +43,9 @@ pub fn ui(sync_handler: &SyncHandler, ui: &mut Ui) {
 
             ui.label(format!(
                 "{} cards downloaded",
-                sync_handler.displayed_cards_transformed.load(Ordering::Acquire)
+                sync_handler
+                    .displayed_cards_transformed
+                    .load(Ordering::Acquire)
             ));
 
             let msg = match *sync_handler.sync_state.try_lock().unwrap() {
@@ -58,8 +60,6 @@ pub fn ui(sync_handler: &SyncHandler, ui: &mut Ui) {
         });
     });
 }
-
-
 
 #[cfg(test)]
 mod tests {

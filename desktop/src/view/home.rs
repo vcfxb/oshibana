@@ -2,7 +2,7 @@
 
 use crate::app::Oshibana;
 use crate::view::search::SEARCH;
-use crate::view::{logic_noop, ui_noop, View};
+use crate::view::{View, logic_noop, ui_noop};
 use eframe::Frame;
 use egui::Ui;
 
