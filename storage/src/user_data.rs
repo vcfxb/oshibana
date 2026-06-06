@@ -13,7 +13,7 @@ pub static USER_DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("u
 pub struct UserDataStorage {
     pub loaded: Mutex<UserData>,
     has_pending_updates: AtomicBool,
-    manually_triggered: AtomicBool,
+    save_manually_triggered: AtomicBool,
     pub autosave_interval_secs: AtomicF32,
     currently_saving: AtomicBool,
     last_save: AtomicInstant,
@@ -61,7 +61,7 @@ impl UserDataStorage {
         let storage = Arc::new(Self {
             loaded: user_data,
             has_pending_updates: has_pending_changes,
-            manually_triggered,
+            save_manually_triggered: manually_triggered,
             autosave_interval_secs: interval,
             currently_saving,
             last_save: AtomicInstant::now(),
@@ -74,7 +74,8 @@ impl UserDataStorage {
                 let last_save = storage_clone.last_save.load(Ordering::Acquire);
                 let interval = storage_clone.autosave_interval_secs.load(Ordering::Relaxed);
 
-                if storage_clone.manually_triggered.load(Ordering::Acquire) {
+                if storage_clone.save_manually_triggered.load(Ordering::Acquire) {
+                    // discard save failures, they'll be retried automatically
                     storage_clone.save().ok();
                 }
 
@@ -83,6 +84,7 @@ impl UserDataStorage {
                 }
 
                 if storage_clone.has_pending_updates.load(Ordering::Acquire) {
+                    // discard save failures, they'll be retried automatically
                     storage_clone.save().ok();
                 }
             }
@@ -99,7 +101,6 @@ impl UserDataStorage {
         }
 
         let new_save_path = USER_DATA_PATH.with_added_extension(".new");
-
         let user_data_guard = self.loaded.lock().unwrap();
 
         let mpk_bytes = serde_json::to_vec(&*user_data_guard).map_err(|err| {
@@ -121,7 +122,7 @@ impl UserDataStorage {
         })?;
 
         self.has_pending_updates.store(false, Ordering::Release);
-        self.manually_triggered.store(false, Ordering::Release);
+        self.save_manually_triggered.store(false, Ordering::Release);
         self.last_save.store(Instant::now(), Ordering::Release);
         log::info!("Saved successfully in {:?}", start.elapsed());
         Ok(())
@@ -132,7 +133,7 @@ impl UserDataStorage {
     }
 
     pub fn trigger_save(&self) {
-        self.manually_triggered.store(true, Ordering::Release);
+        self.save_manually_triggered.store(true, Ordering::Release);
     }
 
     pub fn has_pending_updates(&self) -> bool {
@@ -140,7 +141,7 @@ impl UserDataStorage {
     }
 
     pub fn currently_saving(&self) -> bool {
-        self.manually_triggered.load(Ordering::Acquire)
+        self.save_manually_triggered.load(Ordering::Acquire)
             || self.currently_saving.load(Ordering::Acquire)
     }
 }

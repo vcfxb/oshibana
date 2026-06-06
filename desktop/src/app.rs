@@ -15,24 +15,31 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use storage::scryfall::ScryfallStorage;
 use storage::user_data::UserDataStorage;
+use crate::view::scryfall_sync::SyncView;
 
 pub struct Oshibana {
-    pub scryfall_storage: ScryfallStorage,
+    pub scryfall_storage: Arc<ScryfallStorage>,
     pub user_data_storage: Arc<UserDataStorage>,
     pub icon: Arc<IconData>,
     pub current_view: View,
     pub search_state: SearchState,
+    pub sync_view_state: Arc<SyncView>
 }
 
 impl Oshibana {
     pub fn new(_: &eframe::CreationContext<'_>, icon: Arc<IconData>) -> anyhow::Result<Self> {
         let scryfall_client = ScryfallClient::new();
-        let scryfall_storage = ScryfallStorage::new(scryfall_client);
+        let scryfall_storage = Arc::new(ScryfallStorage::new(scryfall_client));
         let user_data = UserDataStorage::new()?;
+        let sync_view_state = Arc::new(SyncView::new());
 
         if !scryfall_storage.is_ready() {
             log::warn!("scryfall storage not ready, triggering initial sync");
-            scryfall_storage.trigger_sync(Arc::clone(&user_data));
+
+            let progress_cb = sync_view_state.clone()
+                .make_progress_cb(scryfall_storage.sync_handler.clone());
+
+            scryfall_storage.clone().trigger_sync(Arc::clone(&user_data), progress_cb);
         }
 
         log::info!("constructing application state");
@@ -43,6 +50,7 @@ impl Oshibana {
             icon,
             current_view: HOME,
             search_state: SearchState::default(),
+            sync_view_state,
         })
     }
 }
@@ -69,8 +77,11 @@ impl eframe::App for Oshibana {
             && !self.scryfall_storage.sync_handler.is_syncing()
             && !self.scryfall_storage.try_reload()
         {
-            self.scryfall_storage
-                .trigger_sync(Arc::clone(&self.user_data_storage));
+            let progress_cb = self.sync_view_state.clone()
+                .make_progress_cb(self.scryfall_storage.sync_handler.clone());
+
+            self.scryfall_storage.clone()
+                .trigger_sync(Arc::clone(&self.user_data_storage), progress_cb);
         }
 
         if ctx.input(|i| i.viewport().visible()).unwrap_or(true) {
@@ -82,7 +93,7 @@ impl eframe::App for Oshibana {
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut Frame) {
         if self.scryfall_storage.sync_handler.is_syncing() {
-            crate::view::scryfall_sync::ui(&self.scryfall_storage.sync_handler, ui);
+            self.sync_view_state.ui(&*self.scryfall_storage.sync_handler, ui);
             return;
         }
 
@@ -104,8 +115,11 @@ impl eframe::App for Oshibana {
                     ui.separator();
 
                     if ui.button("Pull latest scryfall data").clicked() {
-                        self.scryfall_storage
-                            .trigger_sync(Arc::clone(&self.user_data_storage));
+                        let progress_cb = self.sync_view_state.clone()
+                            .make_progress_cb(self.scryfall_storage.sync_handler.clone());
+
+                        self.scryfall_storage.clone()
+                            .trigger_sync(Arc::clone(&self.user_data_storage), progress_cb);
                     }
 
                     ui.separator();

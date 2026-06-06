@@ -907,6 +907,8 @@ name = "desktop"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "atomic-time",
+ "atomic_float",
  "chrono",
  "clients",
  "eframe",

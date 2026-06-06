@@ -8,7 +8,7 @@ impl ScryfallStorage {
         query: String,
         cols: impl Deref<Target = [impl Deref<Target = str>]>,
     ) -> PolarsResult<()> {
-        let lf = self.lf.as_ref().unwrap().clone();
+        // let lf = self.lf.as_ref().unwrap().clone();
 
         // let select = cols.iter()
         //     .map(|field| col(field.deref()))
@@ -34,9 +34,9 @@ mod tests {
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
         let start = Instant::now();
-        let results = storage
-            .lf
-            .unwrap()
+        let lf_guard = storage.lf.lock().unwrap();
+        let lf = lf_guard.as_ref().unwrap().clone();
+        let results = lf
             .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))
             .select([col("name")])
             .collect()

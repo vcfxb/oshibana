@@ -12,6 +12,10 @@ clients.workspace = true
 schemas.workspace = true
 storage.workspace = true
 
+# Atomics
+atomic_float.workspace = true
+atomic-time.workspace = true
+
 # Error handling
 anyhow.workspace = true
 log.workspace = true
@@ -24,7 +28,6 @@ chrono.workspace = true
 polars.workspace = true
 tokio.workspace = true
 mimalloc = "0.1.50"
-
 
 # UI
 humansize.workspace = true

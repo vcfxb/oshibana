@@ -16,25 +16,33 @@ use polars::prelude::ScanArgsParquet;
 use schemas::scryfall::card::SCRYFALL_CARD_SCHEMA;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, LazyLock, Mutex};
+use std::time::Duration;
 
 pub static SCRYFALL_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| DATA_DIR.join("scryfall-data.parquet"));
 
-#[derive(Clone)]
 pub struct ScryfallStorage {
-    lf: Option<LazyFrame>,
+    lf: Mutex<Option<LazyFrame>>,
     client: ScryfallClient,
-    needs_reload: Arc<AtomicBool>,
+    needs_reload_from_fs: AtomicBool,
     pub sync_handler: Arc<SyncHandler>,
+
 }
+
+// pub struct ScryfallStorage {
+//     lf: Option<LazyFrame>,
+//     client: ScryfallClient,
+//     needs_resync: Arc<AtomicBool>,
+//     pub sync_handler: Arc<SyncHandler>,
+// }
 
 impl ScryfallStorage {
     pub fn new(client: ScryfallClient) -> Self {
         Self {
-            lf: Self::load_lf().ok(),
+            lf: Mutex::new(Self::load_lf().ok()),
             client: client.clone(),
-            needs_reload: Arc::new(AtomicBool::new(false)),
+            needs_reload_from_fs: AtomicBool::new(false),
             sync_handler: Arc::new(SyncHandler::new()),
         }
     }
@@ -65,7 +73,11 @@ impl ScryfallStorage {
         Ok(lf)
     }
 
-    pub fn trigger_sync(&self, userdata: Arc<UserDataStorage>) {
+    pub fn trigger_sync(
+        self: Arc<Self>,
+        userdata: Arc<UserDataStorage>,
+        progress_cb: impl Fn(usize, Duration) + Send + 'static
+    ) {
         let mut state = self.sync_handler.sync_state.lock().unwrap();
 
         // Guard against multiple syncs running simultaneously
@@ -77,11 +89,7 @@ impl ScryfallStorage {
         drop(state);
 
         log::info!("Scryfall Sync triggered");
-        let sync_state = Arc::clone(&self.sync_handler.sync_state);
-        let sync_size = Arc::clone(&self.sync_handler.sync_size);
         let client = self.client.clone();
-        let pull_handler = self.sync_handler.clone();
-        let needs_reload = self.needs_reload.clone();
 
         tokio::spawn(async move {
             let res = async {
@@ -92,15 +100,19 @@ impl ScryfallStorage {
                     .find(|item| item.r#type == "all_cards")
                     .ok_or_else(|| anyhow!("No all_cards bulk data found"))?;
 
-                sync_size.store(all_cards.size as usize, Ordering::Release);
-                pull_handler.pull(all_cards.download_uri).await?;
+                self.sync_handler.expected_size.store(all_cards.size as usize, Ordering::Release);
+                let sync_handler = Arc::clone(&self.sync_handler);
+                sync_handler.pull(all_cards.download_uri, progress_cb).await?;
+
                 userdata
                     .loaded
                     .lock()
                     .unwrap()
                     .last_scryfall_sync
                     .replace(Utc::now());
+
                 userdata.trigger_save();
+
                 Ok::<(), anyhow::Error>(())
             }
             .await;
@@ -109,22 +121,26 @@ impl ScryfallStorage {
                 log::error!("Scryfall Sync failed: {}", e);
             }
 
-            needs_reload.store(true, Ordering::Release);
-            *sync_state.lock().unwrap() = SyncState::Idle;
+            self.needs_reload_from_fs.store(true, Ordering::Release);
+            *self.sync_handler.sync_state.lock().unwrap() = SyncState::Idle;
         });
     }
 
-    pub fn try_reload(&mut self) -> bool {
-        self.lf = Self::load_lf()
+    pub fn try_reload(&self) -> bool {
+        let mut lf_guard = self.lf.lock().unwrap();
+
+        *lf_guard = Self::load_lf()
             .map_err(|err| log::warn!("error loading scryfall data, will retry: {err}"))
             .ok();
 
-        let success = self.lf.is_some();
-        self.needs_reload.store(!success, Ordering::Release);
+        let success = lf_guard.is_some();
+        drop(lf_guard);
+        self.needs_reload_from_fs.store(!success, Ordering::Release);
         success
     }
 
     pub fn is_ready(&self) -> bool {
-        self.lf.is_some() && !self.needs_reload.load(Ordering::Acquire)
+        let has_loaded = self.lf.lock().unwrap().is_some();
+        has_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
     }
 }
