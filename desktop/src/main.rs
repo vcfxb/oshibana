@@ -30,11 +30,13 @@ async fn main() -> anyhow::Result<()> {
     let log_file_dir = LOGS_DIR.as_path();
 
     // create log file cache path if it doesn't exist
-    eprintln!(
-        "Creating {} if it doesn't exist to store logs.",
-        log_file_dir.display()
-    );
-    fs::create_dir_all(log_file_dir)?;
+    if !log_file_dir.exists() {
+        eprintln!(
+            "Creating {} to store logs.",
+            log_file_dir.display()
+        );
+        fs::create_dir_all(log_file_dir)?;
+    }
 
     let archive_pattern = log_file_dir.join("archived-oshibana-{}.log");
 
@@ -75,9 +77,10 @@ async fn main() -> anyhow::Result<()> {
         panic_hook(info);
     }));
 
-    let data_dir = *storage::DATA_DIR;
-    log::info!("creating data dir if doesn't exist: {}", data_dir.display());
-    fs::create_dir_all(data_dir)?;
+    if !storage::DATA_DIR.exists() {
+        log::info!("creating data dir: {}", storage::DATA_DIR.display());
+        fs::create_dir_all(*storage::DATA_DIR)?;
+    }
 
     let icon_data = {
         let png_bytes: &[u8] = match egui::Context::default().system_theme() {
