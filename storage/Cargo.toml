@@ -1,0 +1,36 @@
+[package]
+name = "storage"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+# Oshibana Crates
+schemas.workspace = true
+clients.workspace = true
+
+# Common Dependencies
+# Error Handling
+anyhow.workspace = true
+log.workspace = true
+
+# Atomics
+atomic_float.workspace = true
+atomic-time.workspace = true
+
+# Datatypes
+chrono.workspace = true
+url.workspace = true
+uuid.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+struson = { version = "0.7.2", features = ["serde"] }
+
+# Utilities
+polars.workspace = true
+tokio.workspace = true
+scopeguard.workspace = true
+reqwest.workspace = true
+humansize.workspace = true
+directories = "6.0.0"
