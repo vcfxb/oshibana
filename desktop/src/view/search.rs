@@ -79,7 +79,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         })
     });
 
-    let mut user_data_guard = app.user_data_storage.loaded.lock().unwrap();
+    let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
     let visible_cols = &user_data_guard.visible_search_columns;
 
     TableBuilder::new(ui)
@@ -93,7 +93,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                 });
             }
         })
-        .body(|body| {
+        .body(|_body| {
             // app.scryfall_storage
             // body.rows(18.0, )
         });

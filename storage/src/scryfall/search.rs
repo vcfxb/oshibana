@@ -5,8 +5,8 @@ use std::ops::Deref;
 impl ScryfallStorage {
     pub fn search(
         &self,
-        query: String,
-        cols: impl Deref<Target = [impl Deref<Target = str>]>,
+        _query: String,
+        _cols: impl Deref<Target = [impl Deref<Target = str>]>,
     ) -> PolarsResult<()> {
         // let lf = self.lf.as_ref().unwrap().clone();
 

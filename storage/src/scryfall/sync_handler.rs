@@ -2,7 +2,6 @@
 
 use crate::scryfall::SCRYFALL_DATA_FILE_PATH;
 use crate::scryfall::callback_reader::CallbackReader;
-use atomic_time::AtomicInstant;
 use humansize::{FormatSizeOptions, format_size};
 use polars::prelude::ParquetWriter;
 use schemas::scryfall::card::{ScryfallCard, ScryfallCardBuilder};
@@ -11,7 +10,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use struson::reader::{JsonReader, JsonStreamReader};
 use url::Url;
 
@@ -29,7 +28,6 @@ pub struct SyncHandler {
     pub cancel_requested: AtomicBool,
     pub card_count: AtomicUsize,
     pub expected_size: AtomicUsize,
-    last_tick: AtomicInstant,
 }
 
 impl SyncHandler {
@@ -39,7 +37,6 @@ impl SyncHandler {
             sync_state: Mutex::new(SyncState::Idle),
             expected_size: AtomicUsize::new(0),
             card_count: AtomicUsize::new(0),
-            last_tick: AtomicInstant::now(),
             cancel_requested: AtomicBool::new(false),
         }
     }
