@@ -1,5 +1,5 @@
-use crate::storage::scryfall::ScryfallStorage;
-use crate::storage::user_data::UserDataStorage;
+use storage::scryfall::ScryfallStorage;
+use storage::user_data::UserDataStorage;
 use crate::view::View;
 use crate::view::home::HOME;
 use crate::view::settings::SETTINGS;
@@ -82,7 +82,7 @@ impl eframe::App for Oshibana {
 
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut Frame) {
         if self.scryfall_storage.sync_handler.is_syncing() {
-            self.scryfall_storage.sync_handler.ui(ui);
+            crate::view::scryfall_sync::ui(&self.scryfall_storage.sync_handler, ui);
             return;
         }
 

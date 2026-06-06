@@ -1,4 +1,4 @@
-use crate::storage::scryfall::ScryfallStorage;
+use crate::scryfall::ScryfallStorage;
 use polars::error::PolarsResult;
 use std::ops::Deref;
 
@@ -21,7 +21,7 @@ impl ScryfallStorage {
 
 #[cfg(test)]
 mod tests {
-    use crate::storage::scryfall::ScryfallStorage;
+    use crate::scryfall::ScryfallStorage;
     use clients::scryfall::ScryfallClient;
     use polars::prelude::{col, lit};
     use std::time::Instant;
@@ -32,15 +32,15 @@ mod tests {
 
         let start = Instant::now();
         let results = storage.lf.unwrap()
-            .select([col("id")])
             .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))
+            .select([col("name")])
             .collect()
             .unwrap();
 
         assert_eq!(
             results,
-            polars::df! { "id" => [
-                "c14c07d4-6971-483a-add1-f3cdf18feae9"
+            polars::df! { "name" => [
+                "Wheel of Fortune"
             ]}.unwrap()
         );
 

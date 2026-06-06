@@ -2,9 +2,9 @@ pub mod callback_reader;
 pub mod sync_handler;
 pub mod search;
 
-use crate::storage::DATA_DIR;
-use crate::storage::scryfall::sync_handler::{SyncHandler, SyncState};
-use crate::storage::user_data::UserDataStorage;
+use crate::DATA_DIR;
+use crate::scryfall::sync_handler::{SyncHandler, SyncState};
+use crate::user_data::UserDataStorage;
 use anyhow::anyhow;
 use chrono::Utc;
 use clients::scryfall::ScryfallClient;
@@ -103,7 +103,7 @@ impl ScryfallStorage {
                 userdata.trigger_save();
                 Ok::<(), anyhow::Error>(())
             }
-            .await;
+                .await;
 
             if let Err(e) = res {
                 log::error!("Scryfall Sync failed: {}", e);

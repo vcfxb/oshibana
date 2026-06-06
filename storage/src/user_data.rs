@@ -1,5 +1,5 @@
-use crate::storage::DATA_DIR;
-use crate::storage::user_data::schema::UserData;
+use crate::DATA_DIR;
+use crate::user_data::schema::UserData;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
 use std::path::PathBuf;

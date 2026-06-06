@@ -1,11 +1,11 @@
-use crate::storage::user_data::collection::Collection;
-use crate::storage::user_data::deck::Deck;
-use crate::storage::user_data::package::Package;
-use crate::storage::user_data::wishlist::WishlistItem;
+use crate::user_data::collection::Collection;
+use crate::user_data::deck::Deck;
+use crate::user_data::package::Package;
+use crate::user_data::wishlist::WishlistItem;
 use chrono::{DateTime, Utc};
-use egui::accesskit::Uuid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserData {

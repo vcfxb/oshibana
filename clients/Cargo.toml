@@ -4,12 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-governor = "0.10.4"
-log = "0.4.29"
-thiserror = "2.0.18"
-
-# Workspace deps
 schemas.workspace = true
 futures.workspace = true
 reqwest.workspace = true
 serde.workspace = true
+log.workspace = true
+thiserror.workspace = true
+
+governor = "0.10.4"

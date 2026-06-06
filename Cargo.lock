@@ -907,11 +907,8 @@ name = "desktop"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "atomic-time",
- "atomic_float",
  "chrono",
  "clients",
- "directories",
  "eframe",
  "egui",
  "egui_alignments",
@@ -923,15 +920,9 @@ dependencies = [
  "log4rs",
  "mimalloc",
  "polars",
- "reqwest 0.13.4",
  "schemas",
- "scopeguard",
- "serde",
- "serde_json",
- "struson",
+ "storage",
  "tokio",
- "url",
- "uuid",
 ]
 
 [[package]]
@@ -2497,9 +2488,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.30"
+version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 dependencies = [
  "serde_core",
 ]
@@ -5154,6 +5145,30 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "atomic-time",
+ "atomic_float",
+ "chrono",
+ "clients",
+ "directories",
+ "humansize",
+ "log",
+ "polars",
+ "reqwest 0.13.4",
+ "schemas",
+ "scopeguard",
+ "serde",
+ "serde_json",
+ "struson",
+ "tokio",
+ "url",
+ "uuid",
+]
 
 [[package]]
 name = "streaming-decompression"

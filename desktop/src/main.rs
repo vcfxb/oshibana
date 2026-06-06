@@ -2,11 +2,10 @@
 #![cfg_attr(feature = "prod", windows_subsystem = "windows")]
 
 pub mod app;
-pub mod storage;
 pub mod view;
 
 use crate::app::Oshibana;
-use crate::storage::LOGS_DIR;
+use storage::LOGS_DIR;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
 use image::GenericImageView;

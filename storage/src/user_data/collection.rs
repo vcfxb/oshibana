@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use egui::accesskit::Uuid;
+use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]

@@ -2,12 +2,13 @@
 
 pub mod columns;
 
+use std::sync::{Arc, Mutex};
 use crate::app::Oshibana;
 use crate::view::{logic_noop, View};
 use eframe::Frame;
 use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};
-use schemas::scryfall::card::SCRYFALL_CARD_SCHEMA;
+use polars::prelude::DataFrame;
 
 pub const SEARCH: View = View {
     ui: search_ui,
@@ -20,12 +21,16 @@ pub enum SearchLayout {
     #[default]
     Rows,
     Tiles,
+
+    /// Card images next to their info/oracle_text/etc
+    Detailed,
 }
 
 #[derive(Debug, Default)]
 pub struct SearchState {
     pub search_text: String,
     pub layout: SearchLayout,
+    pub search_result: Arc<Mutex<DataFrame>>,
 }
 
 

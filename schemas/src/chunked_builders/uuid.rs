@@ -16,39 +16,10 @@ impl MapPolarsType for Uuid {
 }
 
 /*
-I wish I cou
+I wish I could use u128s (or better yet, a native uuid type)
+here but polars support for them is not finished it seems.
+https://github.com/pola-rs/polars/pull/27881
  */
-
-
-// impl MapPolarsType for Option<Uuid> {
-//     type StaticPolarsType = <Uuid as MapPolarsType>::StaticPolarsType;
-//     type Builder = <Uuid as MapPolarsType>::Builder;
-//
-//     fn dt() -> DataType {
-//         <Uuid as MapPolarsType>::dt()
-//     }
-// }
-
-// impl PolarsBuilder<Uuid> for PrimitiveChunkedBuilder<UInt128Type> {
-//     type ChunkedType = ChunkedArray<UInt128Type>;
-//
-//     fn new() -> Self {
-//         PrimitiveChunkedBuilder::new(PlSmallStr::EMPTY, 0)
-//     }
-//
-//     fn append(&mut self, val: Uuid) -> PolarsResult<()> {
-//         ChunkedBuilder::append_value(self, val.as_u128());
-//         Ok(())
-//     }
-//
-//     fn append_null(&mut self) {
-//         ChunkedBuilder::append_null(self)
-//     }
-//
-//     fn finish(self) -> PolarsResult<ChunkedArray<UInt128Type>> {
-//         Ok(ChunkedBuilder::finish(self))
-//     }
-// }
 
 impl PolarsBuilder<Uuid> for StringChunkedBuilder {
     type ChunkedType = ChunkedArray<StringType>;
