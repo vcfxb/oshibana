@@ -27,7 +27,6 @@ pub struct ScryfallStorage {
     client: ScryfallClient,
     needs_reload_from_fs: AtomicBool,
     pub sync_handler: Arc<SyncHandler>,
-
 }
 
 // pub struct ScryfallStorage {
@@ -76,7 +75,7 @@ impl ScryfallStorage {
     pub fn trigger_sync(
         self: Arc<Self>,
         userdata: Arc<UserDataStorage>,
-        progress_cb: impl Fn(usize, Duration) + Send + 'static
+        progress_cb: impl Fn(usize, Duration) + Send + 'static,
     ) {
         let mut state = self.sync_handler.sync_state.lock().unwrap();
 
@@ -100,9 +99,13 @@ impl ScryfallStorage {
                     .find(|item| item.r#type == "all_cards")
                     .ok_or_else(|| anyhow!("No all_cards bulk data found"))?;
 
-                self.sync_handler.expected_size.store(all_cards.size as usize, Ordering::Release);
+                self.sync_handler
+                    .expected_size
+                    .store(all_cards.size as usize, Ordering::Release);
                 let sync_handler = Arc::clone(&self.sync_handler);
-                sync_handler.pull(all_cards.download_uri, progress_cb).await?;
+                sync_handler
+                    .pull(all_cards.download_uri, progress_cb)
+                    .await?;
 
                 userdata
                     .loaded

@@ -31,10 +31,7 @@ async fn main() -> anyhow::Result<()> {
 
     // create log file cache path if it doesn't exist
     if !log_file_dir.exists() {
-        eprintln!(
-            "Creating {} to store logs.",
-            log_file_dir.display()
-        );
+        eprintln!("Creating {} to store logs.", log_file_dir.display());
         fs::create_dir_all(log_file_dir)?;
     }
 

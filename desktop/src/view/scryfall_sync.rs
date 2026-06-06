@@ -1,13 +1,13 @@
 //! We want scryfall sync to render over the whole window so we don't bother with the usual
 //! View stuff.
 
-use std::sync::{Arc, LazyLock};
 use atomic_float::AtomicF32;
+use atomic_time::AtomicInstant;
 use egui::Ui;
 use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
-use atomic_time::AtomicInstant;
 use storage::scryfall::sync_handler::{SyncHandler, SyncState};
 
 pub struct SyncView {
@@ -27,14 +27,13 @@ impl SyncView {
 
     pub fn make_progress_cb(
         self: Arc<Self>,
-        sync_handler: Arc<SyncHandler>
+        sync_handler: Arc<SyncHandler>,
     ) -> impl Fn(usize, Duration) + Send + 'static {
         const DISPLAY_TICK_INTERVAL: Duration = Duration::from_millis(300);
         static LAST_DISPLAY_TICK: LazyLock<AtomicInstant> = LazyLock::new(AtomicInstant::now);
 
         move |bytes_downloaded: usize, elapsed: Duration| {
-            let last_call =
-                bytes_downloaded == sync_handler.expected_size.load(Ordering::Acquire);
+            let last_call = bytes_downloaded == sync_handler.expected_size.load(Ordering::Acquire);
 
             let interval_passed =
                 LAST_DISPLAY_TICK.load(Ordering::Acquire).elapsed() >= DISPLAY_TICK_INTERVAL;
@@ -42,10 +41,11 @@ impl SyncView {
             if last_call || interval_passed {
                 self.displayed_cards.store(
                     sync_handler.card_count.load(Ordering::Acquire),
-                    Ordering::Release
+                    Ordering::Release,
                 );
 
-                self.displayed_bytes_downloaded.store(bytes_downloaded, Ordering::Release);
+                self.displayed_bytes_downloaded
+                    .store(bytes_downloaded, Ordering::Release);
 
                 let rate = bytes_downloaded as f32 / elapsed.as_secs_f32();
                 self.displayed_rate.store(rate, Ordering::Release);

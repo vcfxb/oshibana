@@ -74,7 +74,10 @@ impl UserDataStorage {
                 let last_save = storage_clone.last_save.load(Ordering::Acquire);
                 let interval = storage_clone.autosave_interval_secs.load(Ordering::Relaxed);
 
-                if storage_clone.save_manually_triggered.load(Ordering::Acquire) {
+                if storage_clone
+                    .save_manually_triggered
+                    .load(Ordering::Acquire)
+                {
                     // discard save failures, they'll be retried automatically
                     storage_clone.save().ok();
                 }

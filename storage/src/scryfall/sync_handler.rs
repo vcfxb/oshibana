@@ -52,38 +52,14 @@ impl SyncHandler {
     pub async fn pull(
         self: Arc<Self>,
         uri: Url,
-        progress_cb: impl Fn(usize, Duration) + Send + 'static, 
+        progress_cb: impl Fn(usize, Duration) + Send + 'static,
     ) -> anyhow::Result<()> {
-        // let displayed_download = Arc::clone(&self.displayed_bytes);
-        // let displayed_rate = Arc::clone(&self.displayed_rate);
-        // let displayed_cards_transformed = Arc::clone(&self.displayed_cards_transformed);
-        // let last_tick = Arc::clone(&self.last_tick);
-        // let sync_state = Arc::clone(&self.sync_state);
-        // let sync_size = self.sync_size.load(Ordering::Relaxed);
-        // let cancel_requested = self.cancel_requested.clone();
-        // let atomic_card_count = AtomicUsize::new(0);
         let mut builder = <ScryfallCardBuilder as PolarsBuilder<ScryfallCard>>::new();
 
         tokio::task::spawn_blocking::<_, anyhow::Result<()>>(move || {
             log::info!("pulling scryfall card data from {uri}");
             let client = reqwest::blocking::Client::builder().build()?;
             let response = client.get(uri).send()?;
-
-            // let wrapper_cb = |total_read: usize, elapsed: Duration| {
-            //     if last_tick.load(Ordering::Acquire).elapsed() > Self::UPDATE_DISPLAY_INTERVAL {
-            //         displayed_download.store(total_read, Ordering::Relaxed);
-            //         // fix!! we have to make sure elapsed is > 0, since otherwise we
-            //         // get infinity here, and then the ui freezes forever trying to render
-            //         // infinity as a size of bytes.
-            //         let new_rate = total_read as f32 / elapsed.as_secs_f32().max(0.1);
-            //         displayed_rate.store(new_rate, Ordering::Relaxed);
-            //         let card_count = atomic_card_count.load(Ordering::Acquire);
-            //         displayed_cards_transformed.store(card_count, Ordering::Relaxed);
-            //         last_tick.store(Instant::now(), Ordering::Release);
-            //     }
-            // };
-
-            
             let cb_reader = CallbackReader::new(progress_cb, response);
             // Sticking it in a bufreader gives us a very significant speedup
             let buf_reader = BufReader::new(cb_reader);
@@ -102,11 +78,8 @@ impl SyncHandler {
                     return Ok(());
                 }
             }
-            
-            let card_count = self.card_count.load(Ordering::Acquire);
-            // displayed_cards_transformed.store(card_count, Ordering::Relaxed);
+
             json_reader.end_array()?;
-            // displayed_download.store(sync_size, Ordering::Relaxed);
             let mut df = builder.finish_into_dataframe()?;
             log::info!("finished downloading card data");
             *self.sync_state.lock().unwrap() = SyncState::FsWrite;
