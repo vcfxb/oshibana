@@ -1,5 +1,5 @@
 use crate::DATA_DIR;
-use crate::user_data::schema::UserData;
+use schemas::oshibana::UserData;
 use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
 use std::path::PathBuf;
@@ -7,12 +7,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 use std::{fs, thread};
-
-pub mod collection;
-pub mod deck;
-pub mod package;
-pub mod schema;
-pub mod wishlist;
 
 pub static USER_DATA_PATH: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("user_data.json"));
 

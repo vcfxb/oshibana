@@ -41,37 +41,3 @@ macro_rules! impl_map_to_polars_for_prim {
 }
 
 impl_map_to_polars_for_prim!(u8, i8, u16, i16, f32, i32, u32, f64, i64, u64, u128, i128,);
-
-// impl MapPolarsType for u8 {
-//     type StaticPolarsType = UInt8Type;
-//     type Builder = PrimitiveChunkedBuilder<UInt8Type>;
-//
-//     fn dt() -> DataType {
-//         DataType::UInt8
-//     }
-// }
-//
-// impl PolarsBuilder<u8> for PrimitiveChunkedBuilder<UInt8Type> {
-//     type ChunkedType = ChunkedArray<UInt8Type>;
-//
-//     fn new() -> Self {
-//         todo!()
-//     }
-//
-//     fn append(&mut self, val: u8) -> PolarsResult<()> {
-//         todo!()
-//     }
-//
-//     fn finish(self) -> PolarsResult<Self::ChunkedType> {
-//         todo!()
-//     }
-// }
-//
-// impl MapPolarsType for Vec<u8> {
-//     type StaticPolarsType = ListType;
-//     type Builder = ListPrimitiveChunkedBuilder<UInt8Type>;
-//
-//     fn dt() -> DataType {
-//         DataType::List(Box::new(DataType::UInt8))
-//     }
-// }

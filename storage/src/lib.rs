@@ -1,4 +1,7 @@
 //! Storage & filesystem handling for oshibana
+//!
+//! The goal of this crate is to provide an abstraction over the concurrency handling, file IO, etc
+//! of data stored on disk.
 
 pub mod scryfall;
 pub mod user_data;
