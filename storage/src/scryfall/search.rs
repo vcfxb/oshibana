@@ -1,3 +1,5 @@
+pub mod query_parser;
+
 use crate::scryfall::ScryfallStorage;
 use polars::error::PolarsResult;
 use std::ops::Deref;
@@ -34,7 +36,7 @@ mod tests {
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
         let start = Instant::now();
-        let lf_guard = storage.lf.lock().unwrap();
+        let lf_guard = storage.cards_lf.lock().unwrap();
         let lf = lf_guard.as_ref().unwrap().clone();
         let results = lf
             .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))

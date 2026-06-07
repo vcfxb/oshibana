@@ -155,6 +155,25 @@ impl eframe::App for Oshibana {
                         }
                     }
                 });
+
+                ui.menu_button("Help", |ui| {
+                    if ui.button("Open logs folder").clicked() {
+                        opener::reveal(storage::LOGS_DIR.as_path())
+                            .inspect_err(|err| {
+                                log::warn!("Could not open logs directory: {err}");
+                            })
+                            // discard error after logging
+                            .ok();
+                    }
+
+                    if ui.button("Open data folder").clicked() {
+                        opener::reveal(*storage::DATA_DIR)
+                            .inspect_err(|err| {
+                                log::warn!("Could not open data directory: {err}");
+                            })
+                            .ok();
+                    }
+                });
             })
         });
 

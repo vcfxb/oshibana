@@ -1,9 +1,10 @@
 use crate::traits::map_type::MapPolarsType;
-use polars::chunked_array::ChunkedArray;
 use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
+use polars::chunked_array::ChunkedArray;
 use polars::datatypes::{PlSmallStr, PolarsNumericType};
 use polars::error::PolarsResult;
-use polars::prelude::{ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder};
+use polars::frame::DataFrame;
+use polars::prelude::{ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder, StructChunked};
 use polars::prelude::{ListBuilderTrait, PolarsCategoricalType};
 
 pub trait PolarsBuilder<T: MapPolarsType> {
@@ -16,6 +17,16 @@ pub trait PolarsBuilder<T: MapPolarsType> {
     fn append_null(&mut self);
 
     fn finish(self) -> PolarsResult<Self::ChunkedType>;
+
+    /// Finishes this builder and then breaks out the fields into columns of a [`DataFrame`].
+    fn finish_into_dataframe(self) -> PolarsResult<DataFrame>
+    where
+        Self: Sized + PolarsBuilder<T, ChunkedType = StructChunked>,
+    {
+        let chunked: StructChunked = Self::finish(self)?;
+        let cols = chunked.fields_as_columns();
+        DataFrame::new_infer_height(cols)
+    }
 }
 
 impl<T> PolarsBuilder<Option<T>> for PrimitiveChunkedBuilder<<T as MapPolarsType>::StaticPolarsType>

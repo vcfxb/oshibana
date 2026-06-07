@@ -18,7 +18,8 @@ use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use std::sync::Arc;
 use std::{fs, panic};
-use storage::LOGS_DIR;
+use storage::{DATA_DIR, LOGS_DIR};
+use storage::scryfall::SCRYFALL_DATA_DIR;
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -74,9 +75,10 @@ async fn main() -> anyhow::Result<()> {
         panic_hook(info);
     }));
 
-    if !storage::DATA_DIR.exists() {
-        log::info!("creating data dir: {}", storage::DATA_DIR.display());
-        fs::create_dir_all(*storage::DATA_DIR)?;
+    // create data dir & scryfall data dir if not present
+    if !SCRYFALL_DATA_DIR.exists() {
+        log::info!("creating data & data/scryfall directories: {}", DATA_DIR.display());
+        fs::create_dir_all(SCRYFALL_DATA_DIR.as_path())?;
     }
 
     let icon_data = {
@@ -109,8 +111,9 @@ async fn main() -> anyhow::Result<()> {
         ..NativeOptions::default()
     };
 
+    
     eframe::run_native(
-        "Oshibana",
+        format!("Oshibana v{}", env!("CARGO_PKG_VERSION")).as_str(),
         native_options,
         Box::new(|cc| {
             egui_material_icons::initialize(&cc.egui_ctx);

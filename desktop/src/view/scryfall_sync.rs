@@ -2,16 +2,16 @@
 //! View stuff.
 
 use atomic_float::AtomicF32;
-use atomic_time::AtomicInstant;
 use egui::Ui;
-use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
+use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+use storage::scryfall::callback_reader::ProgressCallback;
 use storage::scryfall::sync_handler::{SyncHandler, SyncState};
 
 pub struct SyncView {
-    displayed_cards: AtomicUsize,
+    displayed_records: AtomicUsize,
     displayed_rate: AtomicF32,
     displayed_bytes_downloaded: AtomicUsize,
 }
@@ -20,7 +20,7 @@ impl SyncView {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         SyncView {
-            displayed_cards: AtomicUsize::new(0),
+            displayed_records: AtomicUsize::new(0),
             displayed_rate: AtomicF32::new(0.0),
             displayed_bytes_downloaded: AtomicUsize::new(0),
         }
@@ -29,29 +29,45 @@ impl SyncView {
     pub fn make_progress_cb(
         self: Arc<Self>,
         sync_handler: Arc<SyncHandler>,
-    ) -> impl Fn(usize, Duration) + Send + 'static {
+    ) -> impl ProgressCallback + Clone + Send + 'static {
         const DISPLAY_TICK_INTERVAL: Duration = Duration::from_millis(300);
-        static LAST_DISPLAY_TICK: LazyLock<AtomicInstant> = LazyLock::new(AtomicInstant::now);
 
-        move |bytes_downloaded: usize, elapsed: Duration| {
-            let last_call = bytes_downloaded == sync_handler.expected_size.load(Ordering::Acquire);
+        #[derive(Clone)]
+        struct CallbackHandler {
+            last_display_tick: Instant,
+            sync_view: Arc<SyncView>,
+            sync_handler: Arc<SyncHandler>
+        }
 
-            let interval_passed =
-                LAST_DISPLAY_TICK.load(Ordering::Acquire).elapsed() >= DISPLAY_TICK_INTERVAL;
+        impl ProgressCallback for CallbackHandler {
+            fn call(&mut self, bytes_read: usize, elapsed: Duration) {
+                let last_call =
+                    bytes_read == self.sync_handler.expected_size.load(Ordering::Acquire);
 
-            if last_call || interval_passed {
-                self.displayed_cards.store(
-                    sync_handler.card_count.load(Ordering::Acquire),
-                    Ordering::Release,
-                );
+                let interval_passed =
+                    self.last_display_tick.elapsed() >= DISPLAY_TICK_INTERVAL;
 
-                self.displayed_bytes_downloaded
-                    .store(bytes_downloaded, Ordering::Release);
+                if last_call || interval_passed {
+                    self.sync_view.displayed_records.store(
+                        self.sync_handler.card_count.load(Ordering::Acquire),
+                        Ordering::Release,
+                    );
 
-                let rate = bytes_downloaded as f32 / elapsed.as_secs_f32();
-                self.displayed_rate.store(rate, Ordering::Release);
-                LAST_DISPLAY_TICK.store(Instant::now(), Ordering::Release);
+                    self.sync_view.displayed_bytes_downloaded
+                        .store(bytes_read, Ordering::Release);
+
+                    // force the denominator to never be 0 so that we don't get INFINITY issues
+                    let rate = bytes_read as f32 / elapsed.as_secs_f32().max(0.1);
+                    self.sync_view.displayed_rate.store(rate, Ordering::Release);
+                    self.last_display_tick = Instant::now();
+                }
             }
+        }
+
+        CallbackHandler {
+            last_display_tick: Instant::now(),
+            sync_view: self,
+            sync_handler,
         }
     }
 
@@ -59,7 +75,9 @@ impl SyncView {
         egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(ui.available_height() / 3.0);
-                ui.heading("Syncing Scryfall Data");
+                let name_guard = sync_handler.sync_target.lock().unwrap();
+                ui.heading(format!("Syncing Scryfall Data: {name_guard}"));
+                drop(name_guard);
                 ui.add_space(20.0);
 
                 let total = sync_handler.expected_size.load(Ordering::Acquire);
@@ -87,8 +105,8 @@ impl SyncView {
                 ));
 
                 ui.label(format!(
-                    "{} cards downloaded",
-                    self.displayed_cards.load(Ordering::Acquire)
+                    "{} records downloaded",
+                    self.displayed_records.load(Ordering::Acquire)
                 ));
 
                 let msg = match *sync_handler.sync_state.lock().unwrap() {

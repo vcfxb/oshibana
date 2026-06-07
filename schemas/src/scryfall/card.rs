@@ -16,10 +16,8 @@ use crate::scryfall::card::related_card::RelatedCard;
 use crate::scryfall::card::related_uris::RelatedUris;
 use crate::scryfall::card::security_stamp::SecurityStamp;
 use crate::scryfall::set::SetType;
-use crate::traits::builder::PolarsBuilder;
 use chrono::NaiveDate;
-use polars::chunked_array::StructChunked;
-use polars::prelude::{DataFrame, DataType, PolarsResult, Schema, SchemaRef};
+use polars::prelude::{DataType, Schema, SchemaRef};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, LazyLock};
 use url::Url;
@@ -162,12 +160,3 @@ pub static SCRYFALL_CARD_SCHEMA: LazyLock<SchemaRef> = LazyLock::new(|| {
 
     Arc::new(Schema::from_iter(fields.iter().cloned()))
 });
-
-impl ScryfallCardBuilder {
-    /// Finishes this builder and then breaks out the fields into columns of a [`DataFrame`].
-    pub fn finish_into_dataframe(self) -> PolarsResult<DataFrame> {
-        let chunked: StructChunked = PolarsBuilder::<ScryfallCard>::finish(self)?;
-        let cols = chunked.fields_as_columns();
-        DataFrame::new_infer_height(cols)
-    }
-}

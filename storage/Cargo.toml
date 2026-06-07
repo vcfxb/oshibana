@@ -20,11 +20,10 @@ atomic-time.workspace = true
 # Datatypes
 chrono.workspace = true
 url.workspace = true
-uuid.workspace = true
 
 # Serialization
-serde.workspace = true
 serde_json.workspace = true
+serde.workspace = true
 struson = { version = "0.7.2", features = ["serde"] }
 
 # Utilities

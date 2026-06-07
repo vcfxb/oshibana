@@ -1,18 +1,19 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
-use crate::scryfall::SCRYFALL_DATA_FILE_PATH;
-use crate::scryfall::callback_reader::CallbackReader;
+use std::fmt::Debug;
+use crate::scryfall::callback_reader::{CallbackReader, ProgressCallback};
 use humansize::{FormatSizeOptions, format_size};
-use polars::prelude::ParquetWriter;
-use schemas::scryfall::card::{ScryfallCard, ScryfallCardBuilder};
+use polars::prelude::{ParquetWriter, StructChunked};
 use schemas::traits::builder::PolarsBuilder;
 use std::fs::File;
 use std::io::BufReader;
+use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 use struson::reader::{JsonReader, JsonStreamReader};
-use url::Url;
+use schemas::scryfall::bulk_data::BulkDataItem;
+use schemas::traits::map_type::MapPolarsType;
+use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum SyncState {
@@ -24,6 +25,8 @@ pub enum SyncState {
 
 #[derive(Debug)]
 pub struct SyncHandler {
+    /// Human-readable string -- what are we syncing from scryfall?
+    pub sync_target: Mutex<String>,
     pub sync_state: Mutex<SyncState>,
     pub cancel_requested: AtomicBool,
     pub card_count: AtomicUsize,
@@ -34,6 +37,7 @@ impl SyncHandler {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         SyncHandler {
+            sync_target: Mutex::new(String::new()),
             sync_state: Mutex::new(SyncState::Idle),
             expected_size: AtomicUsize::new(0),
             card_count: AtomicUsize::new(0),
@@ -46,28 +50,36 @@ impl SyncHandler {
     }
 
     /// Progress Callback args are bytes_synced & duration since start.
-    pub async fn pull(
+    pub async fn pull<D, B>(
         self: Arc<Self>,
-        uri: Url,
-        progress_cb: impl Fn(usize, Duration) + Send + 'static,
-    ) -> anyhow::Result<()> {
-        let mut builder = <ScryfallCardBuilder as PolarsBuilder<ScryfallCard>>::new();
+        bd_item: &BulkDataItem,
+        save_to: &Path,
+        progress_cb: impl ProgressCallback + Send + 'static,
+    ) -> anyhow::Result<()>
+    where
+        D: MapPolarsType + for<'de> Deserialize<'de> + Debug,
+        B: PolarsBuilder<D, ChunkedType = StructChunked> + Send + 'static,
+    {
+        self.expected_size.store(bd_item.size as usize, Ordering::Release);
+        let bd_name = bd_item.name.clone();
+        *self.sync_target.lock().unwrap() = bd_name.clone();
+        let mut builder = B::new();
+        let uri = bd_item.download_uri.clone();
+        let save_to = save_to.to_path_buf();
 
         tokio::task::spawn_blocking::<_, anyhow::Result<()>>(move || {
-            log::info!("pulling scryfall card data from {uri}");
+            log::info!("pulling scryfall {bd_name} data from {uri}");
             let client = reqwest::blocking::Client::builder().build()?;
             let response = client.get(uri).send()?;
             let cb_reader = CallbackReader::new(progress_cb, response);
             // Sticking it in a bufreader gives us a very significant speedup
             let buf_reader = BufReader::new(cb_reader);
-            // use struson to iterate over values so that we don't have to build
-            // an entire card vec in memory
             let mut json_reader = JsonStreamReader::new(buf_reader);
             json_reader.begin_array()?;
 
             while json_reader.has_next()? {
-                let card = json_reader.deserialize_next::<ScryfallCard>()?;
-                builder.append(card)?;
+                let row = json_reader.deserialize_next::<D>()?;
+                builder.append(row)?;
                 self.card_count.fetch_add(1, Ordering::Release);
 
                 if self.cancel_requested.load(Ordering::Relaxed) {
@@ -78,12 +90,12 @@ impl SyncHandler {
 
             json_reader.end_array()?;
             let mut df = builder.finish_into_dataframe()?;
-            log::info!("finished downloading card data");
+            log::info!("finished downloading {bd_name} data");
             *self.sync_state.lock().unwrap() = SyncState::FsWrite;
-            let mut file = File::create(&*SCRYFALL_DATA_FILE_PATH)?;
+            let mut file = File::create(save_to)?;
             ParquetWriter::new(&mut file).finish(&mut df)?;
             log::info!(
-                "wrote scryfall data file, {}",
+                "wrote scryfall {bd_name} data file, {}",
                 format_size(file.metadata()?.len(), FormatSizeOptions::default())
             );
             Ok(())
