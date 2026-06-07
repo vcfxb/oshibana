@@ -2,6 +2,8 @@ pub mod callback_reader;
 pub mod search;
 pub mod sync_handler;
 
+use std::fs::File;
+use std::io::BufReader;
 use crate::DATA_DIR;
 use crate::scryfall::callback_reader::ProgressCallback;
 use crate::scryfall::sync_handler::{SyncHandler, SyncState};
@@ -9,10 +11,9 @@ use crate::user_data::UserDataStorage;
 use anyhow::anyhow;
 use chrono::Utc;
 use clients::scryfall::ScryfallClient;
-use polars::prelude::PlRefPath;
+use polars::prelude::{DataFrame, ParquetReader, PlRefPath};
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
-use polars::prelude::ScanArgsParquet;
 use polars::prelude::{LazyFrame, SchemaRef};
 use schemas::scryfall::card::{SCRYFALL_CARD_SCHEMA, ScryfallCard, ScryfallCardBuilder};
 use schemas::scryfall::rulings::{SCRYFALL_RULING_SCHEMA, ScryfallRuling, ScryfallRulingBuilder};
@@ -20,6 +21,7 @@ use schemas::scryfall::tags::{SCRYFALL_TAGS_SCHEMA, ScryfallTag, ScryfallTagBuil
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
+use polars::prelude::SerReader;
 
 // todo: make sure this path is instantiated
 pub static SCRYFALL_DATA_DIR: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("scryfall"));
@@ -37,10 +39,10 @@ pub static SCRYFALL_ORACLE_TAGS_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_oracle_tags_data.parquet"));
 
 pub struct ScryfallStorage {
-    cards_lf: Mutex<Option<LazyFrame>>,
-    rulings_lf: Mutex<Option<LazyFrame>>,
-    art_tags_lf: Mutex<Option<LazyFrame>>,
-    oracle_tags_lf: Mutex<Option<LazyFrame>>,
+    cards_df: Mutex<Option<DataFrame>>,
+    rulings_df: Mutex<Option<DataFrame>>,
+    art_tags_df: Mutex<Option<DataFrame>>,
+    oracle_tags_df: Mutex<Option<DataFrame>>,
     client: ScryfallClient,
     needs_reload_from_fs: AtomicBool,
     pub sync_handler: Arc<SyncHandler>,
@@ -49,17 +51,17 @@ pub struct ScryfallStorage {
 impl ScryfallStorage {
     pub fn new(client: ScryfallClient) -> Self {
         Self {
-            cards_lf: Mutex::new(Self::load_cards_lf().ok()),
-            rulings_lf: Mutex::new(Self::load_rulings_lf().ok()),
-            art_tags_lf: Mutex::new(Self::load_art_tags_lf().ok()),
-            oracle_tags_lf: Mutex::new(Self::load_oracle_tags_lf().ok()),
+            cards_df: Mutex::new(Self::load_cards_df().ok()),
+            rulings_df: Mutex::new(Self::load_rulings_df().ok()),
+            art_tags_df: Mutex::new(Self::load_art_tags_df().ok()),
+            oracle_tags_df: Mutex::new(Self::load_oracle_tags_df().ok()),
             client: client.clone(),
             needs_reload_from_fs: AtomicBool::new(false),
             sync_handler: Arc::new(SyncHandler::new()),
         }
     }
 
-    fn load_lf(name: &str, path: &Path, expected_schema: SchemaRef) -> PolarsResult<LazyFrame> {
+    fn load_df(name: &str, path: &Path, expected_schema: SchemaRef) -> PolarsResult<DataFrame> {
         if !path.exists() {
             return Err(PolarsError::ComputeError(
                 format!("scryfall {name} data file does not exist").into(),
@@ -67,57 +69,61 @@ impl ScryfallStorage {
         }
 
         let pl_path_ref = PlRefPath::try_from_path(path)?;
-        let mut lf = LazyFrame::scan_parquet(pl_path_ref, ScanArgsParquet::default())?;
-        let actual_schema = lf.collect_schema()?;
+        let file_reader = BufReader::new(File::open(path)?);
+        let df = ParquetReader::new(file_reader)
+            .set_rechunk(true)
+            .finish()?;
 
-        if actual_schema != expected_schema {
+        let actual_schema = df.schema();
+
+        if *actual_schema != expected_schema {
             return Err(PolarsError::SchemaMismatch(
                 format!("{name} file schema does not match expected").into(),
             ));
         }
 
         log::info!("Loaded Scryfall {name} lazyframe successfully");
-        Ok(lf)
+        Ok(df)
     }
 
-    fn load_rulings_lf() -> PolarsResult<LazyFrame> {
-        Self::load_lf(
+    fn load_rulings_df() -> PolarsResult<DataFrame> {
+        Self::load_df(
             "rulings",
             SCRYFALL_RULINGS_DATA_FILE_PATH.as_path(),
             Arc::clone(&*SCRYFALL_RULING_SCHEMA),
         )
     }
 
-    fn load_cards_lf() -> PolarsResult<LazyFrame> {
-        Self::load_lf(
+    fn load_cards_df() -> PolarsResult<DataFrame> {
+        Self::load_df(
             "cards",
             SCRYFALL_CARD_DATA_FILE_PATH.as_path(),
             Arc::clone(&*SCRYFALL_CARD_SCHEMA),
         )
     }
 
-    fn load_art_tags_lf() -> PolarsResult<LazyFrame> {
-        Self::load_lf(
+    fn load_art_tags_df() -> PolarsResult<DataFrame> {
+        Self::load_df(
             "art tags",
             SCRYFALL_ART_TAGS_DATA_FILE_PATH.as_path(),
             Arc::clone(&*SCRYFALL_TAGS_SCHEMA),
         )
     }
 
-    fn load_oracle_tags_lf() -> PolarsResult<LazyFrame> {
-        Self::load_lf(
+    fn load_oracle_tags_df() -> PolarsResult<DataFrame> {
+        Self::load_df(
             "oracle tags",
             SCRYFALL_ORACLE_TAGS_DATA_FILE_PATH.as_path(),
             Arc::clone(&*SCRYFALL_TAGS_SCHEMA),
         )
     }
 
-    fn iter_lazyframes(&self) -> impl Iterator<Item = &Mutex<Option<LazyFrame>>> {
+    fn iter_dataframes(&self) -> impl Iterator<Item = &Mutex<Option<DataFrame>>> {
         [
-            &self.cards_lf,
-            &self.rulings_lf,
-            &self.art_tags_lf,
-            &self.oracle_tags_lf,
+            &self.cards_df,
+            &self.rulings_df,
+            &self.art_tags_df,
+            &self.oracle_tags_df,
         ]
         .into_iter()
     }
@@ -213,29 +219,29 @@ impl ScryfallStorage {
     }
 
     pub fn try_reload(&self) -> bool {
-        let handle_err = |name: &str, f: fn() -> PolarsResult<LazyFrame>| {
+        let handle_err = |name: &str, f: fn() -> PolarsResult<DataFrame>| {
             f().inspect_err(|err| log::warn!("error loading scryfall {name} data: {err}"))
                 .ok()
         };
 
-        let store_to_mutex = |mu: &Mutex<Option<LazyFrame>>, v: Option<LazyFrame>| {
+        let store_to_mutex = |mu: &Mutex<Option<DataFrame>>, v: Option<DataFrame>| {
             let mut guard = mu.lock().unwrap();
             *guard = v;
             guard.is_some()
         };
 
-        let loaded_cards = store_to_mutex(&self.cards_lf, handle_err("cards", Self::load_cards_lf));
+        let loaded_cards = store_to_mutex(&self.cards_df, handle_err("cards", Self::load_cards_df));
         let loaded_rulings = store_to_mutex(
-            &self.rulings_lf,
-            handle_err("rulings", Self::load_rulings_lf),
+            &self.rulings_df,
+            handle_err("rulings", Self::load_rulings_df),
         );
         let loaded_atags = store_to_mutex(
-            &self.art_tags_lf,
-            handle_err("art tags", Self::load_art_tags_lf),
+            &self.art_tags_df,
+            handle_err("art tags", Self::load_art_tags_df),
         );
         let loaded_otags = store_to_mutex(
-            &self.oracle_tags_lf,
-            handle_err("oracle tags", Self::load_oracle_tags_lf),
+            &self.oracle_tags_df,
+            handle_err("oracle tags", Self::load_oracle_tags_df),
         );
 
         let success = loaded_rulings && loaded_cards && loaded_atags && loaded_otags;
@@ -244,8 +250,8 @@ impl ScryfallStorage {
     }
 
     pub fn is_ready(&self) -> bool {
-        let check_loaded = |mu: &Mutex<Option<LazyFrame>>| mu.lock().unwrap().is_some();
-        let all_loaded = self.iter_lazyframes().all(check_loaded);
+        let check_loaded = |mu: &Mutex<Option<DataFrame>>| mu.lock().unwrap().is_some();
+        let all_loaded = self.iter_dataframes().all(check_loaded);
         all_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
     }
 }

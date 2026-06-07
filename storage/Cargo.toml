@@ -26,6 +26,9 @@ serde_json.workspace = true
 serde.workspace = true
 struson = { version = "0.7.2", features = ["serde"] }
 
+# Parsing
+nom = "8.0"
+
 # Utilities
 polars.workspace = true
 tokio.workspace = true

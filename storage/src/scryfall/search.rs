@@ -28,7 +28,7 @@ impl ScryfallStorage {
 mod tests {
     use crate::scryfall::ScryfallStorage;
     use clients::scryfall::ScryfallClient;
-    use polars::prelude::{col, lit};
+    use polars::prelude::{col, lit, DataFrame, IntoLazy};
     use std::time::Instant;
 
     #[test]
@@ -36,8 +36,9 @@ mod tests {
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
         let start = Instant::now();
-        let lf_guard = storage.cards_lf.lock().unwrap();
-        let lf = lf_guard.as_ref().unwrap().clone();
+        let lf_guard = storage.cards_df.lock().unwrap();
+        // df clone here is cheap -- it should just be a few pointers/arcs.
+        let lf = lf_guard.as_ref().unwrap().clone().lazy();
         let results = lf
             .filter(col("id").eq(lit("c14c07d4-6971-483a-add1-f3cdf18feae9")))
             .select([col("name")])
