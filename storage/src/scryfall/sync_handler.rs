@@ -1,19 +1,19 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
-use std::fmt::Debug;
 use crate::scryfall::callback_reader::{CallbackReader, ProgressCallback};
 use humansize::{FormatSizeOptions, format_size};
 use polars::prelude::{ParquetWriter, StructChunked};
+use schemas::scryfall::bulk_data::BulkDataItem;
 use schemas::traits::builder::PolarsBuilder;
+use schemas::traits::map_type::MapPolarsType;
+use serde::Deserialize;
+use std::fmt::Debug;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use struson::reader::{JsonReader, JsonStreamReader};
-use schemas::scryfall::bulk_data::BulkDataItem;
-use schemas::traits::map_type::MapPolarsType;
-use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum SyncState {
@@ -60,7 +60,8 @@ impl SyncHandler {
         D: MapPolarsType + for<'de> Deserialize<'de> + Debug,
         B: PolarsBuilder<D, ChunkedType = StructChunked> + Send + 'static,
     {
-        self.expected_size.store(bd_item.size as usize, Ordering::Release);
+        self.expected_size
+            .store(bd_item.size as usize, Ordering::Release);
         let bd_name = bd_item.name.clone();
         *self.sync_target.lock().unwrap() = bd_name.clone();
         let mut builder = B::new();

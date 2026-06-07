@@ -1,9 +1,9 @@
-use std::sync::{Arc, LazyLock};
+use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 use chrono::NaiveDate;
 use polars::datatypes::DataType;
 use polars::prelude::{Categorical8Type, Schema, SchemaRef};
-use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, LazyLock};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use uuid::Uuid;
@@ -25,7 +25,7 @@ use uuid::Uuid;
 #[strum(serialize_all = "lowercase")]
 pub enum RulingSource {
     Scryfall,
-    Wotc
+    Wotc,
 }
 
 generate_enum_dt_map_and_builder_impl!(RulingSource => Categorical8Type);

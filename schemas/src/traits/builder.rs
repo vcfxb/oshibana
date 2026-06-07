@@ -1,10 +1,12 @@
 use crate::traits::map_type::MapPolarsType;
-use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
 use polars::chunked_array::ChunkedArray;
+use polars::chunked_array::builder::{AnonymousOwnedListBuilder, CategoricalChunkedBuilder};
 use polars::datatypes::{PlSmallStr, PolarsNumericType};
 use polars::error::PolarsResult;
 use polars::frame::DataFrame;
-use polars::prelude::{ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder, StructChunked};
+use polars::prelude::{
+    ChunkedBuilder, IntoSeries, ListChunked, PrimitiveChunkedBuilder, StructChunked,
+};
 use polars::prelude::{ListBuilderTrait, PolarsCategoricalType};
 
 pub trait PolarsBuilder<T: MapPolarsType> {

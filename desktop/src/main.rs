@@ -18,8 +18,8 @@ use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use std::sync::Arc;
 use std::{fs, panic};
-use storage::{DATA_DIR, LOGS_DIR};
 use storage::scryfall::SCRYFALL_DATA_DIR;
+use storage::{DATA_DIR, LOGS_DIR};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -77,7 +77,10 @@ async fn main() -> anyhow::Result<()> {
 
     // create data dir & scryfall data dir if not present
     if !SCRYFALL_DATA_DIR.exists() {
-        log::info!("creating data & data/scryfall directories: {}", DATA_DIR.display());
+        log::info!(
+            "creating data & data/scryfall directories: {}",
+            DATA_DIR.display()
+        );
         fs::create_dir_all(SCRYFALL_DATA_DIR.as_path())?;
     }
 
@@ -111,7 +114,6 @@ async fn main() -> anyhow::Result<()> {
         ..NativeOptions::default()
     };
 
-    
     eframe::run_native(
         format!("Oshibana v{}", env!("CARGO_PKG_VERSION")).as_str(),
         native_options,

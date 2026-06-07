@@ -1,13 +1,13 @@
 //! As of June 2026, scryfall also exposes tagger data to us
 
-use std::sync::{Arc, LazyLock};
+use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 use polars::prelude::{Categorical8Type, DataType, Schema, SchemaRef};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, LazyLock};
 use strum::{EnumIter, IntoStaticStr};
 use typename::TypeName;
 use url::Url;
 use uuid::Uuid;
-use crate::{generate_enum_dt_map_and_builder_impl, generate_record_builder_and_dt};
 
 #[derive(
     Deserialize,
@@ -28,7 +28,7 @@ pub enum TagWeight {
     VeryStrong,
     Strong,
     Median,
-    Weak
+    Weak,
 }
 
 generate_enum_dt_map_and_builder_impl!(TagWeight => Categorical8Type);
@@ -50,11 +50,10 @@ generate_enum_dt_map_and_builder_impl!(TagWeight => Categorical8Type);
 #[strum(serialize_all = "lowercase")]
 pub enum TagType {
     Illustration,
-    Oracle
+    Oracle,
 }
 
 generate_enum_dt_map_and_builder_impl!(TagType => Categorical8Type);
-
 
 generate_record_builder_and_dt! {
     #[derive(Deserialize, Serialize, Debug)]
@@ -89,4 +88,3 @@ pub static SCRYFALL_TAGS_SCHEMA: LazyLock<SchemaRef> = LazyLock::new(|| {
 
     Arc::new(Schema::from_iter(fields.iter().cloned()))
 });
-

@@ -3,9 +3,9 @@
 
 use atomic_float::AtomicF32;
 use egui::Ui;
-use humansize::{format_size, format_size_i, FormatSizeOptions, Kilo};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use humansize::{FormatSizeOptions, Kilo, format_size, format_size_i};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use storage::scryfall::callback_reader::ProgressCallback;
 use storage::scryfall::sync_handler::{SyncHandler, SyncState};
@@ -36,7 +36,7 @@ impl SyncView {
         struct CallbackHandler {
             last_display_tick: Instant,
             sync_view: Arc<SyncView>,
-            sync_handler: Arc<SyncHandler>
+            sync_handler: Arc<SyncHandler>,
         }
 
         impl ProgressCallback for CallbackHandler {
@@ -44,8 +44,7 @@ impl SyncView {
                 let last_call =
                     bytes_read == self.sync_handler.expected_size.load(Ordering::Acquire);
 
-                let interval_passed =
-                    self.last_display_tick.elapsed() >= DISPLAY_TICK_INTERVAL;
+                let interval_passed = self.last_display_tick.elapsed() >= DISPLAY_TICK_INTERVAL;
 
                 if last_call || interval_passed {
                     self.sync_view.displayed_records.store(
@@ -53,7 +52,8 @@ impl SyncView {
                         Ordering::Release,
                     );
 
-                    self.sync_view.displayed_bytes_downloaded
+                    self.sync_view
+                        .displayed_bytes_downloaded
                         .store(bytes_read, Ordering::Release);
 
                     // force the denominator to never be 0 so that we don't get INFINITY issues
