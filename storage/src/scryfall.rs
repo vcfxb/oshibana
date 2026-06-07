@@ -245,9 +245,7 @@ impl ScryfallStorage {
 
     pub fn is_ready(&self) -> bool {
         let check_loaded = |mu: &Mutex<Option<LazyFrame>>| mu.lock().unwrap().is_some();
-
-        let all_loaded = self.iter_lazyframes().all(|mu| check_loaded(mu));
-
+        let all_loaded = self.iter_lazyframes().all(check_loaded);
         all_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
     }
 }
