@@ -1,26 +1,31 @@
 pub mod query_parser;
+pub mod polars_mapping;
 
 use crate::scryfall::ScryfallStorage;
-use polars::error::PolarsResult;
+use polars::prelude::DataFrame;
+use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum SearchError {
+    #[error("polars error: {0}")]
+    PolarsError(#[from] polars::error::PolarsError),
+    #[error("query parsing error: {0}")]
+    QueryParseError(#[from] query_parser::Error),
+}
 
 impl ScryfallStorage {
     pub fn search(
         &self,
-        _query: String,
-        _cols: impl Deref<Target = [impl Deref<Target = str>]>,
-    ) -> PolarsResult<()> {
-        // let lf = self.lf.as_ref().unwrap().clone();
-
-        // let select = cols.iter()
-        //     .map(|field| col(field.deref()))
-        //     .collect::<Vec<Expr>>();
-        //
-        // let df = lf.select(select)
-        //     .filter()
-        //     .collect()?;
-
-        unimplemented!()
+        query: &str,
+        cols: impl Deref<Target = [SearchColumn]>,
+    ) -> Result<DataFrame, SearchError> {
+        let parsed = query_parser::Expr::parse(query)?;
+        let filtered = polars_mapping::apply_filters(parsed, self);
+        let results_lf = polars_mapping::apply_select(filtered, cols);
+        let result = results_lf.collect()?;
+        Ok(result)
     }
 }
 
@@ -28,7 +33,7 @@ impl ScryfallStorage {
 mod tests {
     use crate::scryfall::ScryfallStorage;
     use clients::scryfall::ScryfallClient;
-    use polars::prelude::{col, lit, DataFrame, IntoLazy};
+    use polars::prelude::{col, lit, IntoLazy};
     use std::time::Instant;
 
     #[test]

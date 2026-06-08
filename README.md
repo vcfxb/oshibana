@@ -2,6 +2,16 @@
 
 ## About
 
+Oshibana is a desktop application for building _Magic: The Gathering_ decks and tracking 
+you _Magic: The Gathering_ collection.
+
+## System Requirements
+In order to make searching for cards all throughout the history of magic as fast as possible,
+we store a compressed copy of scryfall's card exports in memory. Because of this, it is recommended
+that you expect Oshibana to use 2-3 Gigabytes of RAM while you're using it. As I spend more time
+optimizing card storage going forward, this number may eventually be reduced.
+
+
 ## April/May 2026 rewrite
 This project is actively being rewritten in rust as a desktop native application.
 

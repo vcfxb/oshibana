@@ -12,6 +12,7 @@ clients.workspace = true
 # Error Handling
 anyhow.workspace = true
 log.workspace = true
+thiserror.workspace = true
 
 # Atomics
 atomic_float.workspace = true

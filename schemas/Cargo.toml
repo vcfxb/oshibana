@@ -7,10 +7,10 @@ edition = "2024"
 enumflags2 = { version = "0.7.12", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 uuid = { version = "1.23.1", features = ["serde"] }
-strum = { version = "0.28.0", features = ["derive"] }
 typename = "0.1.2"
 
 # Workspace deps
+strum.workspace = true
 chrono.workspace = true
 polars.workspace = true
 url.workspace = true

@@ -1057,6 +1057,7 @@ dependencies = [
  "polars",
  "schemas",
  "storage",
+ "strum 0.28.0",
  "tokio",
 ]
 
@@ -5383,6 +5384,7 @@ dependencies = [
  "serde",
  "serde_json",
  "struson",
+ "thiserror 2.0.18",
  "tokio",
  "url",
 ]

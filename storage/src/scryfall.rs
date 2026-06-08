@@ -11,10 +11,10 @@ use crate::user_data::UserDataStorage;
 use anyhow::anyhow;
 use chrono::Utc;
 use clients::scryfall::ScryfallClient;
-use polars::prelude::{DataFrame, ParquetReader, PlRefPath};
+use polars::prelude::{DataFrame, ParquetReader};
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
-use polars::prelude::{LazyFrame, SchemaRef};
+use polars::prelude::SchemaRef;
 use schemas::scryfall::card::{SCRYFALL_CARD_SCHEMA, ScryfallCard, ScryfallCardBuilder};
 use schemas::scryfall::rulings::{SCRYFALL_RULING_SCHEMA, ScryfallRuling, ScryfallRulingBuilder};
 use schemas::scryfall::tags::{SCRYFALL_TAGS_SCHEMA, ScryfallTag, ScryfallTagBuilder};
@@ -68,7 +68,6 @@ impl ScryfallStorage {
             ));
         }
 
-        let pl_path_ref = PlRefPath::try_from_path(path)?;
         let file_reader = BufReader::new(File::open(path)?);
         let df = ParquetReader::new(file_reader)
             .set_rechunk(true)

@@ -7,6 +7,7 @@ use crate::oshibana::wishlist::WishlistItem;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use strum::{EnumIter, IntoStaticStr};
 use uuid::Uuid;
 
 pub mod collection;
@@ -25,22 +26,33 @@ pub struct UserData {
     pub packages: Vec<Package>,
     /// Apply global oracle tags in wishlist, decks, & collection
     pub global_oracle_tags: HashMap<Uuid, Vec<String>>,
-    #[serde(default)] // todo: better default here
-    pub visible_search_columns: Vec<String>,
+    #[serde(default = "SearchColumn::defaults")]
+    pub visible_search_columns: Vec<SearchColumn>,
 }
-// fn default_visible_columns() -> Vec<String> {
-//     [
-//         "name",
-//         "mana_cost",
-//         "type_line",
-//         "rarity",
-//         "set",
-//         "collector_number",
-//         "lang",
-//     ]
-//     .map(ToOwned::to_owned)
-//     .to_vec()
-// }
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, IntoStaticStr, EnumIter)]
+#[strum(serialize_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum SearchColumn {
+    Name,
+    Type,
+}
+
+impl SearchColumn {
+    fn defaults() -> Vec<SearchColumn> {
+        use SearchColumn::*;
+        vec![
+            Name,
+            Type
+        ]
+    }
+
+    pub fn into_str(self) -> &'static str {
+        self.into()
+    }
+}
+
+
 
 #[allow(clippy::derivable_impls)]
 impl Default for UserData {
