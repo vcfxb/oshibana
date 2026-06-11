@@ -30,9 +30,11 @@ tokio.workspace = true
 mimalloc = "0.1.50"
 strum.workspace = true
 
-# UI
+# Formatting
 humansize.workspace = true
+heck = "0.5.0"
 
+# UI
 opener = { version = "0.8.4", features = ["reveal"] }
 
 # Disabling wgpu and using glow speeds up startup significantly (2 seconds).

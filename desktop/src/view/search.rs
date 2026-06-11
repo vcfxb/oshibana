@@ -5,8 +5,9 @@ pub mod col_format;
 use crate::app::Oshibana;
 use crate::view::{logic_noop, View};
 use eframe::Frame;
-use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
+use egui::{FontFamily, FontId, Response, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};
+use heck::ToPascalCase;
 use polars::prelude::AnyValue;
 use schemas::oshibana::SearchColumn;
 use strum::IntoEnumIterator;
@@ -55,7 +56,8 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             ScrollArea::vertical().show(ui, |ui| {
                 for col in SearchColumn::iter() {
                     let selected = user_data_lock.visible_search_columns.contains(&col);
-                    if ui.selectable_label(selected, col.into_str()).clicked() {
+                    let text = col.into_str().to_pascal_case();
+                    if ui.selectable_label(selected, text).clicked() {
                         if !selected {
                             user_data_lock.visible_search_columns.push(col);
                         } else {
@@ -87,7 +89,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let visible_cols = &user_data_guard.visible_search_columns;
     let formatting_fns = visible_cols.iter()
         .map(|col| col_format::col_format(*col))
-        .collect::<Vec<Box<dyn Fn(AnyValue, &mut Ui)>>>();
+        .collect::<Vec<fn(&AnyValue, &mut Ui) -> Response>>();
 
     let query = app.search_state.search_text.as_str();
     let search_result = app.scryfall_storage
@@ -102,29 +104,50 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
     let df = search_result.unwrap();
 
+    let col_count = df.columns()
+        .iter()
+        .filter(|c| !c.name().starts_with("_"))
+        .count();
+
     TableBuilder::new(ui)
-        .columns(Column::auto(), df.width())
+        .columns(Column::remainder(), col_count)
         .resizable(true)
         .striped(true)
         .header(16.0, |mut row| {
-            for search_col in df.get_column_names() {
+            let col_name_iter = df.get_column_names()
+                .into_iter()
+                .filter(|s| !s.starts_with("_"));
+
+            for search_col in col_name_iter {
                 row.col(|ui| {
                     ui.label(search_col.as_str());
                 });
             }
         })
         .body(|body| {
-            body.rows(12.0, df.height(), |mut row| {
+            body.rows(14.0, df.height(), |mut row| {
                 // this is potentially slow (polars discourages row indexing),
                 // but I don't know of a better way -- table's don't support adding col by col.
                 let df_row = df.get_row(row.index())
                     .expect("dataframe index is in bounds");
 
-                for (col_idx, col) in df_row.0.into_iter().enumerate() {
+                let mut values = df_row.0;
+                let normal_image_uri = values.pop().unwrap();
+
+                let hover = |ui: &mut Ui| {
+                    if let Some(uri) = normal_image_uri.extract_str() {
+                        ui.image(uri);
+                    }
+                };
+
+                for (col_idx, col) in values.iter().enumerate() {
                     row.col(|ui| {
-                        (formatting_fns[col_idx])(col, ui);
+                        let response = formatting_fns[col_idx](col, ui);
+                        response.on_hover_ui_at_pointer(hover);
                     });
                 }
+
+                row.response().on_hover_ui_at_pointer(hover);
             })
         });
 }

@@ -106,7 +106,7 @@ impl UserDataStorage {
         let new_save_path = USER_DATA_PATH.with_added_extension(".new");
         let user_data_guard = self.loaded.lock().unwrap();
 
-        let mpk_bytes = serde_json::to_vec(&*user_data_guard).map_err(|err| {
+        let mpk_bytes = serde_json::to_vec_pretty(&*user_data_guard).map_err(|err| {
             log::error!("failed to serialize userdata: {err}");
             err
         })?;

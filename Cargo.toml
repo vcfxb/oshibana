@@ -29,7 +29,8 @@ polars  = { version = "0.54.4", features = [
     "dtype-u8",
     "lazy",
     "parquet",
-    "regex"
+    "regex",
+    "is_in"
 ]}
 
 futures = "0.3.32"

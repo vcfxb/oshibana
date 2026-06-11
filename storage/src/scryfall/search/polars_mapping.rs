@@ -3,6 +3,7 @@
 use std::ops::Deref;
 use polars::prelude::{col, IntoLazy, LazyFrame, Expr as PExpr, lit};
 use schemas::oshibana::SearchColumn;
+use schemas::scryfall::card::languages::Language;
 use crate::scryfall::ScryfallStorage;
 use crate::scryfall::search::query_parser::Expr;
 
@@ -36,6 +37,11 @@ fn map_expr(e: Expr) -> PExpr {
             map_expr(*expr).not()
         }
 
+        Expr::Language(lang) => {
+            let lang_code = <Language as Into<&'static str>>::into(lang);
+            col("lang").list().contains(lit(lang_code), false)
+        }
+
         Expr::Intersection(mut exprs) => {
             let mut root = map_expr(exprs.pop().unwrap());
 
@@ -64,6 +70,14 @@ pub fn apply_filters(
     cards_lf.filter(map_expr(query))
 }
 
+/// The normal card image uri will always be the last col.
 pub fn apply_select(lf: LazyFrame, cols: impl Deref<Target = [SearchColumn]>) -> LazyFrame {
-    lf.select(resolve_cols(cols))
+    let image_normal_uri_expr = col("image_uris")
+        .struct_()
+        .field_by_name("normal")
+        .alias("_normal_image_uri");
+
+    let mut cols = resolve_cols(cols);
+    cols.push(image_normal_uri_expr);
+    lf.select(cols)
 }

@@ -23,22 +23,22 @@ use std::sync::{Arc, LazyLock};
 use url::Url;
 use uuid::Uuid;
 
-mod card_face;
-mod colors;
-mod finishes;
-mod frame;
-mod games;
-mod image_status;
-mod image_uris;
-mod languages;
-mod layout;
-mod legalities;
-mod prices;
-mod purchase_uris;
-mod rarity;
-mod related_card;
-mod related_uris;
-mod security_stamp;
+pub mod card_face;
+pub mod colors;
+pub mod finishes;
+pub mod frame;
+pub mod games;
+pub mod image_status;
+pub mod image_uris;
+pub mod languages;
+pub mod layout;
+pub mod legalities;
+pub mod prices;
+pub mod purchase_uris;
+pub mod rarity;
+pub mod related_card;
+pub mod related_uris;
+pub mod security_stamp;
 
 generate_record_builder_and_dt! {
     #[derive(Debug, Deserialize, Serialize)]

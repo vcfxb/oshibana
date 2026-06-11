@@ -36,4 +36,5 @@ tokio.workspace = true
 scopeguard.workspace = true
 reqwest.workspace = true
 humansize.workspace = true
+strum.workspace = true
 directories = "6.0.0"
