@@ -52,6 +52,13 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
         let mut user_data_lock = app.user_data_storage.loaded.lock().unwrap();
 
+        // If they have no search columns visible, make at least card name visible so that we
+        // don't error out later on lol
+        if user_data_lock.visible_search_columns.is_empty() {
+            user_data_lock.visible_search_columns.push(SearchColumn::Name);
+            app.user_data_storage.mark_pending();
+        }
+
         ui.menu_button("Columns", |ui| {
             ScrollArea::vertical().show(ui, |ui| {
                 for col in SearchColumn::iter() {
@@ -147,7 +154,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                     });
                 }
 
-                row.response().on_hover_ui_at_pointer(hover);
+                // row.response().on_hover_ui_at_pointer(hover);
             })
         });
 }

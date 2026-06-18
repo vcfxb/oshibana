@@ -65,7 +65,7 @@ impl Default for UserData {
             wishlist: vec![],
             packages: vec![],
             global_oracle_tags: Default::default(),
-            visible_search_columns: Vec::new(),
+            visible_search_columns: SearchColumn::defaults(),
         }
     }
 }
