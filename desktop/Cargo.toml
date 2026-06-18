@@ -32,7 +32,7 @@ strum.workspace = true
 
 # Formatting
 humansize.workspace = true
-heck = "0.5.0"
+heck.workspace = true
 
 # UI
 opener = { version = "0.8.4", features = ["reveal"] }
