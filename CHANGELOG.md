@@ -1,3 +1,12 @@
+## [0.1.10] - 2026-07-03
+
+### 🐛 Bug Fixes
+
+- *(ci)* Publish binaries step was missing correct runs-on info
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version to 0.1.10
 ## [0.1.9] - 2026-07-03
 
 ### ⚙️ Miscellaneous Tasks
