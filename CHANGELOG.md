@@ -1,3 +1,12 @@
+## [0.1.12] - 2026-07-03
+
+### 🐛 Bug Fixes
+
+- *(ci)* Add `permissions: write-all` to publish-binaries job
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version to 0.1.12
 ## [0.1.11] - 2026-07-03
 
 ### 🐛 Bug Fixes
