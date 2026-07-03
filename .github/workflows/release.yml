@@ -6,7 +6,7 @@ on:
 
 jobs:
   update-changelog:
-    if: github.ref == 'refs/heads/main'
+    if: github.event.base_ref == 'refs/heads/main'
     name: Update changelog
     runs-on: ubuntu-latest
     permissions:
@@ -36,7 +36,7 @@ jobs:
           git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git main
 
   create-release:
-    if: github.ref == 'refs/heads/main'
+    if: github.event.base_ref == 'refs/heads/main'
     name: Create release
     runs-on: ubuntu-latest
     needs: update-changelog
@@ -49,7 +49,7 @@ jobs:
           changelog: CHANGELOG.md
 
   publish-binaries:
-    if: github.ref == 'refs/heads/main'
+    if: github.event.base_ref == 'refs/heads/main'
     name: Publish binaries
     needs: create-release
     runs-on: ${{ matrix.build.os }}
