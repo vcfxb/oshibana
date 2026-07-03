@@ -55,6 +55,7 @@ jobs:
   publish-binaries:
     name: Publish binaries
     needs: create-release
+    permissions: write-all
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
