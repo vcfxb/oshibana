@@ -72,7 +72,7 @@ impl SyncView {
     }
 
     pub fn ui(&self, sync_handler: &SyncHandler, ui: &mut Ui) {
-        egui::CentralPanel::default().show_inside(ui, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(ui.available_height() / 3.0);
                 let name_guard = sync_handler.sync_target.lock().unwrap();

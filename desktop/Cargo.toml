@@ -52,13 +52,13 @@ humansize.workspace = true
 heck.workspace = true
 
 # UI
-opener = { version = "0.8.4", features = ["reveal"] }
+opener = { version = "0.8.5", features = ["reveal"] }
 
 # Disabling wgpu and using glow speeds up startup significantly (2 seconds).
 # This seems to be due to wgpu taking time to query the OS for gpu adapter data and the host responding too slowly?
 # not sure if this is a wgpu issue or a driver issue or maybe just something on my system, but glow should be fine
 # for most/all usecases regardless
-eframe = { version = "0.34.2", default-features = false, features = [
+eframe = { version = "0.35.0", default-features = false, features = [
     "glow",
     "wayland",
     "default_fonts",
@@ -66,11 +66,10 @@ eframe = { version = "0.34.2", default-features = false, features = [
     "persistence"
 ] }
 
-egui = "0.34.1"
-egui_extras = { version = "0.34.3", features = ["all_loaders", "http", "file"] }
+egui = "0.35.0"
+egui_extras = { version = "0.35.0", features = ["all_loaders", "http", "file"] }
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg"] }
-egui_material_icons = "0.6.0"
-egui_alignments = "0.3.8"
+egui_material_icons = "0.7.0"
 
 [build-dependencies]
 built = "0.8.1"

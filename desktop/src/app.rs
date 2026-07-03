@@ -118,7 +118,7 @@ impl eframe::App for Oshibana {
             return;
         }
 
-        Panel::top("top_panel").show_inside(ui, |ui| {
+        Panel::top("top_panel").show(ui, |ui| {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Home").clicked() {
@@ -200,7 +200,7 @@ impl eframe::App for Oshibana {
             ui.visuals_mut().panel_fill = translucent_green + base_fill;
         }
 
-        Panel::bottom("bottom_panel").show_inside(ui, |ui| {
+        Panel::bottom("bottom_panel").show(ui, |ui| {
             ui.add_space(1.0);
             ui.horizontal(|ui| {
                 ui.label(Local::now().format("%Y %B %e %r").to_string());
@@ -230,7 +230,7 @@ impl eframe::App for Oshibana {
         ui.visuals_mut().panel_fill = base_fill;
 
         // central panel must always go last
-        CentralPanel::default().show_inside(ui, |ui| {
+        CentralPanel::default().show(ui, |ui| {
             (self.current_view.ui)(self, ui, frame);
         });
     }

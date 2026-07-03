@@ -107,7 +107,6 @@ async fn main() -> anyhow::Result<()> {
     let icon_data_arc = Arc::new(icon_data);
 
     let native_options = NativeOptions {
-        vsync: true,
         centered: true,
         dithering: true,
         // persist window size and location
