@@ -152,6 +152,8 @@ jobs:
       - name: Upload package to Release
         uses: softprops/action-gh-release@v2
         with:
+          # Release notes are already generated for us when we create the release
+          generate_release_notes: false
           # Use globbing to grab all generated installers automatically
           files: |
             target/${{ matrix.target }}/release/oshibana_*
