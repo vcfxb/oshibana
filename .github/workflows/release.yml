@@ -49,6 +49,7 @@ jobs:
           changelog: CHANGELOG.md
 
   publish-binaries:
+    if: github.ref == 'refs/heads/main'
     name: Publish binaries
     needs: create-release
     runs-on: ${{ matrix.build.os }}
