@@ -1,10 +1,10 @@
 //! Map parsed queries to polars expressions
 
-use std::ops::Deref;
-use polars::prelude::{col, IntoLazy, LazyFrame, Expr as PExpr};
-use schemas::oshibana::SearchColumn;
 use crate::scryfall::ScryfallStorage;
 use crate::scryfall::search::query_parser::Query;
+use polars::prelude::{Expr as PExpr, IntoLazy, LazyFrame, col};
+use schemas::oshibana::SearchColumn;
+use std::ops::Deref;
 
 fn resolve_cols(cols: impl Deref<Target = [SearchColumn]>) -> Vec<PExpr> {
     let mut resolved = Vec::with_capacity(cols.len());
@@ -26,12 +26,11 @@ pub trait MapToPolarsExpr {
 }
 
 /// Panics
-pub fn apply_filters(
-    query: Query,
-    storage: &ScryfallStorage,
-) -> LazyFrame {
+pub fn apply_filters(query: Query, storage: &ScryfallStorage) -> LazyFrame {
     // clone reference to cards dataframe, make it lazy
-    let cards_lf = storage.cards_df.lock()
+    let cards_lf = storage
+        .cards_df
+        .lock()
         .unwrap()
         .as_ref()
         .expect("cards_df should not be none")

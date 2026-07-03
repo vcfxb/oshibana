@@ -1,12 +1,12 @@
-pub mod query_parser;
 pub mod polars_mapping;
+pub mod query_parser;
 
 use crate::scryfall::ScryfallStorage;
+use crate::scryfall::search::query_parser::Query;
 use polars::prelude::DataFrame;
 use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
 use thiserror::Error;
-use crate::scryfall::search::query_parser::Query;
 
 #[derive(Error, Debug)]
 pub enum SearchError {
@@ -15,7 +15,7 @@ pub enum SearchError {
     #[error("query parsing error: {0}")]
     QueryParseError(#[from] pest::error::Error<query_parser::Rule>),
     #[error("query is empty")]
-    EmptyQuery
+    EmptyQuery,
 }
 
 impl ScryfallStorage {
@@ -41,7 +41,7 @@ impl ScryfallStorage {
 mod tests {
     use crate::scryfall::ScryfallStorage;
     use clients::scryfall::ScryfallClient;
-    use polars::prelude::{col, lit, IntoLazy};
+    use polars::prelude::{IntoLazy, col, lit};
     use std::time::Instant;
 
     #[test]

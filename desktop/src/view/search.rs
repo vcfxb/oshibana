@@ -3,7 +3,7 @@
 pub mod col_format;
 
 use crate::app::Oshibana;
-use crate::view::{logic_noop, View};
+use crate::view::{View, logic_noop};
 use eframe::Frame;
 use egui::{FontFamily, FontId, Response, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};
@@ -55,7 +55,9 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         // If they have no search columns visible, make at least card name visible so that we
         // don't error out later on lol
         if user_data_lock.visible_search_columns.is_empty() {
-            user_data_lock.visible_search_columns.push(SearchColumn::Name);
+            user_data_lock
+                .visible_search_columns
+                .push(SearchColumn::Name);
             app.user_data_storage.mark_pending();
         }
 
@@ -94,12 +96,14 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
     let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
     let visible_cols = &user_data_guard.visible_search_columns;
-    let formatting_fns = visible_cols.iter()
+    let formatting_fns = visible_cols
+        .iter()
         .map(|col| col_format::col_format(*col))
         .collect::<Vec<fn(&AnyValue, &mut Ui) -> Response>>();
 
     let query = app.search_state.search_text.as_str();
-    let search_result = app.scryfall_storage
+    let search_result = app
+        .scryfall_storage
         .search(query, user_data_guard.visible_search_columns.as_slice());
 
     drop(user_data_guard);
@@ -111,7 +115,8 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
     let df = search_result.unwrap();
 
-    let col_count = df.columns()
+    let col_count = df
+        .columns()
         .iter()
         .filter(|c| !c.name().starts_with("_"))
         .count();
@@ -121,7 +126,8 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         .resizable(true)
         .striped(true)
         .header(16.0, |mut row| {
-            let col_name_iter = df.get_column_names()
+            let col_name_iter = df
+                .get_column_names()
                 .into_iter()
                 .filter(|s| !s.starts_with("_"));
 
@@ -135,7 +141,8 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             body.rows(14.0, df.height(), |mut row| {
                 // this is potentially slow (polars discourages row indexing),
                 // but I don't know of a better way -- table's don't support adding col by col.
-                let df_row = df.get_row(row.index())
+                let df_row = df
+                    .get_row(row.index())
                     .expect("dataframe index is in bounds");
 
                 let mut values = df_row.0;

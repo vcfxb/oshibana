@@ -1,25 +1,25 @@
 //! Parser for scryfall-syntax queries
 
 pub mod filter;
-pub mod operator;
-pub mod item;
 pub mod group;
-pub mod union;
 pub mod intersection;
+pub mod item;
+pub mod operator;
+pub mod union;
 
-use pest_derive::Parser;
+use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use pest::Parser;
 use pest::iterators::Pair;
+use pest_derive::Parser;
 use polars::prelude::Expr;
 use union::Union;
-use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 
 #[derive(Parser)]
 #[grammar = "scryfall/search/query_grammar.pest"]
 struct QueryParser;
 
 pub struct Query<'i> {
-    pub union: Union<'i>
+    pub union: Union<'i>,
 }
 
 impl<'i> Query<'i> {
@@ -30,7 +30,9 @@ impl<'i> Query<'i> {
         };
 
         let union_pair = query_pair.into_inner().next().unwrap();
-        let query = Self { union: Union::consume(union_pair) };
+        let query = Self {
+            union: Union::consume(union_pair),
+        };
         assert_eq!(query_pairs.next(), None);
         Ok(Some(query))
     }
@@ -41,7 +43,6 @@ impl<'i> MapToPolarsExpr for Query<'i> {
         self.union.as_pexpr()
     }
 }
-
 
 fn unwrap_exactly_one(pair: Pair<Rule>) -> Pair<Rule> {
     let mut inner = pair.into_inner();

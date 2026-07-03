@@ -2,8 +2,6 @@ pub mod callback_reader;
 pub mod search;
 pub mod sync_handler;
 
-use std::fs::File;
-use std::io::BufReader;
 use crate::DATA_DIR;
 use crate::scryfall::callback_reader::ProgressCallback;
 use crate::scryfall::sync_handler::{SyncHandler, SyncState};
@@ -11,17 +9,19 @@ use crate::user_data::UserDataStorage;
 use anyhow::anyhow;
 use chrono::Utc;
 use clients::scryfall::ScryfallClient;
-use polars::prelude::{DataFrame, ParquetReader};
 use polars::prelude::PolarsError;
 use polars::prelude::PolarsResult;
 use polars::prelude::SchemaRef;
+use polars::prelude::SerReader;
+use polars::prelude::{DataFrame, ParquetReader};
 use schemas::scryfall::card::{SCRYFALL_CARD_SCHEMA, ScryfallCard, ScryfallCardBuilder};
 use schemas::scryfall::rulings::{SCRYFALL_RULING_SCHEMA, ScryfallRuling, ScryfallRulingBuilder};
 use schemas::scryfall::tags::{SCRYFALL_TAGS_SCHEMA, ScryfallTag, ScryfallTagBuilder};
+use std::fs::File;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
-use polars::prelude::SerReader;
 
 // todo: make sure this path is instantiated
 pub static SCRYFALL_DATA_DIR: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("scryfall"));
@@ -69,9 +69,7 @@ impl ScryfallStorage {
         }
 
         let file_reader = BufReader::new(File::open(path)?);
-        let df = ParquetReader::new(file_reader)
-            .set_rechunk(true)
-            .finish()?;
+        let df = ParquetReader::new(file_reader).set_rechunk(true).finish()?;
 
         let actual_schema = df.schema();
 

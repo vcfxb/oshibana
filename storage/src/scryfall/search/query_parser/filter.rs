@@ -1,10 +1,10 @@
-use std::borrow::Cow;
+use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
+use crate::scryfall::search::query_parser::{Rule, operator::Operator, unwrap_exactly_one};
 use pest::iterators::Pair;
 use polars::prelude::Expr;
-use unescape_zero_copy::unescape_default;
 use schemas::scryfall::card::languages::Language;
-use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::{unwrap_exactly_one, Rule, operator::Operator};
+use std::borrow::Cow;
+use unescape_zero_copy::unescape_default;
 
 pub enum Filter<'i> {
     Lang {
@@ -13,23 +13,23 @@ pub enum Filter<'i> {
 
     Name {
         operator: Operator,
-        value: FilterValue<'i>
+        value: FilterValue<'i>,
     },
 
     Untagged {
         exact: bool,
-        value: FilterValue<'i>
-    }
+        value: FilterValue<'i>,
+    },
 }
 
 pub enum FilterValue<'i> {
     Identifier(&'i str),
     String(Cow<'i, str>),
-    Regex(&'i str)
+    Regex(&'i str),
 }
 
 impl<'i> Filter<'i> {
-    pub(in super) fn consume(pair: Pair<'i, Rule>) -> Self {
+    pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {
         match pair.as_rule() {
             Rule::filter => Self::consume(unwrap_exactly_one(pair)),
 
@@ -42,10 +42,7 @@ impl<'i> Filter<'i> {
                 let operator = Operator::consume(inner.next().unwrap());
                 let value = FilterValue::consume(inner.next().unwrap());
 
-                Self::Name {
-                    operator,
-                    value,
-                }
+                Self::Name { operator, value }
             }
 
             Rule::optionally_exact_filter_no_directive => {
@@ -65,8 +62,8 @@ impl<'i> Filter<'i> {
 
 impl<'i> MapToPolarsExpr for Filter<'i> {
     fn as_pexpr(&self) -> Expr {
-        use polars::prelude::*;
         use self::Operator;
+        use polars::prelude::*;
 
         match self {
             Filter::Lang { value } => {
@@ -75,22 +72,40 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
             }
 
             // ignore exactness for regexes
-            Filter::Untagged { value: FilterValue::Regex(re), .. } |
-            Filter::Name { value: FilterValue::Regex(re), .. } => {
-                col("name").str().contains(lit(*re), false)
+            Filter::Untagged {
+                value: FilterValue::Regex(re),
+                ..
+            }
+            | Filter::Name {
+                value: FilterValue::Regex(re),
+                ..
+            } => col("name").str().contains(lit(*re), false),
+
+            Filter::Name {
+                operator: Operator::Colon,
+                value,
+            }
+            | Filter::Untagged {
+                exact: false,
+                value,
+            } => col("name")
+                .str()
+                .to_lowercase()
+                .str()
+                .contains_literal(lit(value.as_str().unwrap()).str().to_lowercase()),
+
+            Filter::Name {
+                operator: Operator::Eq,
+                value,
+            }
+            | Filter::Untagged { exact: true, value } => {
+                col("name")
+                    .str()
+                    .to_lowercase()
+                    .eq(lit(value.as_str().unwrap()).str().to_lowercase())
             }
 
-            Filter::Name { operator: Operator::Colon, value } |
-            Filter::Untagged { exact: false, value } => {
-                col("name").str().to_lowercase().str().contains_literal(lit(value.as_str().unwrap()).str().to_lowercase())
-            }
-
-            Filter::Name { operator: Operator::Eq, value } |
-            Filter::Untagged { exact: true, value } => {
-                col("name").str().to_lowercase().eq(lit(value.as_str().unwrap()).str().to_lowercase())
-            }
-
-            Filter::Name { operator, ..} => panic!("unsupported name operator: {operator:?}"),
+            Filter::Name { operator, .. } => panic!("unsupported name operator: {operator:?}"),
         }
     }
 }
@@ -103,7 +118,9 @@ impl<'i> FilterValue<'i> {
             Rule::regex => Self::consume(unwrap_exactly_one(pair)),
             Rule::regex_inner => Self::Regex(pair.as_str()),
             Rule::string => Self::consume(unwrap_exactly_one(pair)),
-            Rule::string_inner => Self::String(unescape_default(pair.as_str()).unwrap_or(pair.as_str().into())),
+            Rule::string_inner => {
+                Self::String(unescape_default(pair.as_str()).unwrap_or(pair.as_str().into()))
+            }
             _ => panic!("{pair:?} is not a filtervalue"),
         }
     }

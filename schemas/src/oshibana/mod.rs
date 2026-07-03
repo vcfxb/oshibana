@@ -30,7 +30,9 @@ pub struct UserData {
     pub visible_search_columns: Vec<SearchColumn>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, IntoStaticStr, EnumIter)]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, IntoStaticStr, EnumIter,
+)]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum SearchColumn {
@@ -41,18 +43,13 @@ pub enum SearchColumn {
 impl SearchColumn {
     fn defaults() -> Vec<SearchColumn> {
         use SearchColumn::*;
-        vec![
-            Name,
-            Type
-        ]
+        vec![Name, Type]
     }
 
     pub fn into_str(self) -> &'static str {
         self.into()
     }
 }
-
-
 
 #[allow(clippy::derivable_impls)]
 impl Default for UserData {
