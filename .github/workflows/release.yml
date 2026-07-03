@@ -43,6 +43,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Checkout main directly here so that we have the updated changelog
+          ref: main
+          fetch-depth: '0'
+      - run: git checkout origin/main
       - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
