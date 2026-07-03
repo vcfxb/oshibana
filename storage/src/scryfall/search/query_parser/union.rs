@@ -14,7 +14,7 @@ impl<'i> Union<'i> {
         
         Self {
             intersections: pair.into_inner()
-                .map(|intersection_pair| Intersection::consume(intersection_pair))
+                .map(Intersection::consume)
                 .collect()
         }
     }

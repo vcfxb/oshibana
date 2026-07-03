@@ -14,7 +14,7 @@ impl<'i> Intersection<'i> {
 
         Self {
             items: pair.into_inner()
-                .map(|item_pair| Item::consume(item_pair))
+                .map(Item::consume)
                 .collect()
         }
     }
