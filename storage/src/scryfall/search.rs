@@ -45,6 +45,7 @@ mod tests {
     use std::time::Instant;
 
     #[test]
+    #[ignore = "this tests only works when run locally with a valid scryfall sync file"]
     fn test_search_by_scryfall_id() {
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
