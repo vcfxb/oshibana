@@ -68,7 +68,12 @@ impl UserDataStorage {
             loop {
                 thread::sleep(Duration::from_millis(200));
                 let last_save = storage_clone.last_save.load(Ordering::Acquire);
-                let interval_secs = storage_clone.loaded.lock().unwrap().autosave_interval.map(chrono::Duration::as_seconds_f32);
+                let interval_secs = storage_clone
+                    .loaded
+                    .lock()
+                    .unwrap()
+                    .autosave_interval
+                    .map(chrono::Duration::as_seconds_f32);
 
                 if storage_clone
                     .save_manually_triggered

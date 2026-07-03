@@ -1,10 +1,10 @@
 use crate::app::Oshibana;
 use crate::view::{View, logic_noop, ui_noop};
+use chrono::Duration;
 use eframe::Frame;
+use eframe::emath::Align;
 use egui::{DragValue, Layout, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
-use chrono::Duration;
-use eframe::emath::Align;
 
 pub const SETTINGS: View = View {
     ui: settings_ui,
@@ -29,7 +29,8 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
         .user_data_storage
         .loaded
         .lock()
-        .unwrap().autosave_interval
+        .unwrap()
+        .autosave_interval
         .map(Duration::as_seconds_f32)
         .unwrap_or(f32::INFINITY);
 
@@ -47,8 +48,12 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
             ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
                 if ui.checkbox(&mut enable_autosave, ()).changed() {
                     match enable_autosave {
-                        true => { new_value = 2.0; }
-                        false => { new_value = f32::INFINITY; }
+                        true => {
+                            new_value = 2.0;
+                        }
+                        false => {
+                            new_value = f32::INFINITY;
+                        }
                     }
                 }
 
@@ -73,7 +78,8 @@ fn add_autosave_selection(app: &mut Oshibana, table: &mut TableBody) {
         app.user_data_storage
             .loaded
             .lock()
-            .unwrap().autosave_interval = new_duration;
+            .unwrap()
+            .autosave_interval = new_duration;
 
         app.user_data_storage.mark_pending();
     }
@@ -91,10 +97,11 @@ fn add_scyfall_sync_option(app: &mut Oshibana, table: &mut TableBody) {
 
     table.row(14.0, |mut row| {
         row.col(|ui| {
-            ui.label("Scryfall autosync interval")
-                .on_hover_text("\
+            ui.label("Scryfall autosync interval").on_hover_text(
+                "\
                     If enabled, trigger a scryfall sync whenever the app is launched with \
-                    scryfall data older than specified.");
+                    scryfall data older than specified.",
+            );
         });
 
         row.col(|ui| {
@@ -113,17 +120,23 @@ fn add_scyfall_sync_option(app: &mut Oshibana, table: &mut TableBody) {
                 }
 
                 if let Some(value) = new_value.as_mut() {
-                    ui.add(DragValue::new(value)
-                        .speed(1.0)
-                        .range(6..=1000)
-                        .suffix(" hours"));
+                    ui.add(
+                        DragValue::new(value)
+                            .speed(1.0)
+                            .range(6..=1000)
+                            .suffix(" hours"),
+                    );
                 }
             });
         });
     });
 
     if new_value != current_value.map(|d| d.num_hours()) {
-        app.user_data_storage.loaded.lock().unwrap().scryfall_sync_interval = new_value.map(Duration::hours);
+        app.user_data_storage
+            .loaded
+            .lock()
+            .unwrap()
+            .scryfall_sync_interval = new_value.map(Duration::hours);
         app.user_data_storage.mark_pending();
     }
 }

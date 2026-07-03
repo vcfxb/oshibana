@@ -37,7 +37,7 @@ impl Oshibana {
             let ud = user_data.loaded.lock().unwrap();
             match (ud.last_scryfall_sync, ud.scryfall_sync_interval) {
                 (None, _) | (_, None) => false,
-                (Some(last_sync), Some(interval)) => Utc::now() - last_sync > interval
+                (Some(last_sync), Some(interval)) => Utc::now() - last_sync > interval,
             }
         };
 
