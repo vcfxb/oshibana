@@ -3,7 +3,7 @@
 ## About
 
 Oshibana is a desktop application for building _Magic: The Gathering_ decks and tracking 
-you _Magic: The Gathering_ collection.
+your _Magic: The Gathering_ collection.
 
 ## System Requirements
 In order to make searching for cards all throughout the history of magic as fast as possible,
