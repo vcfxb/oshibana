@@ -1,3 +1,9 @@
+## [0.1.9] - 2026-07-03
+
+### ⚙️ Miscellaneous Tasks
+
+- Tell release workflow to wait for updated changelog
+- Bump version to 0.1.9
 ## [0.1.8] - 2026-07-03
 
 ### ⚙️ Miscellaneous Tasks
