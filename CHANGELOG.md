@@ -1,3 +1,12 @@
+## [0.1.11] - 2026-07-03
+
+### 🐛 Bug Fixes
+
+- *(release)* Rename binary to oshibana, add prod feature to build args
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version to 0.1.11
 ## [0.1.10] - 2026-07-03
 
 ### 🐛 Bug Fixes
