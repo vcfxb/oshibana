@@ -28,7 +28,9 @@ serde.workspace = true
 struson = { version = "0.7.2", features = ["serde"] }
 
 # Parsing
-nom = "8.0"
+pest = { version = "2.8.6", features = ["miette-error", "pretty-print"] }
+pest_derive = { version = "2.8.6", features = ["grammar-extras"] }
+unescape_zero_copy = "2.3.2"
 
 # Utilities
 polars.workspace = true

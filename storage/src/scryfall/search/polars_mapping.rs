@@ -1,11 +1,10 @@
 //! Map parsed queries to polars expressions
 
 use std::ops::Deref;
-use polars::prelude::{col, IntoLazy, LazyFrame, Expr as PExpr, lit};
+use polars::prelude::{col, IntoLazy, LazyFrame, Expr as PExpr};
 use schemas::oshibana::SearchColumn;
-use schemas::scryfall::card::languages::Language;
 use crate::scryfall::ScryfallStorage;
-use crate::scryfall::search::query_parser::Expr;
+use crate::scryfall::search::query_parser::Query;
 
 fn resolve_cols(cols: impl Deref<Target = [SearchColumn]>) -> Vec<PExpr> {
     let mut resolved = Vec::with_capacity(cols.len());
@@ -22,41 +21,13 @@ fn resolve_cols(cols: impl Deref<Target = [SearchColumn]>) -> Vec<PExpr> {
     resolved
 }
 
-/// Function assumes any/all necessary frames are joined together.
-fn map_expr(e: Expr) -> PExpr {
-    match e {
-        Expr::Atom(atom) => {
-            col("name").str().contains_literal(lit(atom))
-        }
-
-        Expr::Exact(atom) => {
-            col("name").eq(lit(atom))
-        }
-
-        Expr::Negated(expr) => {
-            map_expr(*expr).not()
-        }
-
-        Expr::Language(lang) => {
-            let lang_code = <Language as Into<&'static str>>::into(lang);
-            col("lang").list().contains(lit(lang_code), false)
-        }
-
-        Expr::Intersection(mut exprs) => {
-            let mut root = map_expr(exprs.pop().unwrap());
-
-            while let Some(next) = exprs.pop() {
-                root = root.and(map_expr(next));
-            }
-
-            root
-        }
-    }
+pub trait MapToPolarsExpr {
+    fn as_pexpr(&self) -> PExpr;
 }
 
 /// Panics
 pub fn apply_filters(
-    query: Expr,
+    query: Query,
     storage: &ScryfallStorage,
 ) -> LazyFrame {
     // clone reference to cards dataframe, make it lazy
@@ -67,7 +38,7 @@ pub fn apply_filters(
         .clone()
         .lazy();
 
-    cards_lf.filter(map_expr(query))
+    cards_lf.filter(query.as_pexpr())
 }
 
 /// The normal card image uri will always be the last col.
