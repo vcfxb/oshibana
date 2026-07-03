@@ -9,7 +9,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-version = "0.1.12"
+version = "0.1.13-pre"
 
 [workspace.dependencies]
 schemas = { path = "schemas" }

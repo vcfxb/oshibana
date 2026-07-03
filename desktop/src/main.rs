@@ -4,6 +4,10 @@
 pub mod app;
 pub mod view;
 
+pub mod built {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
 use crate::app::Oshibana;
 use eframe::NativeOptions;
 use egui::{IconData, Theme, ViewportBuilder};
@@ -86,8 +90,8 @@ async fn main() -> anyhow::Result<()> {
 
     let icon_data = {
         let png_bytes: &[u8] = match egui::Context::default().system_theme() {
-            None | Some(Theme::Dark) => include_bytes!("../assets/favicon-light.png"),
-            Some(Theme::Light) => include_bytes!("../assets/favicon-dark.png"),
+            None | Some(Theme::Dark) => include_bytes!("../assets/favicon/favicon-light.png"),
+            Some(Theme::Light) => include_bytes!("../assets/favicon/favicon-dark.png"),
         };
 
         let png = image::load_from_memory(png_bytes).expect("failed to load icon");

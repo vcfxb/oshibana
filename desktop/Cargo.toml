@@ -7,6 +7,20 @@ version.workspace = true
 name = "oshibana"
 path = "src/main.rs"
 
+[package.metadata.packager]
+before-packaging-command = "cargo build --release -F prod"
+product-name = "Oshibana"
+identifier = "org.vcfxb.oshibana"
+icons = [ "assets/favicon/icons/*" ]
+homepage = "https://oshibana.cards"
+copyright = "Copyright (C) 2026 Venus Xeon-Blonde"
+license_file = "../LICENSE"
+authors = [ "Venus Xeon-Blonde" ]
+
+[[package.metadata.packager.binaries]]
+path = "oshibana"
+main = true
+
 [features]
 prod = []
 
@@ -18,7 +32,6 @@ storage.workspace = true
 
 # Atomics
 atomic_float.workspace = true
-atomic-time.workspace = true
 
 # Error handling
 anyhow.workspace = true
@@ -58,3 +71,9 @@ egui_extras = { version = "0.34.3", features = ["all_loaders", "http", "file"] }
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg"] }
 egui_material_icons = "0.6.0"
 egui_alignments = "0.3.8"
+
+[build-dependencies]
+built = "0.8.1"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.12"
