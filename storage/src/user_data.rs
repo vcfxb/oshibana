@@ -1,5 +1,4 @@
 use crate::DATA_DIR;
-use atomic_float::AtomicF32;
 use atomic_time::AtomicInstant;
 use schemas::oshibana::UserData;
 use std::path::PathBuf;
@@ -14,7 +13,6 @@ pub struct UserDataStorage {
     pub loaded: Mutex<UserData>,
     has_pending_updates: AtomicBool,
     save_manually_triggered: AtomicBool,
-    pub autosave_interval_secs: AtomicF32,
     currently_saving: AtomicBool,
     last_save: AtomicInstant,
 }
@@ -53,7 +51,6 @@ impl UserDataStorage {
         }
 
         let user_data = Mutex::new(Self::load_from_fs()?);
-        let interval = AtomicF32::new(2.0);
         let has_pending_changes = AtomicBool::new(false);
         let manually_triggered = AtomicBool::new(false);
         let currently_saving = AtomicBool::new(false);
@@ -62,7 +59,6 @@ impl UserDataStorage {
             loaded: user_data,
             has_pending_updates: has_pending_changes,
             save_manually_triggered: manually_triggered,
-            autosave_interval_secs: interval,
             currently_saving,
             last_save: AtomicInstant::now(),
         });
@@ -72,7 +68,7 @@ impl UserDataStorage {
             loop {
                 thread::sleep(Duration::from_millis(200));
                 let last_save = storage_clone.last_save.load(Ordering::Acquire);
-                let interval = storage_clone.autosave_interval_secs.load(Ordering::Relaxed);
+                let interval_secs = storage_clone.loaded.lock().unwrap().autosave_interval.map(chrono::Duration::as_seconds_f32);
 
                 if storage_clone
                     .save_manually_triggered
@@ -82,7 +78,7 @@ impl UserDataStorage {
                     storage_clone.save().ok();
                 }
 
-                if last_save.elapsed().as_secs_f32() < interval {
+                if last_save.elapsed().as_secs_f32() < interval_secs.unwrap_or(f32::INFINITY) {
                     continue;
                 }
 

@@ -109,7 +109,11 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     drop(user_data_guard);
 
     if let Err(err) = search_result {
-        ui.label(format!("search error: {err}"));
+        ui.scope(|ui| {
+            ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
+            ui.label(format!("search error: {err}"));
+        });
+
         return;
     };
 

@@ -4,7 +4,7 @@ use crate::oshibana::collection::Collection;
 use crate::oshibana::deck::Deck;
 use crate::oshibana::package::Package;
 use crate::oshibana::wishlist::WishlistItem;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use strum::{EnumIter, IntoStaticStr};
@@ -19,7 +19,9 @@ pub mod wishlist;
 pub struct UserData {
     pub last_scryfall_sync: Option<DateTime<Utc>>,
     #[serde(default)]
-    pub scryfall_sync_interval: Option<chrono::Duration>,
+    pub scryfall_sync_interval: Option<Duration>,
+    #[serde(default)]
+    pub autosave_interval: Option<Duration>,
     pub decks: Vec<Deck>,
     pub collection: Collection,
     pub wishlist: Vec<WishlistItem>,
@@ -57,6 +59,7 @@ impl Default for UserData {
         UserData {
             last_scryfall_sync: None,
             scryfall_sync_interval: None,
+            autosave_interval: Some(Duration::seconds(2)),
             decks: vec![],
             collection: Default::default(),
             wishlist: vec![],

@@ -3,7 +3,7 @@ use crate::view::home::HOME;
 use crate::view::scryfall_sync::SyncView;
 use crate::view::search::{SEARCH, SearchState};
 use crate::view::settings::SETTINGS;
-use chrono::Local;
+use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
@@ -33,9 +33,23 @@ impl Oshibana {
         let user_data = UserDataStorage::new()?;
         let sync_view_state = Arc::new(SyncView::new());
 
+        let scryfall_sync_expired = {
+            let ud = user_data.loaded.lock().unwrap();
+            match (ud.last_scryfall_sync, ud.scryfall_sync_interval) {
+                (None, _) | (_, None) => false,
+                (Some(last_sync), Some(interval)) => Utc::now() - last_sync > interval
+            }
+        };
+
         if !scryfall_storage.is_ready() {
             log::warn!("scryfall storage not ready, triggering initial sync");
+        }
 
+        if scryfall_sync_expired {
+            log::info!("scryfall sync expired, triggering sync");
+        }
+
+        if !scryfall_storage.is_ready() || scryfall_sync_expired {
             let progress_cb = sync_view_state
                 .clone()
                 .make_progress_cb(scryfall_storage.sync_handler.clone());
