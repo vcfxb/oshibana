@@ -3,12 +3,9 @@ resolver = "3"
 members = [
     "clients",
     "desktop",
-    "schemas"
-, "storage"]
-
-## for flamegraph
-#[profile.release]
-#debug = true
+    "schemas",
+    "storage"
+]
 
 [workspace.package]
 edition = "2024"
@@ -24,8 +21,6 @@ polars  = { version = "0.54.4", features = [
     "strings",
     "dtype-i128",
     "dtype-u128",
-#    "dtype-array",
-#    "dtype-i8",
     "dtype-u8",
     "lazy",
     "parquet",
