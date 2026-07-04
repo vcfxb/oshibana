@@ -5,8 +5,10 @@ use schemas::oshibana::SearchColumn;
 use storage::scryfall::ScryfallStorage;
 use crate::util::scryfall_symbols::ResolvedPart;
 
+pub type ValueFormatter<'s> = Box<dyn Fn(&AnyValue, &mut Ui) -> Response + 's>;
+
 /// Formatting for columns
-pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> Box<dyn Fn(&AnyValue, &mut Ui) -> Response + 's> {
+pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> ValueFormatter<'s> {
     let str_col = |v: &AnyValue, ui: &mut Ui| {
         Label::new(v.str_value())
             .wrap_mode(TextWrapMode::Truncate)

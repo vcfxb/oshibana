@@ -320,9 +320,7 @@ impl ScryfallStorage {
     pub fn get_symbol_svg_uri(&self, symbol: &str) -> Option<Url> {
         let symbol_uri = self.lookup_symbol_svg_url(symbol)?;
         let filename = symbol_uri.path_segments()
-            .expect("scryfall symbol svg uri has path segments")
-            .rev()
-            .next()
+            .expect("scryfall symbol svg uri has path segments").next_back()
             .expect("scryfall symbol svg uri has at least one path segment");
 
         assert!(filename.ends_with(".svg"), "`{filename}` should be an svg");
