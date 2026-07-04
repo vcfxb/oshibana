@@ -1,3 +1,22 @@
+## [0.1.13-pre] - 2026-07-04
+
+### 🚀 Features
+
+- *(CI)* Add automatic testing for a few more platforms, and add build caching to the test workflow.
+- Add build versioning into desktop app (ui pending).
+- *(CI)* Add automatic creation of installation packages to release workflow
+- Add "about" to help menu
+
+### 💼 Other
+
+- *(README)* You -> your
+
+### ⚙️ Miscellaneous Tasks
+
+- *(icons)* Generate icons using `npx @tauri-apps/cli icon`
+- *(CI)* Ensure bundler job doesn't overwrite changelog
+- Cargo fmt
+- Clippy + fmt
 ## [0.1.12] - 2026-07-03
 
 ### 🐛 Bug Fixes
