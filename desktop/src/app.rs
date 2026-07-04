@@ -34,7 +34,7 @@ impl Oshibana {
         let scryfall_storage = Arc::new(ScryfallStorage::new(scryfall_client));
         let user_data = UserDataStorage::new()?;
         let sync_view_state = Arc::new(SyncView::new());
-        
+
         for cache_dir in [SCRYFALL_SYMBOLOGY_CACHE_DIR.as_path(), SCRYFALL_CARD_IMAGERY_CACHE_DIR.as_path()] {
             if !cache_dir.exists() {
                 log::info!("creating {}", cache_dir.display());
@@ -226,6 +226,15 @@ impl eframe::App for Oshibana {
                 ui.menu_button("Help", |ui| {
                     if ui.button("About...").clicked() {
                         self.view_about.store(true, Ordering::Release);
+                    }
+
+                    if ui.button("Open cache folder").clicked() {
+                        opener::reveal(*storage::CACHE_DIR)
+                            .inspect_err(|err| {
+                                log::warn!("Could not open cache directory: {err}");
+                            })
+                            // discard error after logging
+                            .ok();
                     }
 
                     if ui.button("Open logs folder").clicked() {
