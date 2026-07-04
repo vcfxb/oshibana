@@ -12,7 +12,6 @@ name = "oshibana"
 path = "src/main.rs"
 
 [package.metadata.packager]
-before-packaging-command = "cargo build --release -F prod"
 product-name = "Oshibana"
 identifier = "org.vcfxb.oshibana"
 icons = [ "assets/favicon/icons/*" ]
