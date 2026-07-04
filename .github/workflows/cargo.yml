@@ -13,7 +13,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - ubuntu-latest-arm
+          - ubuntu-24.04-arm
           - windows-latest
           - windows-11-arm
           - macos-latest
