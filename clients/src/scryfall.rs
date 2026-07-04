@@ -8,11 +8,11 @@ use reqwest::{Client, IntoUrl, Method};
 use schemas::scryfall::bulk_data::BulkData;
 use schemas::scryfall::lists::ScryfallList;
 use schemas::scryfall::set::ScryfallSet;
+use schemas::scryfall::symbology::CardSymbol;
 use serde::de::DeserializeOwned;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use thiserror::Error;
-use schemas::scryfall::symbology::CardSymbol;
 
 #[derive(Clone, Debug)]
 pub struct ScryfallClient {

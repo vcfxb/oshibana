@@ -2,10 +2,10 @@ pub mod callback_reader;
 pub mod search;
 pub mod sync_handler;
 
-use crate::{CACHE_DIR, DATA_DIR};
 use crate::scryfall::callback_reader::ProgressCallback;
 use crate::scryfall::sync_handler::{SyncHandler, SyncState};
 use crate::user_data::UserDataStorage;
+use crate::{CACHE_DIR, DATA_DIR};
 use anyhow::anyhow;
 use chrono::Utc;
 use clients::scryfall::ScryfallClient;
@@ -14,20 +14,20 @@ use polars::prelude::PolarsResult;
 use polars::prelude::SchemaRef;
 use polars::prelude::SerReader;
 use polars::prelude::{DataFrame, ParquetReader};
+use reqwest::Method;
 use schemas::scryfall::card::{SCRYFALL_CARD_SCHEMA, ScryfallCard, ScryfallCardBuilder};
 use schemas::scryfall::rulings::{SCRYFALL_RULING_SCHEMA, ScryfallRuling, ScryfallRulingBuilder};
+use schemas::scryfall::symbology::CardSymbol;
 use schemas::scryfall::tags::{SCRYFALL_TAGS_SCHEMA, ScryfallTag, ScryfallTagBuilder};
-use std::fs::File;
-use std::fs;
 use std::fmt::Display;
+use std::fs;
+use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Instant;
-use reqwest::Method;
 use url::Url;
-use schemas::scryfall::symbology::CardSymbol;
 
 // todo: make sure this path is instantiated
 pub static SCRYFALL_DATA_DIR: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("scryfall"));
@@ -138,7 +138,10 @@ impl ScryfallStorage {
         }
 
         let start = Instant::now();
-        log::info!("reading symbology data from {}", SCRYFALL_SYMBOLOGY_FILE_PATH.display());
+        log::info!(
+            "reading symbology data from {}",
+            SCRYFALL_SYMBOLOGY_FILE_PATH.display()
+        );
 
         let file_content = fs::read(&*SCRYFALL_SYMBOLOGY_FILE_PATH).map_err(|err| {
             log::warn!("failed to read file: {err}");
@@ -292,7 +295,8 @@ impl ScryfallStorage {
             handle_err("symbology", Self::load_symbology),
         );
 
-        let success = loaded_rulings && loaded_cards && loaded_atags && loaded_otags && loaded_symbology;
+        let success =
+            loaded_rulings && loaded_cards && loaded_atags && loaded_otags && loaded_symbology;
         self.needs_reload_from_fs.store(!success, Ordering::Release);
         success
     }
@@ -301,7 +305,9 @@ impl ScryfallStorage {
         let check_loaded = |mu: &Mutex<Option<DataFrame>>| mu.lock().unwrap().is_some();
         let all_dataframes_loaded = self.iter_dataframes().all(check_loaded);
         let symbology_loaded = self.symbology.lock().unwrap().is_some();
-        all_dataframes_loaded && symbology_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
+        all_dataframes_loaded
+            && symbology_loaded
+            && !self.needs_reload_from_fs.load(Ordering::Acquire)
     }
 
     /// Lookup the svg url of a symbol. Returns `None` if symbology isn't loaded or if the symbol
@@ -309,7 +315,8 @@ impl ScryfallStorage {
     fn lookup_symbol_svg_url(&self, symbol: &str) -> Option<Url> {
         let symbology_guard = self.symbology.lock().unwrap();
         let symbols = symbology_guard.as_ref()?;
-        symbols.iter()
+        symbols
+            .iter()
             .find(|symbol_object| symbol_object.symbol == symbol)
             .and_then(|symbol_object| symbol_object.svg_uri.as_ref())
             .cloned()
@@ -319,8 +326,10 @@ impl ScryfallStorage {
     /// `file://` uri.
     pub fn get_symbol_svg_uri(&self, symbol: &str) -> Option<Url> {
         let symbol_uri = self.lookup_symbol_svg_url(symbol)?;
-        let filename = symbol_uri.path_segments()
-            .expect("scryfall symbol svg uri has path segments").next_back()
+        let filename = symbol_uri
+            .path_segments()
+            .expect("scryfall symbol svg uri has path segments")
+            .next_back()
             .expect("scryfall symbol svg uri has at least one path segment");
 
         assert!(filename.ends_with(".svg"), "`{filename}` should be an svg");
@@ -335,7 +344,9 @@ impl ScryfallStorage {
             let uri = symbol_uri.clone();
 
             let update_cache = async move || {
-                let bytes = client.client.request(Method::GET, uri)
+                let bytes = client
+                    .client
+                    .request(Method::GET, uri)
                     .send()
                     .await?
                     .bytes()

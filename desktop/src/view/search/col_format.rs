@@ -1,9 +1,9 @@
 use crate::util::scryfall_symbols;
+use crate::util::scryfall_symbols::ResolvedPart;
 use egui::{Label, Response, TextBuffer, TextWrapMode, Ui, Widget};
 use polars::prelude::AnyValue;
 use schemas::oshibana::SearchColumn;
 use storage::scryfall::ScryfallStorage;
-use crate::util::scryfall_symbols::ResolvedPart;
 
 pub type ValueFormatter<'s> = Box<dyn Fn(&AnyValue, &mut Ui) -> Response + 's>;
 
@@ -34,10 +34,10 @@ pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> V
                                 };
 
                                 ui.image(reformatted);
-                            },
+                            }
                             Err(_) => {
                                 ui.image(uri.as_str());
-                            },
+                            }
                         };
                         // ui.image(uri.as_str());
                     }
@@ -47,7 +47,8 @@ pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> V
                     }
                 }
             }
-        }).response
+        })
+        .response
     };
 
     match c {

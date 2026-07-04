@@ -3,7 +3,7 @@
 pub mod col_format;
 
 use crate::app::Oshibana;
-use crate::view::{logic_noop, View};
+use crate::view::{View, logic_noop};
 use eframe::Frame;
 use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};

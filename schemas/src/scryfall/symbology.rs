@@ -1,6 +1,6 @@
+use crate::scryfall::card::colors::Color;
 use serde::{Deserialize, Serialize};
 use url::Url;
-use crate::scryfall::card::colors::Color;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CardSymbol {

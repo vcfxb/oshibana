@@ -2,8 +2,8 @@
 #![cfg_attr(feature = "prod", windows_subsystem = "windows")]
 
 pub mod app;
-pub mod view;
 pub mod util;
+pub mod view;
 
 pub mod built {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));

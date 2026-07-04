@@ -10,10 +10,13 @@ static SYMBOL_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"\{[A-Z0-9/
 #[derive(Debug)]
 pub enum ResolvedPart<'a> {
     RenderSymbolUri(Url),
-    Text(&'a str)
+    Text(&'a str),
 }
 
-pub fn render<'a>(scryfall_store: &ScryfallStorage, text: &'a str) -> impl Iterator<Item = ResolvedPart<'a>> {
+pub fn render<'a>(
+    scryfall_store: &ScryfallStorage,
+    text: &'a str,
+) -> impl Iterator<Item = ResolvedPart<'a>> {
     let mut last_end = 0;
     let mut regex_matches = SYMBOL_REGEX.find_iter(text);
     let mut pending = None;
@@ -34,9 +37,12 @@ pub fn render<'a>(scryfall_store: &ScryfallStorage, text: &'a str) -> impl Itera
         };
 
         let match_str = next_match.as_str();
-        pending = Some(scryfall_store.get_symbol_svg_uri(match_str)
-            .map(ResolvedPart::RenderSymbolUri)
-            .unwrap_or(ResolvedPart::Text(match_str)));
+        pending = Some(
+            scryfall_store
+                .get_symbol_svg_uri(match_str)
+                .map(ResolvedPart::RenderSymbolUri)
+                .unwrap_or(ResolvedPart::Text(match_str)),
+        );
 
         let this_part = ResolvedPart::Text(&text[last_end..next_match.start()]);
         last_end = next_match.end();
@@ -48,4 +54,3 @@ pub fn render<'a>(scryfall_store: &ScryfallStorage, text: &'a str) -> impl Itera
         ResolvedPart::Text(s) => !s.is_empty(),
     })
 }
-
