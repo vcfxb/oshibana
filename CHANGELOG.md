@@ -1,3 +1,9 @@
+## [0.1.14-pre] - 2026-07-04
+
+### 🐛 Bug Fixes
+
+- *(CI)* Don't recompile the binaries while building the bundles
+- *(CI)* Cancel in progress releases if a new one is issued
 ## [0.1.13-pre] - 2026-07-04
 
 ### 🚀 Features
