@@ -7,7 +7,10 @@ use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
-use egui::{CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, ViewportCommand, containers::menu::MenuBar, ViewportId, ViewportBuilder, Ui};
+use egui::{
+    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, Ui,
+    ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar,
+};
 use egui_material_icons::icons;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -82,13 +85,11 @@ impl eframe::App for Oshibana {
         }
 
         if ctx.input(|i| i.viewport().close_requested()) && ctx.viewport_id() == ViewportId::ROOT {
-            if ctx.viewport_id() == ViewportId::ROOT {
-                self.scryfall_storage
-                    .sync_handler
-                    .cancel_requested
-                    .store(true, Ordering::Relaxed);
-                self.user_data_storage.save().expect("saved successfully");
-            }
+            self.scryfall_storage
+                .sync_handler
+                .cancel_requested
+                .store(true, Ordering::Relaxed);
+            self.user_data_storage.save().expect("saved successfully");
         }
 
         if !self.scryfall_storage.is_ready()
@@ -133,10 +134,10 @@ impl eframe::App for Oshibana {
                     fn labeled_link(ui: &mut Ui, label: &str, link: &str) {
                         ui.horizontal_wrapped(|ui| {
                             ui.label(label);
-                            if ui.link(link).clicked() {
-                                if let Err(err) = opener::open_browser(link) {
-                                    log::warn!("could not open {link}: {err}");
-                                }
+                            if ui.link(link).clicked()
+                                && let Err(err) = opener::open_browser(link)
+                            {
+                                log::warn!("could not open {link}: {err}");
                             };
                         });
                     }
@@ -152,7 +153,7 @@ impl eframe::App for Oshibana {
                         ui.label(format!("Profile: {PROFILE}"));
                         ui.label(format!("Rust version: {RUSTC_VERSION}"));
                     });
-                }
+                },
             );
         }
 
