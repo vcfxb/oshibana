@@ -18,10 +18,14 @@ use schemas::scryfall::card::{SCRYFALL_CARD_SCHEMA, ScryfallCard, ScryfallCardBu
 use schemas::scryfall::rulings::{SCRYFALL_RULING_SCHEMA, ScryfallRuling, ScryfallRulingBuilder};
 use schemas::scryfall::tags::{SCRYFALL_TAGS_SCHEMA, ScryfallTag, ScryfallTagBuilder};
 use std::fs::File;
+use std::fs;
+use std::fmt::Display;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
+use std::time::Instant;
+use schemas::scryfall::symbology::CardSymbol;
 
 // todo: make sure this path is instantiated
 pub static SCRYFALL_DATA_DIR: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("scryfall"));
@@ -38,11 +42,15 @@ pub static SCRYFALL_ART_TAGS_DATA_FILE_PATH: LazyLock<PathBuf> =
 pub static SCRYFALL_ORACLE_TAGS_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_oracle_tags_data.parquet"));
 
+pub static SCRYFALL_SYMBOLOGY_FILE_PATH: LazyLock<PathBuf> =
+    LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_symbology.json"));
+
 pub struct ScryfallStorage {
     cards_df: Mutex<Option<DataFrame>>,
     rulings_df: Mutex<Option<DataFrame>>,
     art_tags_df: Mutex<Option<DataFrame>>,
     oracle_tags_df: Mutex<Option<DataFrame>>,
+    symbology: Mutex<Option<Vec<CardSymbol>>>,
     client: ScryfallClient,
     needs_reload_from_fs: AtomicBool,
     pub sync_handler: Arc<SyncHandler>,
@@ -55,6 +63,7 @@ impl ScryfallStorage {
             rulings_df: Mutex::new(Self::load_rulings_df().ok()),
             art_tags_df: Mutex::new(Self::load_art_tags_df().ok()),
             oracle_tags_df: Mutex::new(Self::load_oracle_tags_df().ok()),
+            symbology: Mutex::new(Self::load_symbology().ok()),
             client: client.clone(),
             needs_reload_from_fs: AtomicBool::new(false),
             sync_handler: Arc::new(SyncHandler::new()),
@@ -113,6 +122,28 @@ impl ScryfallStorage {
             SCRYFALL_ORACLE_TAGS_DATA_FILE_PATH.as_path(),
             Arc::clone(&*SCRYFALL_TAGS_SCHEMA),
         )
+    }
+
+    fn load_symbology() -> anyhow::Result<Vec<CardSymbol>> {
+        if !SCRYFALL_SYMBOLOGY_FILE_PATH.exists() {
+            anyhow::bail!("symbology file does not exist");
+        }
+
+        let start = Instant::now();
+        log::info!("reading symbology data from {}", SCRYFALL_SYMBOLOGY_FILE_PATH.display());
+
+        let file_content = fs::read(&*SCRYFALL_SYMBOLOGY_FILE_PATH).map_err(|err| {
+            log::warn!("failed to read file: {err}");
+            err
+        })?;
+
+        let data = serde_json::from_slice(file_content.as_slice()).map_err(|err| {
+            log::warn!("failed to deserialize: {err}");
+            err
+        })?;
+
+        log::info!("read symbology data successfully in {:?}", start.elapsed());
+        Ok(data)
     }
 
     fn iter_dataframes(&self) -> impl Iterator<Item = &Mutex<Option<DataFrame>>> {
@@ -194,6 +225,14 @@ impl ScryfallStorage {
                     )
                     .await?;
 
+                *self.sync_handler.sync_target.lock().unwrap() = "Symbology".to_owned();
+                *self.sync_handler.sync_state.lock().unwrap() = SyncState::Downloading;
+                let symbology = self.client.symbology().await?;
+                *self.sync_handler.sync_state.lock().unwrap() = SyncState::FsWrite;
+                let mut file = File::create(SCRYFALL_SYMBOLOGY_FILE_PATH.as_path())?;
+                serde_json::to_writer(&mut file, &symbology.data)?;
+                log::info!("wrote symbology file");
+
                 userdata
                     .loaded
                     .lock()
@@ -216,16 +255,16 @@ impl ScryfallStorage {
     }
 
     pub fn try_reload(&self) -> bool {
-        let handle_err = |name: &str, f: fn() -> PolarsResult<DataFrame>| {
+        fn handle_err<T, E: Display, F: FnOnce() -> Result<T, E>>(name: &str, f: F) -> Option<T> {
             f().inspect_err(|err| log::warn!("error loading scryfall {name} data: {err}"))
                 .ok()
-        };
+        }
 
-        let store_to_mutex = |mu: &Mutex<Option<DataFrame>>, v: Option<DataFrame>| {
+        fn store_to_mutex<T>(mu: &Mutex<Option<T>>, v: Option<T>) -> bool {
             let mut guard = mu.lock().unwrap();
             *guard = v;
             guard.is_some()
-        };
+        }
 
         let loaded_cards = store_to_mutex(&self.cards_df, handle_err("cards", Self::load_cards_df));
         let loaded_rulings = store_to_mutex(
@@ -240,15 +279,20 @@ impl ScryfallStorage {
             &self.oracle_tags_df,
             handle_err("oracle tags", Self::load_oracle_tags_df),
         );
+        let loaded_symbology = store_to_mutex(
+            &self.symbology,
+            handle_err("symbology", Self::load_symbology),
+        );
 
-        let success = loaded_rulings && loaded_cards && loaded_atags && loaded_otags;
+        let success = loaded_rulings && loaded_cards && loaded_atags && loaded_otags && loaded_symbology;
         self.needs_reload_from_fs.store(!success, Ordering::Release);
         success
     }
 
     pub fn is_ready(&self) -> bool {
         let check_loaded = |mu: &Mutex<Option<DataFrame>>| mu.lock().unwrap().is_some();
-        let all_loaded = self.iter_dataframes().all(check_loaded);
-        all_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
+        let all_dataframes_loaded = self.iter_dataframes().all(check_loaded);
+        let symbology_loaded = self.symbology.lock().unwrap().is_some();
+        all_dataframes_loaded && symbology_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
     }
 }

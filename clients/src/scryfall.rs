@@ -12,6 +12,7 @@ use serde::de::DeserializeOwned;
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use thiserror::Error;
+use schemas::scryfall::symbology::CardSymbol;
 
 #[derive(Clone, Debug)]
 pub struct ScryfallClient {
@@ -112,5 +113,9 @@ impl ScryfallClient {
                 }
             },
         ))
+    }
+
+    pub async fn symbology(&self) -> reqwest::Result<ScryfallList<CardSymbol>> {
+        self.call(Method::GET, "symbology").await
     }
 }

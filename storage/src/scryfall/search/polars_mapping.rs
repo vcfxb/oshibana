@@ -13,6 +13,7 @@ fn resolve_cols(cols: impl Deref<Target = [SearchColumn]>) -> Vec<PExpr> {
         let mapped = match c {
             SearchColumn::Name => col("name").alias("Name"),
             SearchColumn::Type => col("type_line").alias("Type"),
+            SearchColumn::ManaCost => col("mana_cost").alias("Mana Cost"),
         };
 
         resolved.push(mapped);

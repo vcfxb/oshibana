@@ -40,6 +40,7 @@ pub struct UserData {
 pub enum SearchColumn {
     Name,
     Type,
+    ManaCost,
 }
 
 impl SearchColumn {

@@ -10,8 +10,15 @@ pub fn col_format(c: SearchColumn) -> fn(&AnyValue, &mut Ui) -> Response {
             .ui(ui)
     };
 
+    let mana_cost_col = |_v: &AnyValue, ui: &mut Ui| {
+        ui.horizontal_wrapped(|_ui| {
+            todo!()
+        }).response
+    };
+
     match c {
         SearchColumn::Name => str_col,
         SearchColumn::Type => str_col,
+        SearchColumn::ManaCost => mana_cost_col,
     }
 }
