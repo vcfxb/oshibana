@@ -1,3 +1,4 @@
+use std::fs;
 use crate::view::View;
 use crate::view::home::HOME;
 use crate::view::scryfall_sync::SyncView;
@@ -14,7 +15,7 @@ use egui::{
 use egui_material_icons::icons;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use storage::scryfall::ScryfallStorage;
+use storage::scryfall::{ScryfallStorage, SCRYFALL_CARD_IMAGERY_CACHE_DIR, SCRYFALL_SYMBOLOGY_CACHE_DIR};
 use storage::user_data::UserDataStorage;
 
 pub struct Oshibana {
@@ -33,6 +34,13 @@ impl Oshibana {
         let scryfall_storage = Arc::new(ScryfallStorage::new(scryfall_client));
         let user_data = UserDataStorage::new()?;
         let sync_view_state = Arc::new(SyncView::new());
+        
+        for cache_dir in [SCRYFALL_SYMBOLOGY_CACHE_DIR.as_path(), SCRYFALL_CARD_IMAGERY_CACHE_DIR.as_path()] {
+            if !cache_dir.exists() {
+                log::info!("creating {}", cache_dir.display());
+                fs::create_dir_all(cache_dir)?;
+            }
+        }
 
         let scryfall_sync_expired = {
             let ud = user_data.loaded.lock().unwrap();

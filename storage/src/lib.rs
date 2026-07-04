@@ -16,3 +16,5 @@ pub static DIRECTORIES: LazyLock<ProjectDirs> =
 pub static LOGS_DIR: LazyLock<PathBuf> = LazyLock::new(|| DIRECTORIES.cache_dir().join("logs"));
 
 pub static DATA_DIR: LazyLock<&Path> = LazyLock::new(|| DIRECTORIES.data_dir());
+
+pub static CACHE_DIR: LazyLock<&Path> = LazyLock::new(|| DIRECTORIES.cache_dir());

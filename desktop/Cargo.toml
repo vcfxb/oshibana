@@ -49,6 +49,8 @@ polars.workspace = true
 tokio.workspace = true
 mimalloc = "0.1.50"
 strum.workspace = true
+regex = "1"
+url.workspace = true
 
 # Formatting
 humansize.workspace = true

@@ -3,12 +3,11 @@
 pub mod col_format;
 
 use crate::app::Oshibana;
-use crate::view::{View, logic_noop};
+use crate::view::{logic_noop, View};
 use eframe::Frame;
-use egui::{FontFamily, FontId, Response, ScrollArea, TextEdit, Ui};
+use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
-use polars::prelude::AnyValue;
 use schemas::oshibana::SearchColumn;
 use strum::IntoEnumIterator;
 
@@ -98,8 +97,8 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let visible_cols = &user_data_guard.visible_search_columns;
     let formatting_fns = visible_cols
         .iter()
-        .map(|col| col_format::col_format(*col))
-        .collect::<Vec<fn(&AnyValue, &mut Ui) -> Response>>();
+        .map(|col| col_format::col_format(&app.scryfall_storage, *col))
+        .collect::<Vec<_>>();
 
     let query = app.search_state.search_text.as_str();
     let search_result = app

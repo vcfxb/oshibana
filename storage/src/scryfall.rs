@@ -2,7 +2,7 @@ pub mod callback_reader;
 pub mod search;
 pub mod sync_handler;
 
-use crate::DATA_DIR;
+use crate::{CACHE_DIR, DATA_DIR};
 use crate::scryfall::callback_reader::ProgressCallback;
 use crate::scryfall::sync_handler::{SyncHandler, SyncState};
 use crate::user_data::UserDataStorage;
@@ -25,6 +25,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Instant;
+use reqwest::Method;
+use url::Url;
 use schemas::scryfall::symbology::CardSymbol;
 
 // todo: make sure this path is instantiated
@@ -40,10 +42,16 @@ pub static SCRYFALL_ART_TAGS_DATA_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_art_tag_data.parquet"));
 
 pub static SCRYFALL_ORACLE_TAGS_DATA_FILE_PATH: LazyLock<PathBuf> =
-    LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_oracle_tags_data.parquet"));
+    LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_oracle_tag_data.parquet"));
 
 pub static SCRYFALL_SYMBOLOGY_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| SCRYFALL_DATA_DIR.join("scryfall_symbology.json"));
+
+pub static SCRYFALL_SYMBOLOGY_CACHE_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| CACHE_DIR.join("symbology-cache"));
+
+pub static SCRYFALL_CARD_IMAGERY_CACHE_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| CACHE_DIR.join("card-imagery-cache"));
 
 pub struct ScryfallStorage {
     cards_df: Mutex<Option<DataFrame>>,
@@ -294,5 +302,58 @@ impl ScryfallStorage {
         let all_dataframes_loaded = self.iter_dataframes().all(check_loaded);
         let symbology_loaded = self.symbology.lock().unwrap().is_some();
         all_dataframes_loaded && symbology_loaded && !self.needs_reload_from_fs.load(Ordering::Acquire)
+    }
+
+    /// Lookup the svg url of a symbol. Returns `None` if symbology isn't loaded or if the symbol
+    /// doesn't have an svg.
+    fn lookup_symbol_svg_url(&self, symbol: &str) -> Option<Url> {
+        let symbology_guard = self.symbology.lock().unwrap();
+        let symbols = symbology_guard.as_ref()?;
+        symbols.iter()
+            .find(|symbol_object| symbol_object.symbol == symbol)
+            .and_then(|symbol_object| symbol_object.svg_uri.as_ref())
+            .cloned()
+    }
+
+    /// Get a [`Url`] for a symbol's svg if it exists. It may be cached, in which case, it's a
+    /// `file://` uri.
+    pub fn get_symbol_svg_uri(&self, symbol: &str) -> Option<Url> {
+        let symbol_uri = self.lookup_symbol_svg_url(symbol)?;
+        let filename = symbol_uri.path_segments()
+            .expect("scryfall symbol svg uri has path segments")
+            .rev()
+            .next()
+            .expect("scryfall symbol svg uri has at least one path segment");
+
+        assert!(filename.ends_with(".svg"), "`{filename}` should be an svg");
+
+        let file_location = SCRYFALL_SYMBOLOGY_CACHE_DIR.join(filename);
+        assert!(file_location.is_absolute());
+
+        if file_location.exists() {
+            Some(Url::from_file_path(&file_location).unwrap())
+        } else {
+            let client = self.client.clone();
+            let uri = symbol_uri.clone();
+
+            let update_cache = async move || {
+                let bytes = client.client.request(Method::GET, uri)
+                    .send()
+                    .await?
+                    .bytes()
+                    .await?;
+
+                fs::write(file_location, bytes)?;
+                Ok::<_, anyhow::Error>(())
+            };
+
+            tokio::spawn(async {
+                if let Err(err) = update_cache().await {
+                    log::warn!("Error updating symbology cache: {err}");
+                }
+            });
+
+            Some(symbol_uri)
+        }
     }
 }

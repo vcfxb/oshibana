@@ -1083,10 +1083,12 @@ dependencies = [
  "mimalloc",
  "opener",
  "polars",
+ "regex",
  "schemas",
  "storage",
  "strum 0.28.0",
  "tokio",
+ "url",
  "winres",
 ]
 

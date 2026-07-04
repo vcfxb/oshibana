@@ -3,6 +3,7 @@
 
 pub mod app;
 pub mod view;
+pub mod util;
 
 pub mod built {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
