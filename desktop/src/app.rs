@@ -7,13 +7,10 @@ use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
-use egui::{
-    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel,
-    ViewportCommand, containers::menu::MenuBar,
-};
+use egui::{CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, ViewportCommand, containers::menu::MenuBar, ViewportId, ViewportBuilder, Ui};
 use egui_material_icons::icons;
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use storage::scryfall::ScryfallStorage;
 use storage::user_data::UserDataStorage;
 
@@ -24,6 +21,7 @@ pub struct Oshibana {
     pub current_view: View,
     pub search_state: SearchState,
     pub sync_view_state: Arc<SyncView>,
+    view_about: Arc<AtomicBool>,
 }
 
 impl Oshibana {
@@ -68,6 +66,7 @@ impl Oshibana {
             current_view: HOME,
             search_state: SearchState::default(),
             sync_view_state,
+            view_about: Arc::new(AtomicBool::new(false)),
         })
     }
 }
@@ -82,12 +81,14 @@ impl eframe::App for Oshibana {
             self.user_data_storage.trigger_save();
         }
 
-        if ctx.input(|i| i.viewport().close_requested()) {
-            self.scryfall_storage
-                .sync_handler
-                .cancel_requested
-                .store(true, Ordering::Relaxed);
-            self.user_data_storage.save().expect("saved successfully");
+        if ctx.input(|i| i.viewport().close_requested()) && ctx.viewport_id() == ViewportId::ROOT {
+            if ctx.viewport_id() == ViewportId::ROOT {
+                self.scryfall_storage
+                    .sync_handler
+                    .cancel_requested
+                    .store(true, Ordering::Relaxed);
+                self.user_data_storage.save().expect("saved successfully");
+            }
         }
 
         if !self.scryfall_storage.is_ready()
@@ -111,7 +112,50 @@ impl eframe::App for Oshibana {
         (self.current_view.logic)(self, ctx, frame);
     }
 
-    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut Frame) {
+    fn ui(&mut self, ui: &mut Ui, frame: &mut Frame) {
+        if self.view_about.load(Ordering::Acquire) {
+            let arc_clone = Arc::clone(&self.view_about);
+
+            ui.show_viewport_deferred(
+                ViewportId::from_hash_of("about"),
+                ViewportBuilder::default()
+                    .with_title("About Oshibana")
+                    .with_active(true)
+                    .with_inner_size([360.0, 250.0])
+                    .with_icon(self.icon.clone()),
+                move |ui, _| {
+                    use crate::built::*;
+
+                    if ui.input(|i| i.viewport().close_requested()) {
+                        arc_clone.store(false, Ordering::Release);
+                    }
+
+                    fn labeled_link(ui: &mut Ui, label: &str, link: &str) {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.label(label);
+                            if ui.link(link).clicked() {
+                                if let Err(err) = opener::open_browser(link) {
+                                    log::warn!("could not open {link}: {err}");
+                                }
+                            };
+                        });
+                    }
+
+                    CentralPanel::default().show(ui, |ui| {
+                        ui.heading("About Oshibana");
+                        ui.label(format!("Authors: {}", PKG_AUTHORS.replace(":", ", ")));
+                        labeled_link(ui, "Homepage: ", PKG_HOMEPAGE);
+                        labeled_link(ui, "Repository: ", PKG_REPOSITORY);
+                        ui.label(format!("License: {PKG_LICENSE}"));
+                        ui.label(format!("Version: {PKG_VERSION}"));
+                        ui.label(format!("Target: {TARGET}"));
+                        ui.label(format!("Profile: {PROFILE}"));
+                        ui.label(format!("Rust version: {RUSTC_VERSION}"));
+                    });
+                }
+            );
+        }
+
         if self.scryfall_storage.sync_handler.is_syncing() {
             self.sync_view_state
                 .ui(&self.scryfall_storage.sync_handler, ui);
@@ -171,6 +215,10 @@ impl eframe::App for Oshibana {
                 });
 
                 ui.menu_button("Help", |ui| {
+                    if ui.button("About...").clicked() {
+                        self.view_about.store(true, Ordering::Release);
+                    }
+
                     if ui.button("Open logs folder").clicked() {
                         opener::reveal(storage::LOGS_DIR.as_path())
                             .inspect_err(|err| {

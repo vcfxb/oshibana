@@ -2,6 +2,10 @@
 name = "desktop"
 edition.workspace = true
 version.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [[bin]]
 name = "oshibana"

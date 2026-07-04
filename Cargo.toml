@@ -10,6 +10,10 @@ members = [
 [workspace.package]
 edition = "2024"
 version = "0.1.13-pre"
+authors = ["Venus Xeon-Blonde"]
+homepage = "https://oshibana.cards"
+repository = "https://github.com/vcfxb/oshibana"
+license = "MIT"
 
 [workspace.dependencies]
 schemas = { path = "schemas" }
