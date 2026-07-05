@@ -1,3 +1,21 @@
+## [0.1.15-pre] - 2026-07-05
+
+### 🚀 Features
+
+- *(symbology)* Add symbology to schemas and scryfall client
+- *(search)* Add mana cost column to search, use cached mana symbols
+- *(tools)* Add button to open cache folder to top menu
+
+### 🐛 Bug Fixes
+
+- *(CI)* Switch to `ubuntu-24.04-arm` over `ubuntu-latest-arm`
+- *(CI)* Switch cargo test to `ubuntu-24.04-arm` over `ubuntu-latest-arm`
+
+### ⚙️ Miscellaneous Tasks
+
+- Clippy
+- Cargo fmt
+- Bump version to 0.1.15-pre
 ## [0.1.14-pre] - 2026-07-04
 
 ### 🐛 Bug Fixes
