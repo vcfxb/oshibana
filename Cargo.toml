@@ -9,7 +9,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-version = "0.1.15-pre"
+version = "0.1.16-prerelease"
 authors = ["Venus Xeon-Blonde"]
 homepage = "https://oshibana.cards"
 repository = "https://github.com/vcfxb/oshibana"
