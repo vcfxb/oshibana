@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 pub static DIRECTORIES: LazyLock<ProjectDirs> =
-    LazyLock::new(|| ProjectDirs::from("org.vcfxb", "Venus Xeon-Blonde", "Oshibana").unwrap());
+    LazyLock::new(|| ProjectDirs::from("org.vcfxb", "", "Oshibana").unwrap());
 
 pub static LOGS_DIR: LazyLock<PathBuf> = LazyLock::new(|| DIRECTORIES.cache_dir().join("logs"));
 
