@@ -61,6 +61,8 @@ pub enum Language {
     Ph,
     /// Quenya -- lotr language
     Qya,
+    /// Dwarvish
+    Dw
 }
 
 generate_enum_dt_map_and_builder_impl!(Language => Categorical8Type);
