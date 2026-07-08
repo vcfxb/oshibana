@@ -1,3 +1,20 @@
+## [0.1.16-prerelease] - 2026-07-08
+
+### 🐛 Bug Fixes
+
+- Add dwarvish card language
+- [**breaking**] Remove my name from the logs dir path
+- Add support for Dwarvish card language
+
+### 📚 Documentation
+
+- Update README.md with installation info
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version to 0.1.16-prerelease
+- Sync up versions across packages
+- Cargo fmt
 ## [0.1.15-pre] - 2026-07-05
 
 ### 🚀 Features
