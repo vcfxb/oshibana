@@ -43,6 +43,7 @@ lang_value_arabic     = { ^"arabic" | ^"ar" }
 lang_value_sanskrit   = { ^"sanskrit" | ^"sa" }
 lang_value_phyrexian  = { ^"Phyrexian" | ^"ph" }
 lang_value_quenya     = { ^"Quenya" | ^"qya" }
+lang_value_dwarvish   = { ^"Dwarvish" | ^"dw" }
 
 lang_value = {
     lang_value_english
@@ -63,6 +64,7 @@ lang_value = {
     | lang_value_sanskrit
     | lang_value_phyrexian
     | lang_value_quenya
+    | lang_value_dwarvish
 }
 
 lang_filter = ${

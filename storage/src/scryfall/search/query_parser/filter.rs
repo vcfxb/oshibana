@@ -155,6 +155,7 @@ fn pair_to_language(pair: Pair<Rule>) -> Language {
         Rule::lang_value_sanskrit => Language::Sa,
         Rule::lang_value_phyrexian => Language::Ph,
         Rule::lang_value_quenya => Language::Qya,
+        Rule::lang_value_dwarvish => Language::Dw,
         other => panic!("{other:?} does not map to a language"),
     }
 }
