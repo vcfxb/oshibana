@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "clients"
-version = "0.1.0"
+version = "0.1.16-prerelease"
 dependencies = [
  "futures",
  "governor",
@@ -4985,7 +4985,7 @@ dependencies = [
 
 [[package]]
 name = "schemas"
-version = "0.1.0"
+version = "0.1.16-prerelease"
 dependencies = [
  "chrono",
  "enumflags2",
