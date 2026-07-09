@@ -1,10 +1,10 @@
 //! Home View
 
 use crate::app::Oshibana;
+use crate::view;
 use crate::view::{View, logic_noop, ui_noop};
 use eframe::Frame;
 use egui::Ui;
-use crate::view;
 
 pub fn home() -> View {
     View {

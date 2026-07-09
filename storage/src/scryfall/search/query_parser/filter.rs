@@ -49,7 +49,9 @@ impl<'i> Filter<'i> {
                 Self::Name { operator, value }
             }
 
-            Rule::type_filter => Self::Type { value: FilterValue::consume(unwrap_exactly_one(pair)) },
+            Rule::type_filter => Self::Type {
+                value: FilterValue::consume(unwrap_exactly_one(pair)),
+            },
 
             Rule::optionally_exact_filter_no_directive => {
                 let is_exact = pair.as_str().starts_with('!');
@@ -113,13 +115,15 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
 
             Filter::Name { operator, .. } => panic!("unsupported name operator: {operator:?}"),
 
-            Filter::Type { value: FilterValue::Regex(re) } => {
-                col("type_line").str().contains(lit(*re), false)
-            }
+            Filter::Type {
+                value: FilterValue::Regex(re),
+            } => col("type_line").str().contains(lit(*re), false),
 
-            Filter::Type { value } => {
-                col("type_line").str().to_lowercase().str().contains_literal(lit(value.as_str().unwrap()).str().to_lowercase())
-            }
+            Filter::Type { value } => col("type_line")
+                .str()
+                .to_lowercase()
+                .str()
+                .contains_literal(lit(value.as_str().unwrap()).str().to_lowercase()),
         }
     }
 }

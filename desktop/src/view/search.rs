@@ -2,15 +2,15 @@
 
 pub mod col_format;
 
-use std::borrow::Cow;
 use crate::app::Oshibana;
 use crate::view::{View, logic_noop};
 use eframe::Frame;
-use egui::{FontFamily, FontId, ScrollArea, TextBuffer, TextEdit, TextFormat, Ui};
 use egui::text::LayoutJob;
+use egui::{FontFamily, FontId, ScrollArea, TextBuffer, TextEdit, TextFormat, Ui};
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::SearchColumn;
+use std::borrow::Cow;
 use strum::IntoEnumIterator;
 
 pub fn search() -> View {
@@ -104,10 +104,14 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let mut prefix_layout = LayoutJob::default();
 
     prefix_layout.append("Enable search prefix: ", 0.0, TextFormat::default());
-    prefix_layout.append(search_prefix, 0.0, TextFormat {
-        font_id: FontId::new(14.0, FontFamily::Monospace),
-        ..TextFormat::default()
-    });
+    prefix_layout.append(
+        search_prefix,
+        0.0,
+        TextFormat {
+            font_id: FontId::new(14.0, FontFamily::Monospace),
+            ..TextFormat::default()
+        },
+    );
 
     if !search_prefix.is_empty() {
         ui.checkbox(&mut search_state.enable_global_search_prefix, prefix_layout);
@@ -134,9 +138,10 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
     };
 
-    let search_result = app
-        .scryfall_storage
-        .search(query.as_str(), user_data_guard.visible_search_columns.as_slice());
+    let search_result = app.scryfall_storage.search(
+        query.as_str(),
+        user_data_guard.visible_search_columns.as_slice(),
+    );
 
     drop(user_data_guard);
 

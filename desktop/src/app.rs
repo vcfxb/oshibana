@@ -1,10 +1,14 @@
+use crate::view;
 use crate::view::View;
 use crate::view::scryfall_sync::SyncView;
 use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
-use egui::{CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, Ui, ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar, Button};
+use egui::{
+    Button, CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers,
+    Panel, Ui, ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar,
+};
 use egui_material_icons::icons;
 use std::fs;
 use std::sync::Arc;
@@ -13,11 +17,9 @@ use storage::scryfall::{
     SCRYFALL_CARD_IMAGERY_CACHE_DIR, SCRYFALL_SYMBOLOGY_CACHE_DIR, ScryfallStorage,
 };
 use storage::user_data::UserDataStorage;
-use crate::view;
 
 static SAVE_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::S);
 static FULLSCREEN_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F11);
-
 
 pub struct Oshibana {
     pub scryfall_storage: Arc<ScryfallStorage>,
@@ -205,8 +207,8 @@ impl eframe::App for Oshibana {
 
                     ui.separator();
 
-                    let save_button = Button::new("Save")
-                        .shortcut_text(ui.ctx().format_shortcut(&SAVE_SHORTCUT));
+                    let save_button =
+                        Button::new("Save").shortcut_text(ui.ctx().format_shortcut(&SAVE_SHORTCUT));
 
                     if ui.add(save_button).clicked() {
                         self.user_data_storage.trigger_save();
@@ -263,7 +265,13 @@ impl eframe::App for Oshibana {
             })
         });
 
-        let autosave_enabled = self.user_data_storage.loaded.lock().unwrap().autosave_interval.is_some();
+        let autosave_enabled = self
+            .user_data_storage
+            .loaded
+            .lock()
+            .unwrap()
+            .autosave_interval
+            .is_some();
         let has_pending = self.user_data_storage.has_pending_updates();
         let is_saving = self.user_data_storage.currently_saving();
         let base_fill = ui.visuals().panel_fill;
@@ -287,7 +295,6 @@ impl eframe::App for Oshibana {
 
                         (true, true, false) => {
                             ui.label("Waiting for autosave");
-
                         }
 
                         (_, false, false) => {

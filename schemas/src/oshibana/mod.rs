@@ -72,7 +72,7 @@ impl Default for UserData {
             packages: vec![],
             global_oracle_tags: Default::default(),
             visible_search_columns: SearchColumn::defaults(),
-            search_prefix: Default::default()
+            search_prefix: Default::default(),
         }
     }
 }
