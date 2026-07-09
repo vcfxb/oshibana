@@ -117,10 +117,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         ui.vertical_centered(|ui| {
             let search_bar = TextEdit::singleline(&mut search_state.search_text)
                 .desired_width(ui.available_width() - 40.0)
-                .font(FontId {
-                    size: 16.0,
-                    family: FontFamily::Monospace,
-                });
+                .font(FontId::monospace(14.0));
             ui.add(search_bar);
             ui.separator();
         })

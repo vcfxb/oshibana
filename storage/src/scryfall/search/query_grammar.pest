@@ -77,11 +77,15 @@ name_directive = _{ ^"name" }
 name_operator = { "!=" | ":" | "=" }
 name_filter = ${ name_directive ~ name_operator ~ filter_value }
 
+type_directive = _{ ^"t" | ^"type" }
+type_filter = ${ type_directive ~ ":" ~ filter_value }
+
 optionally_exact_filter_no_directive = ${ "!"? ~ filter_value }
 
 filter = {
     lang_filter
     | name_filter
+    | type_filter
     | optionally_exact_filter_no_directive
 }
 
