@@ -1,18 +1,19 @@
 //! Home View
 
 use crate::app::Oshibana;
-use crate::view::search::SEARCH;
 use crate::view::{View, logic_noop, ui_noop};
 use eframe::Frame;
 use egui::Ui;
+use crate::view;
 
-pub const HOME: View = View {
-    ui: home_ui,
-    logic: logic_noop,
-    menu: ui_noop,
-};
-
-pub struct Home;
+pub fn home() -> View {
+    View {
+        ui: home_ui,
+        logic: logic_noop,
+        menu: ui_noop,
+        state: Box::new(()),
+    }
+}
 
 fn home_ui(app: &mut Oshibana, ui: &mut Ui, _frame: &mut Frame) {
     let last_scryfall_sync = app
@@ -32,7 +33,7 @@ fn home_ui(app: &mut Oshibana, ui: &mut Ui, _frame: &mut Frame) {
             ui.label(format!("Last scryfall sync: {last_scryfall_sync}"));
             ui.add_space(10.0);
             if ui.button("Search for Cards").clicked() {
-                app.current_view = SEARCH;
+                app.current_view = view::search::search();
             }
         });
     });

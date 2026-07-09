@@ -1,5 +1,6 @@
 //! Different views that the application uses,
 
+use std::any::Any;
 use crate::app::Oshibana;
 use eframe::Frame;
 use egui::{Context, Ui};
@@ -9,11 +10,11 @@ pub mod scryfall_sync;
 pub mod search;
 pub mod settings;
 
-#[derive(Copy, Clone)]
 pub struct View {
     pub ui: fn(&mut Oshibana, &mut Ui, &mut Frame),
     pub logic: fn(&mut Oshibana, &Context, &mut Frame),
     pub menu: fn(&mut Oshibana, &mut Ui, &mut Frame),
+    state: Box<dyn Any>
 }
 
 const fn ui_noop(_: &mut Oshibana, _: &mut Ui, _: &mut Frame) {}

@@ -6,11 +6,14 @@ use eframe::emath::Align;
 use egui::{DragValue, Layout, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 
-pub const SETTINGS: View = View {
-    ui: settings_ui,
-    logic: logic_noop,
-    menu: ui_noop,
-};
+pub fn settings() -> View {
+    View {
+        ui: settings_ui,
+        logic: logic_noop,
+        menu: ui_noop,
+        state: Box::new(()),
+    }
+}
 
 fn settings_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let available_width = ui.available_width();
@@ -21,6 +24,7 @@ fn settings_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         .body(|mut body| {
             add_autosave_selection(app, &mut body);
             add_scyfall_sync_option(app, &mut body);
+            add_search_prefix_setting(app, &mut body);
         });
 }
 
@@ -138,5 +142,32 @@ fn add_scyfall_sync_option(app: &mut Oshibana, table: &mut TableBody) {
             .unwrap()
             .scryfall_sync_interval = new_value.map(Duration::hours);
         app.user_data_storage.mark_pending();
+    }
+}
+
+fn add_search_prefix_setting(app: &mut Oshibana, table: &mut TableBody) {
+    let mut search_text = app
+        .user_data_storage
+        .loaded
+        .lock()
+        .unwrap()
+        .search_prefix
+        .clone();
+    
+    let mut changed = false;
+    
+    table.row(14.0, |mut row| {
+        row.col(|ui| {
+            ui.label("Search Prefix")
+                .on_hover_text("text that will be added to the beginning of every search");
+        });
+        
+        row.col(|ui| {
+            changed = ui.text_edit_singleline(&mut search_text).changed();
+        });
+    });
+    
+    if changed {
+        app.user_data_storage.loaded.lock().unwrap().search_prefix = search_text;
     }
 }

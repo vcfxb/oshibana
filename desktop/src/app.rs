@@ -1,8 +1,5 @@
 use crate::view::View;
-use crate::view::home::HOME;
 use crate::view::scryfall_sync::SyncView;
-use crate::view::search::{SEARCH, SearchState};
-use crate::view::settings::SETTINGS;
 use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
@@ -16,6 +13,7 @@ use storage::scryfall::{
     SCRYFALL_CARD_IMAGERY_CACHE_DIR, SCRYFALL_SYMBOLOGY_CACHE_DIR, ScryfallStorage,
 };
 use storage::user_data::UserDataStorage;
+use crate::view;
 
 static SAVE_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::S);
 static FULLSCREEN_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F11);
@@ -26,7 +24,6 @@ pub struct Oshibana {
     pub user_data_storage: Arc<UserDataStorage>,
     pub icon: Arc<IconData>,
     pub current_view: View,
-    pub search_state: SearchState,
     pub sync_view_state: Arc<SyncView>,
     view_about: Arc<AtomicBool>,
 }
@@ -80,8 +77,7 @@ impl Oshibana {
             scryfall_storage,
             user_data_storage: user_data,
             icon,
-            current_view: HOME,
-            search_state: SearchState::default(),
+            current_view: view::home::home(),
             sync_view_state,
             view_about: Arc::new(AtomicBool::new(false)),
         })
@@ -183,15 +179,15 @@ impl eframe::App for Oshibana {
             MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Home").clicked() {
-                        self.current_view = HOME;
+                        self.current_view = view::home::home();
                     }
 
                     if ui.button("Search").clicked() {
-                        self.current_view = SEARCH;
+                        self.current_view = view::search::search();
                     }
 
                     if ui.button("Settings...").clicked() {
-                        self.current_view = SETTINGS;
+                        self.current_view = view::settings::settings();
                     };
 
                     ui.separator();

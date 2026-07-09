@@ -2,20 +2,25 @@
 
 pub mod col_format;
 
+use std::borrow::Cow;
 use crate::app::Oshibana;
 use crate::view::{View, logic_noop};
 use eframe::Frame;
-use egui::{FontFamily, FontId, ScrollArea, TextEdit, Ui};
+use egui::{FontFamily, FontId, ScrollArea, TextBuffer, TextEdit, TextFormat, Ui};
+use egui::text::LayoutJob;
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::SearchColumn;
 use strum::IntoEnumIterator;
 
-pub const SEARCH: View = View {
-    ui: search_ui,
-    logic: logic_noop,
-    menu: search_menu,
-};
+pub fn search() -> View {
+    View {
+        ui: search_ui,
+        logic: logic_noop,
+        menu: search_menu,
+        state: Box::new(SearchState::default()),
+    }
+}
 
 #[derive(Debug, Default)]
 pub enum SearchLayout {
@@ -27,25 +32,38 @@ pub enum SearchLayout {
     Detailed,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SearchState {
-    pub search_text: String,
-    pub layout: SearchLayout,
+    search_text: String,
+    layout: SearchLayout,
+    enable_global_search_prefix: bool,
+}
+
+impl Default for SearchState {
+    fn default() -> Self {
+        SearchState {
+            search_text: Default::default(),
+            layout: Default::default(),
+            enable_global_search_prefix: true,
+        }
+    }
 }
 
 fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
+    let search_state: &mut SearchState = app.current_view.state.downcast_mut().unwrap();
+
     ui.menu_button("Search", |ui| {
         ui.menu_button("Layout", |ui| {
             if ui.button("Rows").clicked() {
-                app.search_state.layout = SearchLayout::Rows;
+                search_state.layout = SearchLayout::Rows;
             }
 
             if ui.button("Tiles").clicked() {
-                app.search_state.layout = SearchLayout::Tiles;
+                search_state.layout = SearchLayout::Tiles;
             }
 
             if ui.button("Detailed").clicked() {
-                app.search_state.layout = SearchLayout::Detailed;
+                search_state.layout = SearchLayout::Detailed;
             }
         });
 
@@ -80,9 +98,24 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 }
 
 fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
+    let search_state: &mut SearchState = app.current_view.state.downcast_mut().unwrap();
+    let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
+    let search_prefix = user_data_guard.search_prefix.as_str();
+    let mut prefix_layout = LayoutJob::default();
+
+    prefix_layout.append("Enable search prefix: ", 0.0, TextFormat::default());
+    prefix_layout.append(search_prefix, 0.0, TextFormat {
+        font_id: FontId::new(14.0, FontFamily::Monospace),
+        ..TextFormat::default()
+    });
+
+    if !search_prefix.is_empty() {
+        ui.checkbox(&mut search_state.enable_global_search_prefix, prefix_layout);
+    }
+
     ui.horizontal_top(|ui| {
         ui.vertical_centered(|ui| {
-            let search_bar = TextEdit::singleline(&mut app.search_state.search_text)
+            let search_bar = TextEdit::singleline(&mut search_state.search_text)
                 .desired_width(ui.available_width() - 40.0)
                 .font(FontId {
                     size: 16.0,
@@ -93,17 +126,20 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         })
     });
 
-    let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
     let visible_cols = &user_data_guard.visible_search_columns;
     let formatting_fns = visible_cols
         .iter()
         .map(|col| col_format::col_format(&app.scryfall_storage, *col))
         .collect::<Vec<_>>();
 
-    let query = app.search_state.search_text.as_str();
+    let query = match (search_state.enable_global_search_prefix, search_prefix) {
+        (false, _) | (_, "") => Cow::Borrowed(search_state.search_text.as_str()),
+        (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
+    };
+
     let search_result = app
         .scryfall_storage
-        .search(query, user_data_guard.visible_search_columns.as_slice());
+        .search(query.as_str(), user_data_guard.visible_search_columns.as_slice());
 
     drop(user_data_guard);
 

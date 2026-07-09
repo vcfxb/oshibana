@@ -26,10 +26,16 @@ pub struct UserData {
     pub collection: Collection,
     pub wishlist: Vec<WishlistItem>,
     pub packages: Vec<Package>,
+
     /// Apply global oracle tags in wishlist, decks, & collection
     pub global_oracle_tags: HashMap<Uuid, Vec<String>>,
+
     #[serde(default = "SearchColumn::defaults")]
     pub visible_search_columns: Vec<SearchColumn>,
+
+    /// Prefix automatically placed before search queries
+    #[serde(default)]
+    pub search_prefix: String,
 }
 
 #[derive(
@@ -54,7 +60,6 @@ impl SearchColumn {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for UserData {
     fn default() -> Self {
         UserData {
@@ -67,6 +72,7 @@ impl Default for UserData {
             packages: vec![],
             global_oracle_tags: Default::default(),
             visible_search_columns: SearchColumn::defaults(),
+            search_prefix: Default::default()
         }
     }
 }
