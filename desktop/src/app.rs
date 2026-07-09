@@ -7,10 +7,7 @@ use chrono::{Local, Utc};
 use clients::scryfall::ScryfallClient;
 use eframe::Frame;
 use eframe::emath::Align;
-use egui::{
-    CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, Ui,
-    ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar,
-};
+use egui::{CentralPanel, Color32, Context, IconData, Key, KeyboardShortcut, Layout, Modifiers, Panel, Ui, ViewportBuilder, ViewportCommand, ViewportId, containers::menu::MenuBar, Button};
 use egui_material_icons::icons;
 use std::fs;
 use std::sync::Arc;
@@ -19,6 +16,10 @@ use storage::scryfall::{
     SCRYFALL_CARD_IMAGERY_CACHE_DIR, SCRYFALL_SYMBOLOGY_CACHE_DIR, ScryfallStorage,
 };
 use storage::user_data::UserDataStorage;
+
+static SAVE_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::S);
+static FULLSCREEN_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::NONE, Key::F11);
+
 
 pub struct Oshibana {
     pub scryfall_storage: Arc<ScryfallStorage>,
@@ -89,9 +90,11 @@ impl Oshibana {
 
 impl eframe::App for Oshibana {
     fn logic(&mut self, ctx: &Context, frame: &mut Frame) {
-        static SAVE_SHORTCUT: KeyboardShortcut = KeyboardShortcut::new(Modifiers::COMMAND, Key::S);
-
         let should_save = ctx.input_mut(|input| input.consume_shortcut(&SAVE_SHORTCUT));
+
+        if ctx.input_mut(|is| is.consume_shortcut(&FULLSCREEN_SHORTCUT)) {
+            toggle_fullscreen(ctx);
+        }
 
         if should_save {
             self.user_data_storage.trigger_save();
@@ -205,7 +208,11 @@ impl eframe::App for Oshibana {
                     }
 
                     ui.separator();
-                    if ui.button("Save").clicked() {
+
+                    let save_button = Button::new("Save")
+                        .shortcut_text(ui.ctx().format_shortcut(&SAVE_SHORTCUT));
+
+                    if ui.add(save_button).clicked() {
                         self.user_data_storage.trigger_save();
                     }
 
@@ -218,13 +225,11 @@ impl eframe::App for Oshibana {
                 (self.current_view.menu)(self, ui, frame);
 
                 ui.menu_button("Window", |ui| {
-                    if ui.button("Toggle Fullscreen").clicked() {
-                        let fullscreen_state = ui.input(|input| input.viewport().maximized);
+                    let fullscreen_button = Button::new("Toggle Fullscreen")
+                        .shortcut_text(ui.ctx().format_shortcut(&FULLSCREEN_SHORTCUT));
 
-                        if let Some(state) = fullscreen_state {
-                            ui.send_viewport_cmd(ViewportCommand::Maximized(!state));
-                            ui.send_viewport_cmd(ViewportCommand::Decorations(state));
-                        }
+                    if ui.add(fullscreen_button).clicked() {
+                        toggle_fullscreen(ui.ctx());
                     }
                 });
 
@@ -304,5 +309,14 @@ impl eframe::App for Oshibana {
         CentralPanel::default().show(ui, |ui| {
             (self.current_view.ui)(self, ui, frame);
         });
+    }
+}
+
+fn toggle_fullscreen(ctx: &Context) {
+    let fullscreen_state = ctx.input(|input| input.viewport().maximized);
+
+    if let Some(state) = fullscreen_state {
+        ctx.send_viewport_cmd(ViewportCommand::Maximized(!state));
+        ctx.send_viewport_cmd(ViewportCommand::Decorations(state));
     }
 }
