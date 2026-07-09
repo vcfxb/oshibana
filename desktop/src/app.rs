@@ -263,6 +263,7 @@ impl eframe::App for Oshibana {
             })
         });
 
+        let autosave_enabled = self.user_data_storage.loaded.lock().unwrap().autosave_interval.is_some();
         let has_pending = self.user_data_storage.has_pending_updates();
         let is_saving = self.user_data_storage.currently_saving();
         let base_fill = ui.visuals().panel_fill;
@@ -278,19 +279,25 @@ impl eframe::App for Oshibana {
                 ui.label(Local::now().format("%Y %B %e %r").to_string());
 
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    match (has_pending, is_saving) {
-                        (_, true) => {
+                    match (autosave_enabled, has_pending, is_saving) {
+                        (_, _, true) => {
                             ui.spinner();
                             ui.label("Saving");
                         }
 
-                        (true, false) => {
+                        (true, true, false) => {
                             ui.label("Waiting for autosave");
+
                         }
 
-                        (false, false) => {
-                            ui.label(icons::ICON_CHECK.rich_text());
+                        (_, false, false) => {
+                            ui.label(icons::ICON_CHECK);
                             ui.label("Saved");
+                        }
+
+                        (false, true, false) => {
+                            ui.label("Changes pending");
+                            ui.label(icons::ICON_SAVE);
                         }
                     }
                 });

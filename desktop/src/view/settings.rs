@@ -153,21 +153,22 @@ fn add_search_prefix_setting(app: &mut Oshibana, table: &mut TableBody) {
         .unwrap()
         .search_prefix
         .clone();
-    
+
     let mut changed = false;
-    
+
     table.row(14.0, |mut row| {
         row.col(|ui| {
             ui.label("Search Prefix")
                 .on_hover_text("text that will be added to the beginning of every search");
         });
-        
+
         row.col(|ui| {
             changed = ui.text_edit_singleline(&mut search_text).changed();
         });
     });
-    
+
     if changed {
         app.user_data_storage.loaded.lock().unwrap().search_prefix = search_text;
+        app.user_data_storage.mark_pending();
     }
 }
