@@ -27,6 +27,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Instant;
+use tokio::io::AsyncWriteExt;
 use url::Url;
 
 // todo: make sure this path is instantiated
@@ -352,7 +353,8 @@ impl ScryfallStorage {
                     .bytes()
                     .await?;
 
-                fs::write(file_location, bytes)?;
+                let mut file = tokio::fs::File::create_new(file_location).await?;
+                file.write_all(bytes.as_ref()).await?;
                 Ok::<_, anyhow::Error>(())
             };
 
