@@ -5,6 +5,7 @@ use polars::prelude::Expr;
 use schemas::scryfall::card::languages::Language;
 use std::borrow::Cow;
 use unescape_zero_copy::unescape_default;
+use schemas::scryfall::card::colors::Color;
 
 pub enum Filter<'i> {
     Lang {
@@ -14,6 +15,16 @@ pub enum Filter<'i> {
     Name {
         operator: Operator,
         value: FilterValue<'i>,
+    },
+
+    Color {
+        operator: Operator,
+        value: FilterValue<'i>,
+    },
+
+    ColorIdentity {
+        operator: Operator,
+        value: FilterValue<'i>
     },
 
     Type {
@@ -42,11 +53,18 @@ impl<'i> Filter<'i> {
             },
 
             Rule::name_filter => {
-                let mut inner = pair.into_inner();
-                let operator = Operator::consume(inner.next().unwrap());
-                let value = FilterValue::consume(inner.next().unwrap());
-
+                let (operator, value) = pair_to_operator_value(pair);
                 Self::Name { operator, value }
+            }
+
+            Rule::color_filter => {
+                let (operator, value) = pair_to_operator_value(pair);
+                Self::Color { operator, value }
+            }
+
+            Rule::color_identity_filter => {
+                let (operator, value) = pair_to_operator_value(pair);
+                Self::ColorIdentity { operator, value }
             }
 
             Rule::type_filter => Self::Type {
@@ -115,6 +133,10 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
 
             Filter::Name { operator, .. } => panic!("unsupported name operator: {operator:?}"),
 
+            Filter::Color { operator, value } => {
+
+            },
+
             Filter::Type {
                 value: FilterValue::Regex(re),
             } => col("type_line").str().contains(lit(*re), false),
@@ -139,6 +161,7 @@ impl<'i> FilterValue<'i> {
             Rule::string_inner => {
                 Self::String(unescape_default(pair.as_str()).unwrap_or(pair.as_str().into()))
             }
+            Rule::color_filter_value => Self::consume(unwrap_exactly_one(pair)),
             _ => panic!("{pair:?} is not a filtervalue"),
         }
     }
@@ -150,6 +173,14 @@ impl<'i> FilterValue<'i> {
             FilterValue::Regex(_) => None,
         }
     }
+}
+
+fn pair_to_operator_value(pair: Pair<Rule>) -> (Operator, FilterValue) {
+    let mut inner = pair.into_inner();
+    (
+        Operator::consume(inner.next().unwrap()),
+        FilterValue::consume(inner.next().unwrap())
+    )
 }
 
 fn pair_to_language(pair: Pair<Rule>) -> Language {
@@ -176,4 +207,14 @@ fn pair_to_language(pair: Pair<Rule>) -> Language {
         Rule::lang_value_dwarvish => Language::Dw,
         other => panic!("{other:?} does not map to a language"),
     }
+}
+
+enum ColorValue {
+    Multicolor,
+    Colors(Vec<Color>),
+}
+
+fn filter_value_to_colors(value: FilterValue) -> ColorValue {
+    let as_str = value.as_str().expect("color values should not include regexes");
+
 }

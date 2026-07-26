@@ -6,6 +6,7 @@ pub mod intersection;
 pub mod item;
 pub mod operator;
 pub mod union;
+pub mod fragment;
 
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use pest::Parser;
