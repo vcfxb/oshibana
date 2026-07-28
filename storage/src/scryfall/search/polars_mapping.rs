@@ -1,7 +1,7 @@
 //! Map parsed queries to polars expressions
 
 use crate::scryfall::ScryfallStorage;
-use crate::scryfall::search::query_parser::Query;
+// use crate::scryfall::search::query_parser::Query;
 use polars::prelude::{Expr as PExpr, IntoLazy, LazyFrame, col};
 use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
@@ -27,7 +27,7 @@ pub trait MapToPolarsExpr {
 }
 
 /// Panics
-pub fn apply_filters(query: Query, storage: &ScryfallStorage) -> LazyFrame {
+pub fn apply_filters(query: (), storage: &ScryfallStorage) -> LazyFrame {
     // clone reference to cards dataframe, make it lazy
     let cards_lf = storage
         .cards_df
@@ -38,7 +38,8 @@ pub fn apply_filters(query: Query, storage: &ScryfallStorage) -> LazyFrame {
         .clone()
         .lazy();
 
-    cards_lf.filter(query.as_pexpr())
+    unimplemented!()
+    // cards_lf.filter(query.as_pexpr())
 }
 
 /// The normal card image uri will always be the last col.
