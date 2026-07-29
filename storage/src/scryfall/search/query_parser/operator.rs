@@ -1,5 +1,4 @@
-use crate::scryfall::search::query_parser::Rule;
-use pest::iterators::Pair;
+use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Operator {
@@ -13,16 +12,16 @@ pub enum Operator {
 }
 
 impl Operator {
-    pub(super) fn consume(pair: Pair<Rule>) -> Self {
-        match pair.as_str() {
-            "!=" => Self::Neq,
-            "=" => Self::Eq,
-            ":" => Self::Colon,
-            "<=" => Self::Lte,
-            ">=" => Self::Gte,
-            "<" => Self::Lt,
-            ">" => Self::Gt,
-            other => panic!("`{other}` is not a valid operator"),
+    pub fn parse(token: &Token) -> Result<Self, ()> {
+        match token.kind {
+            TokenTy::BangEq => Ok(Self::Neq),
+            TokenTy::Eq => Ok(Self::Eq),
+            TokenTy::Colon => Ok(Self::Colon),
+            TokenTy::LtEq => Ok(Self::Lte),
+            TokenTy::GtEq => Ok(Self::Gte),
+            TokenTy::Lt => Ok(Self::Lt),
+            TokenTy::Gt => Ok(Self::Gt),
+            _ => Err(()),
         }
     }
 }

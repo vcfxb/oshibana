@@ -1,14 +1,17 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::Rule;
 use crate::scryfall::search::query_parser::intersection::Intersection;
-use pest::iterators::Pair;
 use polars::prelude::Expr;
+use crate::scryfall::search::query_parser::Parser;
 
 pub struct Union<'i> {
     pub intersections: Vec<Intersection<'i>>,
 }
 
 impl<'i> Union<'i> {
+    pub fn parse(parser: &mut Parser<'i>) -> Result<Self, ()> {
+        unimplemented!()
+    }
+    
     pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {
         assert_eq!(
             pair.as_rule(),

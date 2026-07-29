@@ -1,20 +1,65 @@
 //! Parser for scryfall-syntax queries
 
-// pub mod filter;
-// pub mod group;
-// pub mod intersection;
-// pub mod item;
-// pub mod operator;
-// pub mod union;
+use polars::polars_utils::collection::Collection;
+use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
+
+pub mod filter;
+pub mod group;
+pub mod intersection;
+pub mod item;
+pub mod operator;
+pub mod union;
 pub mod fragment;
 pub mod lexer;
+pub mod query;
 
-// use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-// use pest::Parser;
-use pest::iterators::Pair;
-use pest_derive::Parser;
-use polars::prelude::Expr;
-// use union::Union;
+pub struct Parser<'i> {
+    tokens: Vec<Token<'i>>,
+    idx: usize,
+
+}
+
+impl<'i> Parser<'i> {
+    fn head(&self) -> Option<&Token<'i>> {
+        self.peek_n(0)
+    }
+
+    fn head_kind(&self) -> Option<TokenTy> {
+        self.head().map(|t| t.kind)
+    }
+
+    fn peek(&self) -> Option<&Token<'i>> {
+        self.peek_n(1)
+    }
+
+    fn peek_kind(&self) -> Option<TokenTy> {
+        self.peek().map(|t| t.kind)
+    }
+
+    /// Peek several tokens forward, 0 being head.
+    fn peek_n(&self, idx: usize) -> Option<&Token<'i>> {
+        self.tokens.get(self.idx + idx)
+    }
+
+    /// Peek several tokens at once.
+    fn peek_multi(&self, n: usize) -> Option<&[Token<'i>]> {
+        if self.idx + n <= self.tokens.len() {
+            Some(&self.tokens[self.idx..self.idx + n])
+        } else {
+            None
+        }
+    }
+
+    fn advance(&mut self, count: usize) {
+        self.idx += count;
+    }
+
+    fn pull(&mut self) -> &Token<'i> {
+        self.idx += 1;
+        &self.tokens[self.idx - 1]
+    }
+}
+
 
 // #[derive(Parser)]
 // #[grammar = "scryfall/search/query_grammar.pest"]

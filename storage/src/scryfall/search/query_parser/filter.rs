@@ -1,11 +1,14 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::{Rule, operator::Operator, unwrap_exactly_one};
+use crate::scryfall::search::query_parser::{Rule, operator::Operator, unwrap_exactly_one, Parser};
 use pest::iterators::Pair;
 use polars::prelude::Expr;
 use schemas::scryfall::card::languages::Language;
 use std::borrow::Cow;
 use unescape_zero_copy::unescape_default;
 use schemas::scryfall::card::colors::Color;
+use crate::scryfall::search::query_parser::fragment::Fragment;
+use crate::scryfall::search::query_parser::lexer::TokenTy;
+use crate::scryfall::search::query_parser::query::ParseError;
 
 pub enum Filter<'i> {
     Lang {
@@ -31,19 +34,54 @@ pub enum Filter<'i> {
         value: FilterValue<'i>,
     },
 
+    OracleText {
+        operator: Operator,
+        value: FilterValue<'i>
+    },
+
     Untagged {
         exact: bool,
         value: FilterValue<'i>,
     },
+
+    Unknown {
+        full_filter: Fragment<'i>,
+        directive: Fragment<'i>,
+        op: Operator,
+        value: FilterValue<'i>,
+    }
 }
 
+#[derive(Debug)]
 pub enum FilterValue<'i> {
-    Identifier(&'i str),
+    Text(&'i str),
     String(Cow<'i, str>),
     Regex(&'i str),
 }
 
 impl<'i> Filter<'i> {
+    pub fn parse(parser: &mut Parser<'i>) -> Result<Self, ParseError<'i>> {
+        match parser.head_kind() {
+            Some(TokenTy::Text) => {
+                let operator = parser.peek()
+                    .and_then(|t| Operator::parse(t).ok());
+
+                if operator.is_none() {
+
+                }
+
+                let value = parser.peek_n(2);
+
+                let possible_directive_str = parser.head().unwrap().as_str();
+
+                match possible_directive_str.to_ascii_lowercase().as_str() {
+                    "lang" | "language" =>
+                }
+
+            }
+        }
+    }
+
     pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {
         match pair.as_rule() {
             Rule::filter => Self::consume(unwrap_exactly_one(pair)),
@@ -151,24 +189,23 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
 }
 
 impl<'i> FilterValue<'i> {
-    fn consume(pair: Pair<'i, Rule>) -> Self {
-        match pair.as_rule() {
-            Rule::filter_value => Self::consume(unwrap_exactly_one(pair)),
-            Rule::identifier => Self::Identifier(pair.as_str()),
-            Rule::regex => Self::consume(unwrap_exactly_one(pair)),
-            Rule::regex_inner => Self::Regex(pair.as_str()),
-            Rule::string => Self::consume(unwrap_exactly_one(pair)),
-            Rule::string_inner => {
-                Self::String(unescape_default(pair.as_str()).unwrap_or(pair.as_str().into()))
+    pub fn parse(parser: &mut Parser<'i>) -> Result<Self, ()> {
+        match parser.head_kind() {
+            Some(TokenTy::Text) => Ok(Self::Text(parser.pull().as_str())),
+            Some(TokenTy::String) => {
+                let token_str = parser.pull().as_str();
+                let inner = &token_str[1..token_str.len() - 1];
+                let unescaped = unescape_default(inner).unwrap_or(Cow::Borrowed(inner));
+                Ok(Self::String(unescaped))
             }
-            Rule::color_filter_value => Self::consume(unwrap_exactly_one(pair)),
-            _ => panic!("{pair:?} is not a filtervalue"),
+            Some(TokenTy::Regex) => Ok(Self::Regex(parser.pull().as_str())),
+            _ => Err(())
         }
     }
 
     fn as_str(&self) -> Option<&str> {
         match self {
-            FilterValue::Identifier(i) => Some(i),
+            FilterValue::Text(i) => Some(i),
             FilterValue::String(cow) => Some(cow.as_ref()),
             FilterValue::Regex(_) => None,
         }

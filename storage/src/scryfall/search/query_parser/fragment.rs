@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::ops::Range;
+use std::{cmp, ptr};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fragment<'i> {
@@ -22,6 +23,20 @@ impl<'i> Fragment<'i> {
 
     pub fn full_query(&self) -> &'i str {
         self.full_query
+    }
+    
+    /// Make a new fragment that covers both of the given fragments from the same source, as well as
+    /// anything in between.
+    pub fn cover(lhs: &Self, rhs: &Self) -> Self {
+        assert!(ptr::eq(lhs.full_query, rhs.full_query), "fragments must be from same source");
+        
+        let start = cmp::min(lhs.byte_range.start, rhs.byte_range.start);
+        let end = cmp::max(lhs.byte_range.end, rhs.byte_range.end);
+        
+        Fragment {
+            full_query: lhs.full_query,
+            byte_range: start..end,
+        }
     }
 }
 
