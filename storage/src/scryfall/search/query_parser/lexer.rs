@@ -18,6 +18,7 @@ pub enum TokenTy {
     Or,
     And,
     Bang,
+    Whitespace,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -97,9 +98,19 @@ impl<'i> Lexer<'i> {
                     lexer.delimited('/', '\\', TokenTy::Regex, "unclosed regex")?;
                 }
 
-                other => {
+                c if c.is_whitespace() => {
+                    let mut consumed = 0;
+
+                    while let Some(c) = lexer.chars.next_if(|c| c.is_whitespace()) {
+                        consumed += c.len_utf8();
+                    }
+
+                    lexer.push_token(consumed, TokenTy::Whitespace);
+                }
+
+                _ => {
                     let continue_text = |c: &char| {
-                        !"()=!<>\"/:".contains(*c)
+                        !"()=!<>\"/:".contains(*c) && !c.is_whitespace()
                     };
 
                     let mut consumed = 0;
