@@ -20,6 +20,7 @@ pub enum TokenTy {
     Bang,
     BangEq,
     Whitespace,
+    Neg,
 }
 
 pub struct Lexer<'i> {
@@ -64,6 +65,11 @@ impl<'i> Lexer<'i> {
                 ')' => {
                     lexer.chars.next();
                     lexer.push_token(1, TokenTy::RParen);
+                }
+
+                '-' => {
+                    lexer.chars.next();
+                    lexer.push_token(1, TokenTy::Neg);
                 }
 
                 '!' => {
@@ -114,7 +120,7 @@ impl<'i> Lexer<'i> {
 
                 _ => {
                     let continue_text = |c: &char| {
-                        !"()=!<>\"/:".contains(*c) && !c.is_whitespace()
+                        !"()=!<>\"\'/:-".contains(*c) && !c.is_whitespace()
                     };
 
                     let mut consumed = 0;
