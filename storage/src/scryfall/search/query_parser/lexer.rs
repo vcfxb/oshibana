@@ -18,13 +18,8 @@ pub enum TokenTy {
     Or,
     And,
     Bang,
+    BangEq,
     Whitespace,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Token<'i> {
-    frag: Fragment<'i>,
-    kind: TokenTy,
 }
 
 pub struct Lexer<'i> {
@@ -32,6 +27,12 @@ pub struct Lexer<'i> {
     chars: Peekable<Chars<'i>>,
     byte_index: usize,
     tokens: Vec<Token<'i>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Token<'i> {
+    pub frag: Fragment<'i>,
+    pub kind: TokenTy,
 }
 
 impl<'i> Lexer<'i> {
@@ -67,7 +68,10 @@ impl<'i> Lexer<'i> {
 
                 '!' => {
                     lexer.chars.next();
-                    lexer.push_token(1, TokenTy::Bang);
+                    match lexer.chars.next_if_eq(&'=') {
+                        Some(_) => lexer.push_token(2, TokenTy::BangEq),
+                        None => lexer.push_token(1, TokenTy::Bang),
+                    }
                 }
 
                 '>' => {
@@ -117,8 +121,12 @@ impl<'i> Lexer<'i> {
                     while let Some(c) = lexer.chars.next_if(continue_text) {
                         consumed += c.len_utf8();
                     }
-
-                    lexer.push_token(consumed, TokenTy::Text);
+                    
+                    match &lexer.input[lexer.byte_index..lexer.byte_index+consumed] {
+                        "or" | "OR" => lexer.push_token(consumed, TokenTy::Or),
+                        "and" | "AND" => lexer.push_token(consumed, TokenTy::And),
+                        _ => lexer.push_token(consumed, TokenTy::Text),
+                    }
                 }
             }
         }
@@ -164,6 +172,12 @@ impl<'i> Lexer<'i> {
 
         self.push_token(consumed, kind);
         Ok(consumed)
+    }
+}
+
+impl<'i> Token<'i> {
+    pub fn as_str(&self) -> &'i str {
+        self.frag.as_str()
     }
 }
 
