@@ -4,8 +4,10 @@ use crate::scryfall::search::query_parser::filter::Filter;
 use crate::scryfall::search::query_parser::group::Group;
 use pest::iterators::Pair;
 use polars::prelude::Expr;
+use crate::scryfall::search::query_parser::fragment::Fragment;
 
 pub struct Item<'i> {
+    pub cover: Fragment<'i>,
     pub modifier: Option<Modifier>,
     pub inner: ItemInner<'i>,
 }

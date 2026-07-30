@@ -1,7 +1,9 @@
 //! Parser for scryfall-syntax queries
 
 use polars::polars_utils::collection::Collection;
-use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
+use crate::scryfall::search::query_parser::fragment::Fragment;
+use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
+use crate::scryfall::search::query_parser::union::Union;
 
 pub mod filter;
 pub mod group;
@@ -11,52 +13,84 @@ pub mod operator;
 pub mod union;
 pub mod fragment;
 pub mod lexer;
-pub mod query;
 
 pub struct Parser<'i> {
     tokens: Vec<Token<'i>>,
     idx: usize,
+    diagnostics: Vec<Diagnostic<'i>>
+}
 
+#[derive(Debug)]
+pub enum Diagnostic<'i> {
+    Error {
+        message: String,
+        fragment: Option<Fragment<'i>>
+    },
+
+    Warning {
+        message: String,
+        fragment: Fragment<'i>,
+    }
 }
 
 impl<'i> Parser<'i> {
-    fn head(&self) -> Option<&Token<'i>> {
-        self.peek_n(0)
-    }
+    pub fn new(query_str: &'i str) -> Self {
+        match Lexer::lex(query_str) {
+            Ok(tokens) => Self {
+                tokens,
+                idx: 0,
+                diagnostics: Vec::new(),
+            },
 
-    fn head_kind(&self) -> Option<TokenTy> {
-        self.head().map(|t| t.kind)
-    }
-
-    fn peek(&self) -> Option<&Token<'i>> {
-        self.peek_n(1)
-    }
-
-    fn peek_kind(&self) -> Option<TokenTy> {
-        self.peek().map(|t| t.kind)
-    }
-
-    /// Peek several tokens forward, 0 being head.
-    fn peek_n(&self, idx: usize) -> Option<&Token<'i>> {
-        self.tokens.get(self.idx + idx)
-    }
-
-    /// Peek several tokens at once.
-    fn peek_multi(&self, n: usize) -> Option<&[Token<'i>]> {
-        if self.idx + n <= self.tokens.len() {
-            Some(&self.tokens[self.idx..self.idx + n])
-        } else {
-            None
+            Err(message) => Self {
+                tokens: Vec::new(),
+                idx: 0,
+                diagnostics: vec![Diagnostic::Error { message: message.into(), fragment: None }],
+            }
         }
     }
 
-    fn advance(&mut self, count: usize) {
-        self.idx += count;
+    pub fn parse_query(&mut self) -> Union<'i> {
+        unimplemented!()
     }
 
-    fn pull(&mut self) -> &Token<'i> {
-        self.idx += 1;
-        &self.tokens[self.idx - 1]
+    fn exhausted(&self) -> bool {
+        self.idx >= self.tokens.len()
+    }
+
+    /// Peek the next non whitespace token.
+    fn peek(&self) -> Option<&Token<'i>> {
+        let mut offset = 0;
+        while let Some(token) = self.tokens.get(self.idx + offset) {
+            if token.kind != TokenTy::Whitespace {
+                return Some(token);
+            }
+
+            offset += 1;
+        }
+
+        None
+    }
+
+    /// Advance to the next non whitespace token.
+    fn advance(&mut self) -> Option<&Token<'i>> {
+        while let Some(token) = self.tokens.get(self.idx) {
+            if token.kind != TokenTy::Whitespace {
+                return Some(token);
+            }
+
+            self.idx += 1;
+        }
+
+        None
+    }
+
+    /// Advance to the next non-whitespace token if it's of the given `kind`.
+    fn next_if_is(&mut self, kind: TokenTy) -> Option<&Token<'i>> {
+        match self.peek() {
+            Some(token) if token.kind == kind => self.advance(),
+            _ => None,
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use crate::scryfall::search::query_parser::intersection::Intersection;
 use polars::prelude::Expr;
+use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::Parser;
 
 pub struct Union<'i> {
@@ -8,8 +9,14 @@ pub struct Union<'i> {
 }
 
 impl<'i> Union<'i> {
-    pub fn parse(parser: &mut Parser<'i>) -> Result<Self, ()> {
+    pub fn parse(parser: &mut Parser<'i>) -> Self {
         unimplemented!()
+    }
+    
+    pub fn conver_fragment(&self) -> Fragment<'i> {
+        match (self.intersections.first(), self.intersections.last()) {
+            (Some(first), Some(last)) => Fragment::cover(first.)
+        }
     }
     
     pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {

@@ -3,6 +3,7 @@ use crate::scryfall::search::query_parser::Rule;
 use crate::scryfall::search::query_parser::item::Item;
 use pest::iterators::Pair;
 use polars::prelude::Expr;
+use crate::scryfall::search::query_parser::fragment::Fragment;
 
 pub struct Intersection<'i> {
     pub items: Vec<Item<'i>>,
@@ -19,6 +20,12 @@ impl<'i> Intersection<'i> {
 
         Self {
             items: pair.into_inner().map(Item::consume).collect(),
+        }
+    }
+    
+    pub fn fragment(&self) -> Fragment<'i> {
+        match (self.items.first(), self.items.last()) {
+            (Some(first), Some(last)) => Fragment::cover(first)
         }
     }
 }
