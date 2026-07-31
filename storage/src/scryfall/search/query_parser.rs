@@ -1,6 +1,6 @@
 //! Parser for scryfall-syntax queries
 
-use polars::polars_utils::collection::Collection;
+use polars::polars_utils::parma::raw::Key;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
 use crate::scryfall::search::query_parser::union::Union;
@@ -15,6 +15,7 @@ pub mod fragment;
 pub mod lexer;
 
 pub struct Parser<'i> {
+    full_query: &'i str,
     tokens: Vec<Token<'i>>,
     idx: usize,
     diagnostics: Vec<Diagnostic<'i>>
@@ -37,109 +38,99 @@ impl<'i> Parser<'i> {
     pub fn new(query_str: &'i str) -> Self {
         match Lexer::lex(query_str) {
             Ok(tokens) => Self {
+                full_query: query_str,
                 tokens,
                 idx: 0,
                 diagnostics: Vec::new(),
             },
 
             Err(message) => Self {
+                full_query: query_str,
                 tokens: Vec::new(),
                 idx: 0,
                 diagnostics: vec![Diagnostic::Error { message: message.into(), fragment: None }],
             }
         }
     }
-
-    pub fn parse_query(&mut self) -> Union<'i> {
-        unimplemented!()
+    
+    pub fn bytes_consumed(&self) -> usize {
+        self.tokens[..self.idx].iter().map(|t| t.frag.len()).sum()
+    }
+    
+    pub fn bytes_remaining(&self) -> usize {
+        self.tokens[self.idx..].iter().map(|t| t.frag.len()).sum()
     }
 
-    fn exhausted(&self) -> bool {
+    pub fn parse_query(&mut self) -> Union<'i> {
+        Union::parse(self)
+    }
+
+    pub fn exhausted(&self) -> bool {
         self.idx >= self.tokens.len()
     }
 
     /// Peek the next non whitespace token.
-    fn peek(&self) -> Option<&Token<'i>> {
+    pub fn peek(&self) -> Option<&Token<'i>> {
+        self.peek_n(0)
+    }
+    
+    /// Peek the `n`th non-whitespace token ahead (0 is the immediate next).
+    pub fn peek_n(&self, mut n: usize) -> Option<&Token<'i>> {
         let mut offset = 0;
         while let Some(token) = self.tokens.get(self.idx + offset) {
             if token.kind != TokenTy::Whitespace {
-                return Some(token);
+                if n == 0 {
+                    return Some(token);
+                }
+                n -= 1;
             }
-
             offset += 1;
         }
-
         None
     }
 
-    /// Advance to the next non whitespace token.
-    fn advance(&mut self) -> Option<&Token<'i>> {
+    /// Advance past current whitespaces and consume the next non-whitespace token.
+    pub fn pull(&mut self) -> Option<&Token<'i>> {
         while let Some(token) = self.tokens.get(self.idx) {
+            self.idx += 1;
             if token.kind != TokenTy::Whitespace {
                 return Some(token);
             }
-
-            self.idx += 1;
         }
-
         None
     }
 
     /// Advance to the next non-whitespace token if it's of the given `kind`.
-    fn next_if_is(&mut self, kind: TokenTy) -> Option<&Token<'i>> {
+    pub fn next_if_is(&mut self, kind: TokenTy) -> Option<&Token<'i>> {
         match self.peek() {
-            Some(token) if token.kind == kind => self.advance(),
+            Some(token) if token.kind == kind => self.pull(),
             _ => None,
         }
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use schemas::scryfall::card::languages::Language;
+    use crate::scryfall::search::query_parser::filter::Filter;
+    use crate::scryfall::search::query_parser::item::ItemInner;
+    use crate::scryfall::search::query_parser::Parser;
 
-// #[derive(Parser)]
-// #[grammar = "scryfall/search/query_grammar.pest"]
-// struct QueryParser;
-// 
-// pub struct Query<'i> {
-//     pub union: Union<'i>,
-// }
+    #[test]
+    fn parse_language_filter() {
+        let mut parser = Parser::new("lang:en");
+        let query = parser.parse_query();
+        let item = &query.intersections[0].items[0];
+        assert_eq!(item.modifier, None);
+        assert_eq!(item.cover.as_str(), "");
+        let ItemInner::Filter(ref filter) = item.inner else {
+            panic!("is not a filter");
+        };
+        let Filter::Lang { value } = filter else {
+            panic!("is not a language filter");
+        };
 
-// impl<'i> Query<'i> {
-//     pub fn parse(input: &'i str) -> Result<Option<Self>, pest::error::Error<Rule>> {
-//         let mut query_pairs = QueryParser::parse(Rule::query, input)?;
-//         let Some(query_pair) = query_pairs.next() else {
-//             return Ok(None);
-//         };
-// 
-//         let union_pair = query_pair.into_inner().next().unwrap();
-//         let query = Self {
-//             union: Union::consume(union_pair),
-//         };
-//         assert_eq!(query_pairs.next(), None);
-//         Ok(Some(query))
-//     }
-// }
-// 
-// impl<'i> MapToPolarsExpr for Query<'i> {
-//     fn as_pexpr(&self) -> Expr {
-//         self.union.as_pexpr()
-//     }
-// }
-// 
-// fn unwrap_exactly_one(pair: Pair<Rule>) -> Pair<Rule> {
-//     let mut inner = pair.into_inner();
-//     let result = inner.next().expect("pair is not empty");
-//     assert_eq!(inner.next(), None, "more than one pair found");
-//     result
-// }
-// 
-// #[cfg(test)]
-// mod tests {
-//     use crate::scryfall::search::query_parser::Query;
-// 
-//     #[test]
-//     fn parse_language_filter() -> anyhow::Result<()> {
-//         let parse = Query::parse("lang:en")?.unwrap();
-// 
-//         Ok(())
-//     }
-// }
+        assert_eq!(*value, Language::En);
+    }
+}
+

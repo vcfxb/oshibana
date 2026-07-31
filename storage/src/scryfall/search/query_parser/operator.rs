@@ -12,16 +12,16 @@ pub enum Operator {
 }
 
 impl Operator {
-    pub fn parse(token: &Token) -> Result<Self, ()> {
+    pub fn parse(token: &Token) -> Option<Self> {
         match token.kind {
-            TokenTy::BangEq => Ok(Self::Neq),
-            TokenTy::Eq => Ok(Self::Eq),
-            TokenTy::Colon => Ok(Self::Colon),
-            TokenTy::LtEq => Ok(Self::Lte),
-            TokenTy::GtEq => Ok(Self::Gte),
-            TokenTy::Lt => Ok(Self::Lt),
-            TokenTy::Gt => Ok(Self::Gt),
-            _ => Err(()),
+            TokenTy::BangEq => Some(Self::Neq),
+            TokenTy::Eq => Some(Self::Eq),
+            TokenTy::Colon => Some(Self::Colon),
+            TokenTy::LtEq => Some(Self::Lte),
+            TokenTy::GtEq => Some(Self::Gte),
+            TokenTy::Lt => Some(Self::Lt),
+            TokenTy::Gt => Some(Self::Gt),
+            _ => None,
         }
     }
 }

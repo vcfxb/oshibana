@@ -3,6 +3,7 @@ use crate::scryfall::search::query_parser::intersection::Intersection;
 use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::Parser;
+use crate::scryfall::search::query_parser::lexer::TokenTy;
 
 pub struct Union<'i> {
     pub intersections: Vec<Intersection<'i>>,
@@ -10,25 +11,40 @@ pub struct Union<'i> {
 
 impl<'i> Union<'i> {
     pub fn parse(parser: &mut Parser<'i>) -> Self {
-        unimplemented!()
+        let mut intersections = Vec::new();
+        
+        while let Some(intersection) = Intersection::parse(parser) {
+            intersections.push(intersection);
+            
+            if let Some(token) = parser.peek() {
+                if token.kind == TokenTy::Or {
+                    parser.pull(); // consume Or
+                // } else if token.kind == TokenTy::RParen {
+                //     // end of group
+                //     break;
+                } else {
+                    // unexpected token? Or is this another union somehow?
+                    // intersection should consume until it hits 'or' or ')'
+                    break; 
+                }
+            } else {
+                break;
+            }
+        }
+        
+        // if intersections.is_empty() {
+        //     None
+        // } else {
+        //     Some(Self { intersections })
+        // }
+        
+        Self { intersections }
     }
     
     pub fn conver_fragment(&self) -> Fragment<'i> {
         match (self.intersections.first(), self.intersections.last()) {
-            (Some(first), Some(last)) => Fragment::cover(first.)
-        }
-    }
-    
-    pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {
-        assert_eq!(
-            pair.as_rule(),
-            Rule::union,
-            "{:?} is not a union",
-            pair.as_rule()
-        );
-
-        Self {
-            intersections: pair.into_inner().map(Intersection::consume).collect(),
+            (Some(first), Some(last)) => Fragment::cover(&first.fragment(), &last.fragment()),
+            _ => panic!("Union has no intersections"),
         }
     }
 }

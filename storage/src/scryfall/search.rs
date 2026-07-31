@@ -2,7 +2,7 @@ pub mod polars_mapping;
 pub mod query_parser;
 
 use crate::scryfall::ScryfallStorage;
-// use crate::scryfall::search::query_parser::Query;
+use crate::scryfall::search::query_parser::Parser;
 use polars::prelude::DataFrame;
 use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
@@ -12,8 +12,6 @@ use thiserror::Error;
 pub enum SearchError {
     #[error("polars error: {0}")]
     PolarsError(#[from] polars::error::PolarsError),
-    // #[error("query parsing error: {0}")]
-    // QueryParseError(#[from] pest::error::Error<query_parser::Rule>),
     #[error("query is empty")]
     EmptyQuery,
 }
@@ -24,17 +22,17 @@ impl ScryfallStorage {
         query: &str,
         cols: impl Deref<Target = [SearchColumn]>,
     ) -> Result<DataFrame, SearchError> {
-        unimplemented!()
-        // let query = Query::parse(query)?;
-        //
-        // let Some(query) = query else {
-        //     return Err(SearchError::EmptyQuery);
-        // };
-        //
-        // let filtered = polars_mapping::apply_filters(query, self);
-        // let results_lf = polars_mapping::apply_select(filtered, cols);
-        // let result = results_lf.collect()?;
-        // Ok(result)
+        let mut parser = Parser::new(query);
+        let parsed_query = parser.parse_query();
+        
+        if parsed_query.intersections.is_empty() {
+            return Err(SearchError::EmptyQuery);
+        }
+
+        let filtered = polars_mapping::apply_filters(&parsed_query, self);
+        let results_lf = polars_mapping::apply_select(filtered, cols);
+        let result = results_lf.collect()?;
+        Ok(result)
     }
 }
 

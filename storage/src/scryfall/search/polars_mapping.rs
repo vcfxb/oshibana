@@ -5,6 +5,7 @@ use crate::scryfall::ScryfallStorage;
 use polars::prelude::{Expr as PExpr, IntoLazy, LazyFrame, col};
 use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
+use crate::scryfall::search::query_parser::union::Union;
 
 fn resolve_cols(cols: impl Deref<Target = [SearchColumn]>) -> Vec<PExpr> {
     let mut resolved = Vec::with_capacity(cols.len());
@@ -27,7 +28,7 @@ pub trait MapToPolarsExpr {
 }
 
 /// Panics
-pub fn apply_filters(query: (), storage: &ScryfallStorage) -> LazyFrame {
+pub fn apply_filters(query: &Union, storage: &ScryfallStorage) -> LazyFrame {
     // clone reference to cards dataframe, make it lazy
     let cards_lf = storage
         .cards_df
@@ -38,8 +39,7 @@ pub fn apply_filters(query: (), storage: &ScryfallStorage) -> LazyFrame {
         .clone()
         .lazy();
 
-    unimplemented!()
-    // cards_lf.filter(query.as_pexpr())
+    cards_lf.filter(query.as_pexpr())
 }
 
 /// The normal card image uri will always be the last col.

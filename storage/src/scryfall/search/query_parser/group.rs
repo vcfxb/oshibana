@@ -1,6 +1,5 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::{Rule, Union, unwrap_exactly_one, Parser, Diagnostic};
-use pest::iterators::Pair;
+use crate::scryfall::search::query_parser::{Union, Parser, Diagnostic};
 use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
@@ -14,31 +13,18 @@ impl<'i> Group<'i> {
     pub fn parse(parser: &mut Parser<'i>) -> Option<Self> {
         let lparen = parser.next_if_is(TokenTy::LParen)?.frag.clone();
         let union = Union::parse(parser);
-
-        if parser.next_if_is(TokenTy::RParen).is_none() {
+        let rparen = parser.next_if_is(TokenTy::RParen);
+        
+        if rparen.is_none() {
             parser.diagnostics.push(Diagnostic::Warning {
                 message: "missing closing parentheses".to_string(),
-                fragment: lparen,
+                fragment: lparen.clone(),
             });
-            
-            None
-        } else {
-            Some(Self {
-                inner: Box::new(union),
-            })
         }
-    }
 
-    pub(super) fn consume(pair: Pair<'i, Rule>) -> Self {
-        assert_eq!(
-            pair.as_rule(),
-            Rule::group,
-            "{:?} is not a group",
-            pair.as_rule()
-        );
-        Self {
-            inner: Box::new(Union::consume(unwrap_exactly_one(pair))),
-        }
+        Some(Self {
+            inner: Box::new(union),
+        })
     }
 }
 
