@@ -1,7 +1,6 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use crate::scryfall::search::query_parser::{Union, Parser, Diagnostic};
 use polars::prelude::Expr;
-use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
 
 pub struct Group<'i> {

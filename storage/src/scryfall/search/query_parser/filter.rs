@@ -116,7 +116,7 @@ impl<'i> Filter<'i> {
 
                         let Some(lang) = str_to_language(lang_str) else {
                             parser.diagnostics.push(Diagnostic::Warning {
-                                message: format!("could not match {lang_str} to language"),
+                                message: format!("could not match \"{lang_str}\" to language"),
                                 fragment: filter_value.fragment().clone(),
                             });
 
@@ -140,8 +140,8 @@ impl<'i> Filter<'i> {
                         match (operator, &filter_value) {
                             (Operator::Gte | Operator::Lte | Operator::Gt | Operator::Lt, _) => {
                                 parser.diagnostics.push(Diagnostic::Warning {
-                                    message: "name only supports `:`, `=`, and `!=` options".to_string(),
-                                    fragment: filter_value.fragment().clone(),
+                                    message: "name only supports `:`, `=`, and `!=` operators".to_string(),
+                                    fragment: directive_frag.clone(),
                                 });
 
                                 None
@@ -150,7 +150,7 @@ impl<'i> Filter<'i> {
                             (_, FilterValue::Regex { .. }) if operator != Operator::Colon => {
                                 parser.diagnostics.push(Diagnostic::Warning {
                                     message: "name regex filter only supports `:` operator".into(),
-                                    fragment: filter_value.fragment().clone(),
+                                    fragment: directive_frag.clone(),
                                 });
 
                                 None

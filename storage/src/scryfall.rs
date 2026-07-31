@@ -353,8 +353,11 @@ impl ScryfallStorage {
                     .bytes()
                     .await?;
 
-                let mut file = tokio::fs::File::create_new(file_location).await?;
-                file.write_all(bytes.as_ref()).await?;
+                if !file_location.exists() {
+                    let mut file = tokio::fs::File::create_new(file_location).await?;
+                    file.write_all(bytes.as_ref()).await?;
+                }
+
                 Ok::<_, anyhow::Error>(())
             };
 

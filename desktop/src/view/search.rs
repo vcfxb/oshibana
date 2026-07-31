@@ -6,12 +6,13 @@ use crate::app::Oshibana;
 use crate::view::{View, logic_noop};
 use eframe::Frame;
 use egui::text::LayoutJob;
-use egui::{FontFamily, FontId, ScrollArea, TextBuffer, TextEdit, TextFormat, Ui};
+use egui::{Color32, FontFamily, FontId, ScrollArea, Stroke, TextBuffer, TextEdit, TextFormat, Ui};
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::SearchColumn;
 use std::borrow::Cow;
 use strum::IntoEnumIterator;
+use storage::scryfall::search::query_parser::Diagnostic;
 
 pub fn search() -> View {
     View {
@@ -154,7 +155,55 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         return;
     };
 
-    let df = search_result.unwrap();
+    let (df, diagnostics) = search_result.unwrap();
+    if !diagnostics.is_empty() {
+        for diagnostic in diagnostics {
+            let stroke = match diagnostic {
+                Diagnostic::Error { .. } => Stroke::new(2.0, Color32::RED),
+                Diagnostic::Warning { .. } => Stroke::new(1.0, Color32::YELLOW),
+            };
+
+            egui::Frame::NONE
+                .corner_radius(2)
+                .stroke(stroke)
+                .outer_margin(10)
+                .inner_margin(5)
+                .show(ui, |ui| {
+                    ui.add_sized([ui.available_width(), 30.0], |ui: &mut Ui| {
+                        ui.vertical(|ui| {
+                            match diagnostic {
+                                Diagnostic::Error { message, fragment: None } => {
+                                    ui.label(message);
+                                }
+
+                                Diagnostic::Warning { message, fragment } |
+                                Diagnostic::Error { message, fragment: Some(fragment) } => {
+                                    ui.label(message);
+                                    ui.separator();
+                                    let mut lj = LayoutJob::default();
+                                    let start = fragment.byte_range.start;
+                                    let end = fragment.byte_range.end;
+                                    let lhs = &fragment.full_query[..start];
+                                    let highlight = fragment.as_str();
+                                    let rhs = &fragment.full_query[end..];
+                                    let mut monospace_text_format = TextFormat::default();
+                                    monospace_text_format.font_id = FontId::monospace(14.0);
+
+                                    let mut highlight_format = monospace_text_format.clone();
+                                    highlight_format.background = Color32::LIGHT_YELLOW;
+                                    highlight_format.color = Color32::BLACK;
+
+                                    lj.append(lhs, 0.0, monospace_text_format.clone());
+                                    lj.append(highlight, 0.0, highlight_format);
+                                    lj.append(rhs, 0.0, monospace_text_format);
+                                    ui.label(lj);
+                                }
+                            }
+                        }).response
+                    });
+                });
+        }
+    }
 
     let col_count = df
         .columns()

@@ -1,10 +1,10 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use crate::scryfall::search::query_parser::filter::Filter;
-use crate::scryfall::search::query_parser::group::Group;
-use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::fragment::Fragment;
-use crate::scryfall::search::query_parser::{Diagnostic, Parser};
+use crate::scryfall::search::query_parser::group::Group;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
+use crate::scryfall::search::query_parser::Parser;
+use polars::prelude::Expr;
 
 pub struct Item<'i> {
     pub cover: Fragment<'i>,
@@ -28,10 +28,10 @@ impl<'i> Item<'i> {
         let modifier_token = parser.next_if_is(TokenTy::Neg).cloned();
         let modifier = modifier_token.as_ref().map(|_| Modifier::Neg);
         let Some(inner) = ItemInner::parse(parser) else {
-            parser.diagnostics.push(Diagnostic::Error {
-                message: "failed to parse item in query".to_string(),
-                fragment: None,
-            });
+            // parser.diagnostics.push(Diagnostic::Error {
+            //     message: "failed to parse item in query".to_string(),
+            //     fragment: None,
+            // });
 
             return None;
         };

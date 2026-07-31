@@ -2,7 +2,7 @@ pub mod polars_mapping;
 pub mod query_parser;
 
 use crate::scryfall::ScryfallStorage;
-use crate::scryfall::search::query_parser::Parser;
+use crate::scryfall::search::query_parser::{Diagnostic, Parser};
 use polars::prelude::DataFrame;
 use schemas::oshibana::SearchColumn;
 use std::ops::Deref;
@@ -17,11 +17,11 @@ pub enum SearchError {
 }
 
 impl ScryfallStorage {
-    pub fn search(
+    pub fn search<'i>(
         &self,
-        query: &str,
+        query: &'i str,
         cols: impl Deref<Target = [SearchColumn]>,
-    ) -> Result<DataFrame, SearchError> {
+    ) -> Result<(DataFrame, Vec<Diagnostic<'i>>), SearchError> {
         let mut parser = Parser::new(query);
         let parsed_query = parser.parse_query();
         
@@ -32,7 +32,7 @@ impl ScryfallStorage {
         let filtered = polars_mapping::apply_filters(&parsed_query, self);
         let results_lf = polars_mapping::apply_select(filtered, cols);
         let result = results_lf.collect()?;
-        Ok(result)
+        Ok((result, parser.diagnostics))
     }
 }
 

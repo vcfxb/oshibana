@@ -1,6 +1,5 @@
 //! Parser for scryfall-syntax queries
 
-use polars::polars_utils::parma::raw::Key;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
 use crate::scryfall::search::query_parser::union::Union;
@@ -18,7 +17,7 @@ pub struct Parser<'i> {
     full_query: &'i str,
     tokens: Vec<Token<'i>>,
     idx: usize,
-    diagnostics: Vec<Diagnostic<'i>>
+    pub diagnostics: Vec<Diagnostic<'i>>
 }
 
 #[derive(Debug)]
@@ -52,11 +51,11 @@ impl<'i> Parser<'i> {
             }
         }
     }
-    
+
     pub fn bytes_consumed(&self) -> usize {
         self.tokens[..self.idx].iter().map(|t| t.frag.len()).sum()
     }
-    
+
     pub fn bytes_remaining(&self) -> usize {
         self.tokens[self.idx..].iter().map(|t| t.frag.len()).sum()
     }
