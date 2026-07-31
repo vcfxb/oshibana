@@ -3,6 +3,9 @@ name = "storage"
 edition.workspace = true
 version.workspace = true
 
+[features]
+scryfall-sync-tests = []
+
 [dependencies]
 # Oshibana Crates
 schemas.workspace = true

@@ -121,7 +121,7 @@ mod tests {
         let query = parser.parse_query();
         let item = &query.intersections[0].items[0];
         assert_eq!(item.modifier, None);
-        assert_eq!(item.cover.as_str(), "");
+        assert_eq!(item.cover.as_str(), "lang:en");
         let ItemInner::Filter(ref filter) = item.inner else {
             panic!("is not a filter");
         };

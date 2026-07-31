@@ -38,14 +38,15 @@ impl ScryfallStorage {
 
 #[cfg(test)]
 mod tests {
-    use crate::scryfall::ScryfallStorage;
-    use clients::scryfall::ScryfallClient;
-    use polars::prelude::{IntoLazy, col, lit};
-    use std::time::Instant;
-
     #[test]
-    #[ignore = "this tests only works when run locally with a valid scryfall sync file"]
+    #[cfg(feature = "scryfall-sync-tests")]
+    // #[ignore = "this tests only works when run locally with a valid scryfall sync file"]
     fn test_search_by_scryfall_id() {
+        use crate::scryfall::ScryfallStorage;
+        use clients::scryfall::ScryfallClient;
+        use polars::prelude::{IntoLazy, col, lit};
+        use std::time::Instant;
+
         let storage = ScryfallStorage::new(ScryfallClient::new());
 
         let start = Instant::now();
