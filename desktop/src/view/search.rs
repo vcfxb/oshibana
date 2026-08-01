@@ -11,8 +11,10 @@ use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::SearchColumn;
 use std::borrow::Cow;
+use polars::frame::DataFrame;
 use strum::IntoEnumIterator;
 use storage::scryfall::search::query_parser::Diagnostic;
+use storage::scryfall::search::SearchError;
 
 pub fn search() -> View {
     View {
@@ -139,23 +141,20 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
     };
 
-    let search_result = app.scryfall_storage.search(
+    let (search_result, diagnostics): (Result<DataFrame, SearchError>, Vec<Diagnostic>) = app.scryfall_storage.search(
         query.as_str(),
         user_data_guard.visible_search_columns.as_slice(),
     );
 
     drop(user_data_guard);
 
-    if let Err(err) = search_result {
+    if let Err(err) = &search_result {
         ui.scope(|ui| {
             ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
             ui.label(format!("search error: {err}"));
         });
-
-        return;
     };
 
-    let (df, diagnostics) = search_result.unwrap();
     if !diagnostics.is_empty() {
         for diagnostic in diagnostics {
             let stroke = match diagnostic {
@@ -204,6 +203,10 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                 });
         }
     }
+
+    let Ok(df) = search_result else {
+        return
+    };
 
     let col_count = df
         .columns()

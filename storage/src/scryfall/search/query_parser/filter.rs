@@ -1,3 +1,5 @@
+pub mod color;
+
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use crate::scryfall::search::query_parser::{operator::Operator, Diagnostic, Parser};
 use polars::prelude::Expr;
@@ -284,7 +286,27 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
                 .str()
                 .contains_literal(lit(value.as_str().unwrap()).str().to_lowercase()),
                 
-            Filter::OracleText { .. } => todo!("oracle text filtering"),
+            Filter::OracleText {
+                operator: Operator::Colon,
+                value: fv @ (FilterValue::String { .. } | FilterValue::Text(_))
+            } => col("oracle_text")
+                .str()
+                .to_lowercase()
+                .str()
+                .contains_literal(lit(fv.as_str().unwrap()).str().to_lowercase()),
+
+            Filter::OracleText {
+                operator: Operator::Colon,
+                value: FilterValue::Regex { content, .. }
+            } => col("oracle_text")
+                .str()
+                .contains(lit(*content), false),
+
+            Filter::OracleText { operator, .. } => {
+                panic!("unsupported oracle text operator: {operator:?}")
+            },
+
+
         }
     }
 }

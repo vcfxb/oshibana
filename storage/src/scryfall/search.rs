@@ -21,18 +21,17 @@ impl ScryfallStorage {
         &self,
         query: &'i str,
         cols: impl Deref<Target = [SearchColumn]>,
-    ) -> Result<(DataFrame, Vec<Diagnostic<'i>>), SearchError> {
+    ) -> (Result<DataFrame, SearchError>, Vec<Diagnostic<'i>>) {
         let mut parser = Parser::new(query);
         let parsed_query = parser.parse_query();
         
         if parsed_query.intersections.is_empty() {
-            return Err(SearchError::EmptyQuery);
+            return (Err(SearchError::EmptyQuery), parser.diagnostics);
         }
 
         let filtered = polars_mapping::apply_filters(&parsed_query, self);
         let results_lf = polars_mapping::apply_select(filtered, cols);
-        let result = results_lf.collect()?;
-        Ok((result, parser.diagnostics))
+        (results_lf.collect().map_err(Into::into), parser.diagnostics)
     }
 }
 

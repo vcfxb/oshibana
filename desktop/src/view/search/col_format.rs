@@ -7,18 +7,20 @@ use storage::scryfall::ScryfallStorage;
 
 pub type ValueFormatter<'s> = Box<dyn Fn(&AnyValue, &mut Ui) -> Response + 's>;
 
-/// Formatting for columns
-pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> ValueFormatter<'s> {
-    let str_col = |v: &AnyValue, ui: &mut Ui| {
+pub fn make_text_formatter() -> ValueFormatter<'static> {
+    Box::new(|v: &AnyValue, ui: &mut Ui| {
         Label::new(v.str_value())
             .wrap_mode(TextWrapMode::Truncate)
             .ui(ui)
-    };
+    })
+}
 
-    let mana_cost_col = |v: &AnyValue, ui: &mut Ui| {
+
+pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatter {
+    Box::new(|v: &AnyValue, ui: &mut Ui| {
         ui.horizontal_wrapped(|ui| {
             let s = v.str_value();
-            for part in scryfall_symbols::render(scryfall_store, s.as_str()) {
+            for part in scryfall_symbols::render(store, s.as_str()) {
                 match part {
                     ResolvedPart::RenderSymbolUri(uri) => {
                         // because the egui_extras file loader seems to have issues properly
@@ -47,12 +49,13 @@ pub fn col_format<'s>(scryfall_store: &'s ScryfallStorage, c: SearchColumn) -> V
                     }
                 }
             }
-        })
-        .response
-    };
+        }).response
+    })
+}
 
+pub fn col_format(s: &ScryfallStorage, c: SearchColumn) -> ValueFormatter<'_> {
     match c {
-        SearchColumn::Name | SearchColumn::Type => Box::new(str_col),
-        SearchColumn::ManaCost => Box::new(mana_cost_col),
+        SearchColumn::Name | SearchColumn::Type => make_text_formatter(),
+        SearchColumn::ManaCost => make_symbol_rendering_formatter(s),
     }
 }
