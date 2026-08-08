@@ -9,6 +9,7 @@ pub mod home;
 pub mod scryfall_sync;
 pub mod search;
 pub mod settings;
+pub mod card;
 
 pub struct View {
     pub ui: fn(&mut Oshibana, &mut Ui, &mut Frame),

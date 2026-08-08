@@ -16,7 +16,7 @@ pub fn make_text_formatter() -> ValueFormatter<'static> {
 }
 
 
-pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatter {
+pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatter<'_> {
     Box::new(|v: &AnyValue, ui: &mut Ui| {
         ui.horizontal_wrapped(|ui| {
             let s = v.str_value();

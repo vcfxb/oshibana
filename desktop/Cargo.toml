@@ -43,6 +43,7 @@ log4rs = "1.4.0"
 
 # Datatypes
 chrono.workspace = true
+uuid.workspace = true
 
 # Utilities
 polars.workspace = true

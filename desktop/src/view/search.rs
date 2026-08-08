@@ -3,7 +3,7 @@
 pub mod col_format;
 
 use crate::app::Oshibana;
-use crate::view::{View, logic_noop};
+use crate::view::{logic_noop, View};
 use eframe::Frame;
 use egui::text::LayoutJob;
 use egui::{Color32, FontFamily, FontId, ScrollArea, Stroke, TextBuffer, TextEdit, TextFormat, Ui};
@@ -11,10 +11,8 @@ use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::SearchColumn;
 use std::borrow::Cow;
-use polars::frame::DataFrame;
-use strum::IntoEnumIterator;
 use storage::scryfall::search::query_parser::Diagnostic;
-use storage::scryfall::search::SearchError;
+use strum::IntoEnumIterator;
 
 pub fn search() -> View {
     View {
@@ -141,7 +139,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
     };
 
-    let (search_result, diagnostics): (Result<DataFrame, SearchError>, Vec<Diagnostic>) = app.scryfall_storage.search(
+    let (search_result, diagnostics) = app.scryfall_storage.search(
         query.as_str(),
         user_data_guard.visible_search_columns.as_slice(),
     );
