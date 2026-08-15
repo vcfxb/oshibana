@@ -26,9 +26,12 @@ pub struct BulkDataItem {
     pub r#type: String,
     pub name: String,
     pub description: String,
-    pub download_uri: Url,
+    // (2026 Aug 15): Scryfall has switched to gzipped JSONL
+    // pub download_uri: Url,
+    pub jsonl_download_uri: Url,
     pub updated_at: DateTime<Utc>,
-    pub size: u64,
-    pub content_type: String,
-    pub content_encoding: String,
+    // pub size: u64,
+    pub compressed_size: u64,
+    // pub content_type: String,
+    // pub content_encoding: String,
 }

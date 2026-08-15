@@ -13,6 +13,7 @@ use std::io::BufReader;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use flate2::bufread::GzDecoder;
 use struson::reader::{JsonReader, JsonStreamReader};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
@@ -65,7 +66,7 @@ impl SyncHandler {
         let bd_name = bd_item.name.clone();
         *self.sync_target.lock().unwrap() = bd_name.clone();
         let mut builder = B::new();
-        let uri = bd_item.download_uri.clone();
+        let uri = bd_item.jsonl_download_uri.clone();
         let save_to = save_to.to_path_buf();
 
         tokio::task::spawn_blocking::<_, anyhow::Result<()>>(move || {
@@ -75,7 +76,9 @@ impl SyncHandler {
             let cb_reader = CallbackReader::new(progress_cb, response);
             // Sticking it in a bufreader gives us a very significant speedup
             let buf_reader = BufReader::new(cb_reader);
-            let mut json_reader = JsonStreamReader::new(buf_reader);
+            // (2026 Aug 15): Scryfall has switched to gzipped JSONL.
+            let gz_reader = GzDecoder::new(buf_reader);
+            let mut json_reader = JsonStreamReader::new(gz_reader);
             json_reader.begin_array()?;
 
             while json_reader.has_next()? {

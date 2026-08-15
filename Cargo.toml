@@ -20,7 +20,7 @@ schemas = { path = "schemas" }
 clients = { path = "clients" }
 storage = { path = "storage" }
 chrono = { version = "0.4.45", features = ["serde"] }
-polars  = { version = "0.54.4", features = [
+polars  = { version = "0.55.2", features = [
     "dtype-struct",
     "strings",
     "dtype-i128",
@@ -32,19 +32,19 @@ polars  = { version = "0.54.4", features = [
     "is_in"
 ]}
 
-futures = "0.3.32"
+futures = "0.3.34"
 reqwest = { version = "0.13.4", features = ["json", "blocking"] }
 url = { version = "2.5.8", features = ["serde"] }
 serde = "1"
-uuid = { version = "1.23.4", features = ["v4"] }
+uuid = { version = "1.24", features = ["v4"] }
 scopeguard = "1.2.0"
 serde_json = "1"
 atomic_float = "1.1.0"
 atomic-time = "0.2.1"
-tokio = { version = "1.52", features = ["full"] }
+tokio = { version = "1.53", features = ["full"] }
 log = "0.4"
 anyhow = "1"
-thiserror = "2.0.18"
+thiserror = "2.0.20"
 humansize = "2.1.3"
 strum = { version = "0.28.0", features = ["derive"] }
 heck = "0.5.0"
