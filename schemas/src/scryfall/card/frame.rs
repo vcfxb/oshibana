@@ -46,6 +46,9 @@ pub enum FrameEffect {
     /// Also undocumented, textless cards from FRA get their own variant it seems.
     /// https://scryfall.com/card/fra/402/bloodline-recollector-ancestral-craving?utm_source=api
     Textless,
+    
+    // (2026 Aug 15): New scryfall frame effect variant
+    Borderless,
 }
 
 const _: () = const {

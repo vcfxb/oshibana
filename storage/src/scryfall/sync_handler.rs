@@ -9,12 +9,11 @@ use schemas::traits::map_type::MapPolarsType;
 use serde::Deserialize;
 use std::fmt::Debug;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use flate2::bufread::GzDecoder;
-use struson::reader::{JsonReader, JsonStreamReader};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum SyncState {
@@ -62,7 +61,7 @@ impl SyncHandler {
         B: PolarsBuilder<D, ChunkedType = StructChunked> + Send + 'static,
     {
         self.expected_size
-            .store(bd_item.size as usize, Ordering::Release);
+            .store(bd_item.compressed_size as usize, Ordering::Release);
         let bd_name = bd_item.name.clone();
         *self.sync_target.lock().unwrap() = bd_name.clone();
         let mut builder = B::new();
@@ -78,13 +77,16 @@ impl SyncHandler {
             let buf_reader = BufReader::new(cb_reader);
             // (2026 Aug 15): Scryfall has switched to gzipped JSONL.
             let gz_reader = GzDecoder::new(buf_reader);
-            let mut json_reader = JsonStreamReader::new(gz_reader);
-            json_reader.begin_array()?;
+            let lines = BufReader::new(gz_reader).lines();
 
-            while json_reader.has_next()? {
-                let row = json_reader.deserialize_next::<D>()?;
+            for line_result in lines {
+                let line = line_result.inspect_err(|err| {
+                    log::error!("Could not get next line while reading {bd_name} data: {err}");
+                })?;
+
+                let row = serde_json::from_str(line.as_str())?;
                 builder.append(row)?;
-                self.card_count.fetch_add(1, Ordering::Release);
+                self.card_count.fetch_add(1, Ordering::Relaxed);
 
                 if self.cancel_requested.load(Ordering::Relaxed) {
                     log::warn!("Scryfall sync canceled before completion");
@@ -92,7 +94,6 @@ impl SyncHandler {
                 }
             }
 
-            json_reader.end_array()?;
             let mut df = builder.finish_into_dataframe()?;
             log::info!("finished downloading {bd_name} data");
             *self.sync_state.lock().unwrap() = SyncState::FsWrite;
