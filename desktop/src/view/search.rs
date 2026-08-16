@@ -139,6 +139,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
     };
 
+    // fixme: this search has the potential to slow down the UI
     let (search_result, diagnostics) = app.scryfall_storage.search(
         query.as_str(),
         user_data_guard.visible_search_columns.as_slice(),
