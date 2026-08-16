@@ -344,6 +344,7 @@ impl ScryfallStorage {
             let client = self.client.clone();
             let uri = symbol_uri.clone();
 
+            let filename = filename.to_owned();
             let update_cache = async move || {
                 let bytes = client
                     .client
@@ -354,7 +355,12 @@ impl ScryfallStorage {
                     .await?;
 
                 if !file_location.exists() {
-                    let mut file = tokio::fs::File::create_new(file_location).await?;
+                    let mut file = tokio::fs::File::create_new(file_location)
+                        .await
+                        .inspect_err(|err| {
+                            log::warn!("Could not create {filename}: {err}");
+                        })?;
+
                     file.write_all(bytes.as_ref()).await?;
                 }
 
