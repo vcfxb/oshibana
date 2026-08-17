@@ -1,3 +1,47 @@
+## [0.2.0-prerelease] - 2026-08-17
+
+### 🚀 Features
+
+- Add keyboard shortcut indicators to menu items
+- Add global search prefix setting
+- Add type filter to search
+- Add better support for disabled autosave
+- Add lexer support for not-equal, "and", and "or" tokens
+- Add negation support to lexer
+- Custom parser
+- Add grouping and unique card search
+- Add noto fonts to support more languages/unicode
+- Japanese, chinese, korean support
+
+### 🐛 Bug Fixes
+
+- Handle whitespace in lexer
+- Scryfall data ingestion
+- Better error reporting for symbology
+
+### 💼 Other
+
+- Switch to tokio/async IO for writing cached symbology files
+- Hand written parser
+- Parser
+- Parser
+- Updates and remove old deps
+- Search functionality
+- Card view
+- Fix data ingestion
+
+### 🚜 Refactor
+
+- Cargo fmt
+- Finish custom lexer
+
+### 🧪 Testing
+
+- Fix failing unit tests
+
+### ⚙️ Miscellaneous Tasks
+
+- Clippy lint + bump version
 ## [0.1.16-prerelease] - 2026-07-08
 
 ### 🐛 Bug Fixes
