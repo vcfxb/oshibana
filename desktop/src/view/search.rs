@@ -6,10 +6,10 @@ use crate::app::Oshibana;
 use crate::view::{logic_noop, View};
 use eframe::Frame;
 use egui::text::LayoutJob;
-use egui::{Color32, FontFamily, FontId, ScrollArea, Stroke, TextBuffer, TextEdit, TextFormat, Ui};
+use egui::{Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextBuffer, TextEdit, TextFormat, Ui};
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
-use schemas::oshibana::SearchColumn;
+use schemas::oshibana::{SearchViewColumn, UniqueBy};
 use std::borrow::Cow;
 use storage::scryfall::search::query_parser::Diagnostic;
 use strum::IntoEnumIterator;
@@ -38,6 +38,7 @@ pub struct SearchState {
     search_text: String,
     layout: SearchLayout,
     enable_global_search_prefix: bool,
+    unique_by: UniqueBy
 }
 
 impl Default for SearchState {
@@ -46,6 +47,7 @@ impl Default for SearchState {
             search_text: Default::default(),
             layout: Default::default(),
             enable_global_search_prefix: true,
+            unique_by: UniqueBy::default(),
         }
     }
 }
@@ -75,13 +77,13 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         if user_data_lock.visible_search_columns.is_empty() {
             user_data_lock
                 .visible_search_columns
-                .push(SearchColumn::Name);
+                .push(SearchViewColumn::Name);
             app.user_data_storage.mark_pending();
         }
 
         ui.menu_button("Columns", |ui| {
             ScrollArea::vertical().show(ui, |ui| {
-                for col in SearchColumn::iter() {
+                for col in SearchViewColumn::iter() {
                     let selected = user_data_lock.visible_search_columns.contains(&col);
                     let text = col.into_str().to_pascal_case();
                     if ui.selectable_label(selected, text).clicked() {
@@ -102,21 +104,34 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let search_state: &mut SearchState = app.current_view.state.downcast_mut().unwrap();
     let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
     let search_prefix = user_data_guard.search_prefix.as_str();
-    let mut prefix_layout = LayoutJob::default();
 
-    prefix_layout.append("Enable search prefix: ", 0.0, TextFormat::default());
-    prefix_layout.append(
-        search_prefix,
-        0.0,
-        TextFormat {
-            font_id: FontId::new(14.0, FontFamily::Monospace),
-            ..TextFormat::default()
-        },
-    );
+    ui.horizontal_top(|ui| {
+        let mut prefix_layout = LayoutJob::default();
 
-    if !search_prefix.is_empty() {
-        ui.checkbox(&mut search_state.enable_global_search_prefix, prefix_layout);
-    }
+        prefix_layout.append("Enable search prefix: ", 0.0, TextFormat::default());
+        prefix_layout.append(
+            search_prefix,
+            0.0,
+            TextFormat {
+                font_id: FontId::new(14.0, FontFamily::Monospace),
+                ..TextFormat::default()
+            },
+        );
+
+        if !search_prefix.is_empty() {
+            ui.checkbox(&mut search_state.enable_global_search_prefix, prefix_layout);
+        }
+
+        ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
+            ComboBox::from_label("Unique By")
+                .selected_text(format!("{}", search_state.unique_by))
+                .show_ui(ui, |ui| {
+                    for option in UniqueBy::iter() {
+                        ui.selectable_value(&mut search_state.unique_by, option, option.to_string());
+                    }
+                });
+        });
+    });
 
     ui.horizontal_top(|ui| {
         ui.vertical_centered(|ui| {
@@ -143,6 +158,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let (search_result, diagnostics) = app.scryfall_storage.search(
         query.as_str(),
         user_data_guard.visible_search_columns.as_slice(),
+        search_state.unique_by
     );
 
     drop(user_data_guard);

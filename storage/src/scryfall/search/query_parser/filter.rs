@@ -9,6 +9,7 @@ use unescape_zero_copy::unescape_default;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
 
+#[derive(Debug)]
 pub enum Filter<'i> {
     Lang {
         value: Language,

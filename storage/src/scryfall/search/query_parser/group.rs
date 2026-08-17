@@ -3,6 +3,7 @@ use crate::scryfall::search::query_parser::{Union, Parser, Diagnostic};
 use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
 
+#[derive(Debug)]
 pub struct Group<'i> {
     pub inner: Box<Union<'i>>,
 }

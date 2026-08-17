@@ -5,6 +5,7 @@ use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::Parser;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
 
+#[derive(Debug)]
 pub struct Union<'i> {
     pub intersections: Vec<Intersection<'i>>,
 }

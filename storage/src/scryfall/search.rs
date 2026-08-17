@@ -3,8 +3,8 @@ pub mod query_parser;
 
 use crate::scryfall::ScryfallStorage;
 use crate::scryfall::search::query_parser::{Diagnostic, Parser};
-use polars::prelude::DataFrame;
-use schemas::oshibana::SearchColumn;
+use polars::prelude::{DataFrame, IntoLazy};
+use schemas::oshibana::{SearchViewColumn, UniqueBy};
 use std::ops::Deref;
 use thiserror::Error;
 
@@ -20,7 +20,8 @@ impl ScryfallStorage {
     pub fn search<'i>(
         &self,
         query: &'i str,
-        cols: impl Deref<Target = [SearchColumn]>,
+        cols: impl Deref<Target = [SearchViewColumn]>,
+        unique_by: UniqueBy,
     ) -> (Result<DataFrame, SearchError>, Vec<Diagnostic<'i>>) {
         let mut parser = Parser::new(query);
         let parsed_query = parser.parse_query();
@@ -29,8 +30,20 @@ impl ScryfallStorage {
             return (Err(SearchError::EmptyQuery), parser.diagnostics);
         }
 
-        let filtered = polars_mapping::apply_filters(&parsed_query, self);
-        let results_lf = polars_mapping::apply_select(filtered, cols);
+        // clone reference to cards dataframe, make it lazy
+        let cards_lf = self
+            .cards_df
+            .lock()
+            .unwrap()
+            .as_ref()
+            .expect("cards_df should not be none")
+            .clone()
+            .lazy();
+
+        let processed = polars_mapping::apply_preprocessing(cards_lf);
+        let filtered = polars_mapping::apply_filters(processed, &parsed_query);
+        let grouped = polars_mapping::apply_grouping(filtered, unique_by);
+        let results_lf = polars_mapping::apply_select(grouped, cols);
         (results_lf.collect().map_err(Into::into), parser.diagnostics)
     }
 }

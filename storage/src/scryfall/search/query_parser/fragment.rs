@@ -1,8 +1,9 @@
 use std::borrow::Borrow;
 use std::ops::Range;
 use std::{cmp, ptr};
+use std::fmt::{Debug, Formatter};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Fragment<'i> {
     pub full_query: &'i str,
     pub byte_range: Range<usize>,
@@ -43,5 +44,11 @@ impl<'i> Fragment<'i> {
 impl<'i> Borrow<str> for Fragment<'i> {
     fn borrow(&self) -> &str {
         &self.full_query[self.byte_range.clone()]
+    }
+}
+
+impl<'i> Debug for Fragment<'i> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.as_str())
     }
 }

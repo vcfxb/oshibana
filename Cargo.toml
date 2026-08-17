@@ -29,7 +29,8 @@ polars  = { version = "0.55.2", features = [
     "lazy",
     "parquet",
     "regex",
-    "is_in"
+    "is_in",
+    "concat_str"
 ]}
 
 futures = "0.3.34"

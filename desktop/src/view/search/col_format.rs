@@ -2,7 +2,7 @@ use crate::util::scryfall_symbols;
 use crate::util::scryfall_symbols::ResolvedPart;
 use egui::{Label, Response, TextBuffer, TextWrapMode, Ui, Widget};
 use polars::prelude::AnyValue;
-use schemas::oshibana::SearchColumn;
+use schemas::oshibana::SearchViewColumn;
 use storage::scryfall::ScryfallStorage;
 
 pub type ValueFormatter<'s> = Box<dyn Fn(&AnyValue, &mut Ui) -> Response + 's>;
@@ -14,7 +14,6 @@ pub fn make_text_formatter() -> ValueFormatter<'static> {
             .ui(ui)
     })
 }
-
 
 pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatter<'_> {
     Box::new(|v: &AnyValue, ui: &mut Ui| {
@@ -53,9 +52,9 @@ pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatte
     })
 }
 
-pub fn col_format(s: &ScryfallStorage, c: SearchColumn) -> ValueFormatter<'_> {
+pub fn col_format(s: &ScryfallStorage, c: SearchViewColumn) -> ValueFormatter<'_> {
     match c {
-        SearchColumn::Name | SearchColumn::Type => make_text_formatter(),
-        SearchColumn::ManaCost => make_symbol_rendering_formatter(s),
+        SearchViewColumn::Name | SearchViewColumn::Type => make_text_formatter(),
+        SearchViewColumn::ManaCost => make_symbol_rendering_formatter(s),
     }
 }

@@ -7,7 +7,7 @@ use crate::oshibana::wishlist::WishlistItem;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use strum::{EnumIter, IntoStaticStr};
+use strum::{Display, EnumIter, IntoStaticStr};
 use uuid::Uuid;
 
 pub mod collection;
@@ -30,8 +30,8 @@ pub struct UserData {
     /// Apply global oracle tags in wishlist, decks, & collection
     pub global_oracle_tags: HashMap<Uuid, Vec<String>>,
 
-    #[serde(default = "SearchColumn::defaults")]
-    pub visible_search_columns: Vec<SearchColumn>,
+    #[serde(default = "SearchViewColumn::defaults")]
+    pub visible_search_columns: Vec<SearchViewColumn>,
 
     /// Prefix automatically placed before search queries
     #[serde(default)]
@@ -43,15 +43,15 @@ pub struct UserData {
 )]
 #[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
-pub enum SearchColumn {
+pub enum SearchViewColumn {
     Name,
     Type,
     ManaCost,
 }
 
-impl SearchColumn {
-    fn defaults() -> Vec<SearchColumn> {
-        use SearchColumn::*;
+impl SearchViewColumn {
+    fn defaults() -> Vec<SearchViewColumn> {
+        use SearchViewColumn::*;
         vec![Name, Type]
     }
 
@@ -71,8 +71,16 @@ impl Default for UserData {
             wishlist: vec![],
             packages: vec![],
             global_oracle_tags: Default::default(),
-            visible_search_columns: SearchColumn::defaults(),
+            visible_search_columns: SearchViewColumn::defaults(),
             search_prefix: Default::default(),
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default, Display, EnumIter)]
+pub enum UniqueBy {
+    Printings,
+
+    #[default]
+    Cards,
 }

@@ -6,12 +6,14 @@ use crate::scryfall::search::query_parser::lexer::TokenTy;
 use crate::scryfall::search::query_parser::Parser;
 use polars::prelude::Expr;
 
+#[derive(Debug)]
 pub struct Item<'i> {
     pub cover: Fragment<'i>,
     pub modifier: Option<Modifier>,
     pub inner: ItemInner<'i>,
 }
 
+#[derive(Debug)]
 pub enum ItemInner<'i> {
     Group(Group<'i>),
     Filter(Filter<'i>),
