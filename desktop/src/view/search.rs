@@ -151,7 +151,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
     let query = match (search_state.enable_global_search_prefix, search_prefix) {
         (false, _) | (_, "") => Cow::Borrowed(search_state.search_text.as_str()),
-        (_, prefix) => Cow::Owned(format!("{prefix} {}", &search_state.search_text)),
+        (_, prefix) => Cow::Owned(format!("{prefix} {}", search_state.search_text)),
     };
 
     // fixme: this search has the potential to slow down the UI
@@ -200,8 +200,10 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                                     let lhs = &fragment.full_query[..start];
                                     let highlight = fragment.as_str();
                                     let rhs = &fragment.full_query[end..];
-                                    let mut monospace_text_format = TextFormat::default();
-                                    monospace_text_format.font_id = FontId::monospace(14.0);
+                                    let monospace_text_format = TextFormat {
+                                        font_id: FontId::monospace(14.0),
+                                        ..TextFormat::default()
+                                    };
 
                                     let mut highlight_format = monospace_text_format.clone();
                                     highlight_format.background = Color32::LIGHT_YELLOW;
