@@ -10,56 +10,56 @@ use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
 
 #[derive(Debug)]
-pub enum Filter<'i> {
+pub enum Filter {
     Lang {
         value: Language,
     },
 
     Name {
         operator: Operator,
-        value: FilterValue<'i>,
+        value: FilterValue,
     },
 
     Color {
         operator: Operator,
-        value: FilterValue<'i>,
+        value: FilterValue,
     },
 
     ColorIdentity {
         operator: Operator,
-        value: FilterValue<'i>
+        value: FilterValue
     },
 
     Type {
-        value: FilterValue<'i>,
+        value: FilterValue,
     },
 
     OracleText {
         operator: Operator,
-        value: FilterValue<'i>
+        value: FilterValue
     },
 
     Untagged {
         exact: bool,
-        value: FilterValue<'i>,
+        value: FilterValue,
     },
 }
 
 #[derive(Debug)]
-pub enum FilterValue<'i> {
-    Text(Fragment<'i>),
+pub enum FilterValue {
+    Text(Fragment),
     String {
-        fragment: Fragment<'i>,
-        content: Cow<'i, str>,
+        fragment: Fragment,
+        content: String,
     },
     Regex {
-        fragment: Fragment<'i>,
-        content: &'i str
+        fragment: Fragment,
+        content: String
     },
 }
 
-impl<'i> Filter<'i> {
-    pub fn parse(parser: &mut Parser<'i>) -> Option<Self> {
+impl Filter {
+    pub fn parse(parser: &mut Parser) -> Option<Self> {
         match parser.peek()?.clone() {
             Token { kind: TokenTy::Bang, frag: bang_frag } => {
                 parser.pull();
@@ -164,11 +164,21 @@ impl<'i> Filter<'i> {
                     },
 
                     "c" | "color" => {
-                        unimplemented!()
+                        parser.diagnostics.push(Diagnostic::Error {
+                            message: format!("{} not yet implemented", directive_frag.as_str()),
+                            fragment: Some(directive_frag.clone()),
+                        });
+
+                        None
                     },
 
                     "ci" | "id" | "identity" => {
-                        unimplemented!()
+                        parser.diagnostics.push(Diagnostic::Error {
+                            message: format!("{} not yet implemented", directive_frag.as_str()),
+                            fragment: Some(directive_frag.clone()),
+                        });
+
+                        None
                     },
 
                     "t" | "type" => match operator {
@@ -214,7 +224,7 @@ impl<'i> Filter<'i> {
     }
 }
 
-impl<'i> MapToPolarsExpr for Filter<'i> {
+impl MapToPolarsExpr for Filter {
     fn as_pexpr(&self) -> Expr {
         use self::Operator;
         use polars::prelude::*;
@@ -232,7 +242,7 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
             | Filter::Name {
                 value: FilterValue::Regex { content, .. },
                 operator: Operator::Colon,
-            } => col("name").str().contains(lit(*content), false),
+            } => col("name").str().contains(lit(content.as_str()), false),
 
             Filter::Name {
                 value: FilterValue::Regex { .. },
@@ -279,7 +289,7 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
 
             Filter::Type {
                 value: FilterValue::Regex { content, .. }
-            } => col("type_line").str().contains(lit(*content), false),
+            } => col("type_line").str().contains(lit(content.as_str()), false),
 
             Filter::Type { value } => col("type_line")
                 .str()
@@ -301,7 +311,7 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
                 value: FilterValue::Regex { content, .. }
             } => col("oracle_text")
                 .str()
-                .contains(lit(*content), false),
+                .contains(lit(content.as_str()), false),
 
             Filter::OracleText { operator, .. } => {
                 panic!("unsupported oracle text operator: {operator:?}")
@@ -312,8 +322,8 @@ impl<'i> MapToPolarsExpr for Filter<'i> {
     }
 }
 
-impl<'i> FilterValue<'i> {
-    pub fn parse(parser: &mut Parser<'i>) -> Option<Self> {
+impl FilterValue {
+    pub fn parse(parser: &mut Parser) -> Option<Self> {
         let token = parser.peek()?;
         match token.kind {
             TokenTy::Text => {
@@ -327,7 +337,7 @@ impl<'i> FilterValue<'i> {
                 let unescaped = unescape_default(inner).unwrap_or(Cow::Borrowed(inner));
                 Some(Self::String {
                     fragment: token.frag.clone(),
-                    content: unescaped,
+                    content: unescaped.to_string(),
                 })
             }
             TokenTy::Regex => {
@@ -335,7 +345,7 @@ impl<'i> FilterValue<'i> {
                 let token_str = token.as_str();
                 Some(Self::Regex {
                     fragment: token.frag.clone(),
-                    content: &token_str[1..token_str.len()-1],
+                    content: token_str[1..token_str.len()-1].to_string(),
                 })
             }
             _ => None,
@@ -350,7 +360,7 @@ impl<'i> FilterValue<'i> {
         }
     }
 
-    fn fragment(&self) -> &Fragment<'i> {
+    fn fragment(&self) -> &Fragment {
         match self {
             FilterValue::Text(f) => f,
             FilterValue::String { fragment, .. } => fragment,

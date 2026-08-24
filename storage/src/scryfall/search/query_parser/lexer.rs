@@ -1,5 +1,6 @@
 use std::iter::Peekable;
 use std::str::Chars;
+use std::sync::Arc;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -23,74 +24,68 @@ pub enum TokenTy {
     Neg,
 }
 
-pub struct Lexer<'i> {
-    input: &'i str,
-    chars: Peekable<Chars<'i>>,
+pub struct Lexer {
+    input: Arc<String>,
     byte_index: usize,
-    tokens: Vec<Token<'i>>,
+    tokens: Vec<Token>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Token<'i> {
-    pub frag: Fragment<'i>,
+pub struct Token {
+    pub frag: Fragment,
     pub kind: TokenTy,
 }
 
-impl<'i> Lexer<'i> {
-    pub fn lex(input: &'i str) -> Result<Vec<Token<'i>>, &'static str> {
+impl Lexer {
+    fn chars(&self) -> Peekable<Chars<'_>> {
+        self.input[self.byte_index..].chars().peekable()
+    }
+
+    pub fn lex(input: Arc<String>) -> Result<Vec<Token>, &'static str> {
         let mut lexer = Lexer {
             input,
-            chars: input.chars().peekable(),
             byte_index: 0,
             tokens: Vec::new(),
         };
 
-        while let Some(peek) = lexer.chars.peek() {
+        while let Some(peek) = lexer.chars().peek() {
             match *peek {
                 ':' => {
-                    lexer.chars.next();
                     lexer.push_token(1, TokenTy::Colon);
                 }
 
                 '=' => {
-                    lexer.chars.next();
                     lexer.push_token(1, TokenTy::Eq);
                 }
 
                 '(' => {
-                    lexer.chars.next();
                     lexer.push_token(1, TokenTy::LParen);
                 }
 
                 ')' => {
-                    lexer.chars.next();
                     lexer.push_token(1, TokenTy::RParen);
                 }
 
                 '-' => {
-                    lexer.chars.next();
                     lexer.push_token(1, TokenTy::Neg);
                 }
 
                 '!' => {
-                    lexer.chars.next();
-                    match lexer.chars.next_if_eq(&'=') {
+                    match lexer.chars().next_if_eq(&'=') {
                         Some(_) => lexer.push_token(2, TokenTy::BangEq),
                         None => lexer.push_token(1, TokenTy::Bang),
                     }
                 }
 
                 '>' => {
-                    lexer.chars.next();
-                    match lexer.chars.next_if_eq(&'=') {
+                    match lexer.chars().next_if_eq(&'=') {
                         Some(_) => lexer.push_token(2, TokenTy::GtEq),
                         None => lexer.push_token(1, TokenTy::Gt),
                     }
                 }
 
                 '<' => {
-                    lexer.chars.next();
-                    match lexer.chars.next_if_eq(&'=') {
+                    match lexer.chars().next_if_eq(&'=') {
                         Some(_) => lexer.push_token(2, TokenTy::LtEq),
                         None => lexer.push_token(1, TokenTy::Lt),
                     }
@@ -110,8 +105,9 @@ impl<'i> Lexer<'i> {
 
                 c if c.is_whitespace() => {
                     let mut consumed = 0;
+                    let mut chars = lexer.chars();
 
-                    while let Some(c) = lexer.chars.next_if(|c| c.is_whitespace()) {
+                    while let Some(c) = chars.next_if(|c| c.is_whitespace()) {
                         consumed += c.len_utf8();
                     }
 
@@ -124,7 +120,8 @@ impl<'i> Lexer<'i> {
                     };
 
                     let mut consumed = 0;
-                    while let Some(c) = lexer.chars.next_if(continue_text) {
+                    let mut chars = lexer.chars();
+                    while let Some(c) = chars.next_if(continue_text) {
                         consumed += c.len_utf8();
                     }
                     
@@ -150,7 +147,7 @@ impl<'i> Lexer<'i> {
 
         self.tokens.push(Token {
             frag: Fragment {
-                full_query: self.input,
+                full_query: Arc::clone(&self.input),
                 byte_range: start..end,
             },
             kind,
@@ -159,12 +156,13 @@ impl<'i> Lexer<'i> {
 
     fn delimited(&mut self, delimiter: char, escape: char, kind: TokenTy, err: &'static str) -> Result<usize, &'static str> {
         // opening delimiter
-        if self.chars.next_if_eq(&delimiter).is_none() { return Ok(0); }
+        let mut chars = self.chars();
+        if chars.next_if_eq(&delimiter).is_none() { return Ok(0); }
         let mut consumed = 1;
         let mut escaped = false;
 
         loop {
-            let next = self.chars.next();
+            let next = chars.next();
             next.inspect(|c| consumed += c.len_utf8());
 
             match next {
@@ -181,26 +179,29 @@ impl<'i> Lexer<'i> {
     }
 }
 
-impl<'i> Token<'i> {
-    pub fn as_str(&self) -> &'i str {
+impl Token {
+    pub fn as_str(&self) -> &str {
         self.frag.as_str()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use crate::scryfall::search::query_parser::fragment::Fragment;
     use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
 
     #[test]
     fn lex_plaintext() {
-        let tokens = Lexer::lex("plaintext").unwrap();
+        let input = Arc::new("plaintext".to_string());
+
+        let tokens = Lexer::lex(input.clone()).unwrap();
         assert_eq!(
             tokens,
             vec![
                 Token {
                     frag: Fragment {
-                        full_query: "plaintext",
+                        full_query: input,
                         byte_range: 0.."plaintext".len()
                     },
                     kind: TokenTy::Text

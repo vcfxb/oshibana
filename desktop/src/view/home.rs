@@ -33,7 +33,7 @@ fn home_ui(app: &mut Oshibana, ui: &mut Ui, _frame: &mut Frame) {
             ui.label(format!("Last scryfall sync: {last_scryfall_sync}"));
             ui.add_space(10.0);
             if ui.button("Search for Cards").clicked() {
-                app.current_view = view::search::search();
+                app.current_view = view::search::search(app.scryfall_storage.clone());
             }
         });
     });

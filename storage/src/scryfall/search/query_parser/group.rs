@@ -4,13 +4,13 @@ use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
 
 #[derive(Debug)]
-pub struct Group<'i> {
-    pub inner: Box<Union<'i>>,
+pub struct Group {
+    pub inner: Box<Union>,
 }
 
-impl<'i> Group<'i> {
+impl Group {
     /// Consume a group of filters, started by a left parentheses.
-    pub fn parse(parser: &mut Parser<'i>) -> Option<Self> {
+    pub fn parse(parser: &mut Parser) -> Option<Self> {
         let lparen = parser.next_if_is(TokenTy::LParen)?.frag.clone();
         let union = Union::parse(parser);
         let rparen = parser.next_if_is(TokenTy::RParen);
@@ -28,7 +28,7 @@ impl<'i> Group<'i> {
     }
 }
 
-impl<'i> MapToPolarsExpr for Group<'i> {
+impl MapToPolarsExpr for Group {
     fn as_pexpr(&self) -> Expr {
         self.inner.as_pexpr()
     }

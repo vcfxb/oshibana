@@ -1,5 +1,6 @@
 //! Parser for scryfall-syntax queries
 
+use std::sync::Arc;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
 use crate::scryfall::search::query_parser::union::Union;
@@ -13,29 +14,29 @@ pub mod union;
 pub mod fragment;
 pub mod lexer;
 
-pub struct Parser<'i> {
-    full_query: &'i str,
-    tokens: Vec<Token<'i>>,
+pub struct Parser {
+    full_query: Arc<String>,
+    tokens: Vec<Token>,
     idx: usize,
-    pub diagnostics: Vec<Diagnostic<'i>>
+    pub diagnostics: Vec<Diagnostic>
 }
 
 #[derive(Debug)]
-pub enum Diagnostic<'i> {
+pub enum Diagnostic {
     Error {
         message: String,
-        fragment: Option<Fragment<'i>>
+        fragment: Option<Fragment>
     },
 
     Warning {
         message: String,
-        fragment: Fragment<'i>,
+        fragment: Fragment,
     }
 }
 
-impl<'i> Parser<'i> {
-    pub fn new(query_str: &'i str) -> Self {
-        match Lexer::lex(query_str) {
+impl Parser {
+    pub fn new(query_str: Arc<String>) -> Self {
+        match Lexer::lex(Arc::clone(&query_str)) {
             Ok(tokens) => Self {
                 full_query: query_str,
                 tokens,
@@ -60,7 +61,7 @@ impl<'i> Parser<'i> {
         self.tokens[self.idx..].iter().map(|t| t.frag.len()).sum()
     }
 
-    pub fn parse_query(&mut self) -> Union<'i> {
+    pub fn parse_query(&mut self) -> Union {
         Union::parse(self)
     }
 
@@ -69,12 +70,12 @@ impl<'i> Parser<'i> {
     }
 
     /// Peek the next non whitespace token.
-    pub fn peek(&self) -> Option<&Token<'i>> {
+    pub fn peek(&self) -> Option<&Token> {
         self.peek_n(0)
     }
     
     /// Peek the `n`th non-whitespace token ahead (0 is the immediate next).
-    pub fn peek_n(&self, mut n: usize) -> Option<&Token<'i>> {
+    pub fn peek_n(&self, mut n: usize) -> Option<&Token> {
         let mut offset = 0;
         while let Some(token) = self.tokens.get(self.idx + offset) {
             if token.kind != TokenTy::Whitespace {
@@ -89,7 +90,7 @@ impl<'i> Parser<'i> {
     }
 
     /// Advance past current whitespaces and consume the next non-whitespace token.
-    pub fn pull(&mut self) -> Option<&Token<'i>> {
+    pub fn pull(&mut self) -> Option<&Token> {
         while let Some(token) = self.tokens.get(self.idx) {
             self.idx += 1;
             if token.kind != TokenTy::Whitespace {
@@ -100,7 +101,7 @@ impl<'i> Parser<'i> {
     }
 
     /// Advance to the next non-whitespace token if it's of the given `kind`.
-    pub fn next_if_is(&mut self, kind: TokenTy) -> Option<&Token<'i>> {
+    pub fn next_if_is(&mut self, kind: TokenTy) -> Option<&Token> {
         match self.peek() {
             Some(token) if token.kind == kind => self.pull(),
             _ => None,
@@ -110,6 +111,7 @@ impl<'i> Parser<'i> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use schemas::scryfall::card::languages::Language;
     use crate::scryfall::search::query_parser::filter::Filter;
     use crate::scryfall::search::query_parser::item::ItemInner;
@@ -117,7 +119,7 @@ mod tests {
 
     #[test]
     fn parse_language_filter() {
-        let mut parser = Parser::new("lang:en");
+        let mut parser = Parser::new(Arc::new("lang:en".to_string()));
         let query = parser.parse_query();
         let item = &query.intersections[0].items[0];
         assert_eq!(item.modifier, None);

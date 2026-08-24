@@ -6,12 +6,12 @@ use crate::scryfall::search::query_parser::Parser;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
 
 #[derive(Debug)]
-pub struct Union<'i> {
-    pub intersections: Vec<Intersection<'i>>,
+pub struct Union {
+    pub intersections: Vec<Intersection>,
 }
 
-impl<'i> Union<'i> {
-    pub fn parse(parser: &mut Parser<'i>) -> Self {
+impl Union {
+    pub fn parse(parser: &mut Parser) -> Self {
         let mut intersections = Vec::new();
         
         while let Some(intersection) = Intersection::parse(parser) {
@@ -42,7 +42,7 @@ impl<'i> Union<'i> {
         Self { intersections }
     }
     
-    pub fn conver_fragment(&self) -> Fragment<'i> {
+    pub fn conver_fragment(&self) -> Fragment {
         match (self.intersections.first(), self.intersections.last()) {
             (Some(first), Some(last)) => Fragment::cover(&first.fragment(), &last.fragment()),
             _ => panic!("Union has no intersections"),
@@ -50,7 +50,7 @@ impl<'i> Union<'i> {
     }
 }
 
-impl<'i> MapToPolarsExpr for Union<'i> {
+impl MapToPolarsExpr for Union {
     fn as_pexpr(&self) -> Expr {
         use polars::prelude::*;
 

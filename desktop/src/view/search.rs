@@ -1,25 +1,30 @@
 //! Card Search view
 
 pub mod col_format;
+pub mod indicator_bar;
 
 use crate::app::Oshibana;
 use crate::view::{logic_noop, View};
 use eframe::Frame;
 use egui::text::LayoutJob;
-use egui::{Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextBuffer, TextEdit, TextFormat, Ui};
+use egui::{Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextEdit, TextFormat, Ui};
 use egui_extras::{Column, TableBuilder};
 use heck::ToPascalCase;
 use schemas::oshibana::{SearchViewColumn, UniqueBy};
 use std::borrow::Cow;
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use storage::scryfall::search::query_parser::Diagnostic;
 use strum::IntoEnumIterator;
+use storage::scryfall::ScryfallStorage;
+use storage::scryfall::search::{Query, SearchHandler};
 
-pub fn search() -> View {
+pub fn search(scryfall_storage: Arc<ScryfallStorage>) -> View {
     View {
         ui: search_ui,
         logic: logic_noop,
         menu: search_menu,
-        state: Box::new(SearchState::default()),
+        state: Box::new(SearchState::new(scryfall_storage)),
     }
 }
 
@@ -33,21 +38,22 @@ pub enum SearchLayout {
     Detailed,
 }
 
-#[derive(Debug)]
 pub struct SearchState {
     search_text: String,
     layout: SearchLayout,
     enable_global_search_prefix: bool,
-    unique_by: UniqueBy
+    unique_by: UniqueBy,
+    handler: SearchHandler,
 }
 
-impl Default for SearchState {
-    fn default() -> Self {
+impl SearchState {
+    pub fn new(storage: Arc<ScryfallStorage>) -> Self {
         SearchState {
-            search_text: Default::default(),
+            search_text: "".to_string(),
             layout: Default::default(),
             enable_global_search_prefix: true,
-            unique_by: UniqueBy::default(),
+            unique_by: Default::default(),
+            handler: SearchHandler::new(storage),
         }
     }
 }
@@ -136,9 +142,16 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     ui.horizontal_top(|ui| {
         ui.vertical_centered(|ui| {
             let search_bar = TextEdit::singleline(&mut search_state.search_text)
-                .desired_width(ui.available_width() - 40.0)
+                .desired_width(f32::INFINITY)
                 .font(FontId::monospace(14.0));
-            ui.add(search_bar);
+            let search_rect = ui.add(search_bar).rect;
+
+            indicator_bar::indicator_bar(
+                ui,
+                search_rect,
+                search_state.handler.busy.load(Ordering::Relaxed)
+            );
+
             ui.separator();
         })
     });
@@ -155,23 +168,24 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     };
 
     // fixme: this search has the potential to slow down the UI
-    let (search_result, diagnostics) = app.scryfall_storage.search(
-        query.as_str(),
-        user_data_guard.visible_search_columns.as_slice(),
-        search_state.unique_by
-    );
+    search_state.handler.search(Query {
+        query: Arc::new(query.to_string()),
+        cols: user_data_guard.visible_search_columns.clone(),
+        unique_by: search_state.unique_by,
+    });
 
     drop(user_data_guard);
+    let search_result_guard = search_state.handler.result.lock().unwrap();
 
-    if let Err(err) = &search_result {
+    if let Err(err) = &search_result_guard.result {
         ui.scope(|ui| {
             ui.style_mut().override_text_style = Some(egui::TextStyle::Monospace);
             ui.label(format!("search error: {err}"));
         });
     };
 
-    if !diagnostics.is_empty() {
-        for diagnostic in diagnostics {
+    if !search_result_guard.diagnostics.is_empty() {
+        for diagnostic in &search_result_guard.diagnostics {
             let stroke = match diagnostic {
                 Diagnostic::Error { .. } => Stroke::new(2.0, Color32::RED),
                 Diagnostic::Warning { .. } => Stroke::new(1.0, Color32::YELLOW),
@@ -221,7 +235,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         }
     }
 
-    let Ok(df) = search_result else {
+    let Ok(df) = &search_result_guard.result else {
         return
     };
 

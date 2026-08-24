@@ -185,7 +185,7 @@ impl eframe::App for Oshibana {
                     }
 
                     if ui.button("Search").clicked() {
-                        self.current_view = view::search::search();
+                        self.current_view = view::search::search(self.scryfall_storage.clone());
                     }
 
                     if ui.button("Settings...").clicked() {

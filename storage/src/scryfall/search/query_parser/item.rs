@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
 use crate::scryfall::search::query_parser::filter::Filter;
 use crate::scryfall::search::query_parser::fragment::Fragment;
@@ -7,16 +8,16 @@ use crate::scryfall::search::query_parser::Parser;
 use polars::prelude::Expr;
 
 #[derive(Debug)]
-pub struct Item<'i> {
-    pub cover: Fragment<'i>,
+pub struct Item {
+    pub cover: Fragment,
     pub modifier: Option<Modifier>,
-    pub inner: ItemInner<'i>,
+    pub inner: ItemInner,
 }
 
 #[derive(Debug)]
-pub enum ItemInner<'i> {
-    Group(Group<'i>),
-    Filter(Filter<'i>),
+pub enum ItemInner {
+    Group(Group),
+    Filter(Filter),
 }
 
 #[derive(Eq, PartialEq, Debug, Copy, Clone, Hash)]
@@ -24,8 +25,8 @@ pub enum Modifier {
     Neg,
 }
 
-impl<'i> Item<'i> {
-    pub fn parse(parser: &mut Parser<'i>) -> Option<Self> {
+impl Item {
+    pub fn parse(parser: &mut Parser) -> Option<Self> {
         let starting_byte_idx = parser.bytes_consumed();
         let modifier_token = parser.next_if_is(TokenTy::Neg).cloned();
         let modifier = modifier_token.as_ref().map(|_| Modifier::Neg);
@@ -40,7 +41,7 @@ impl<'i> Item<'i> {
 
         Some(Self {
             cover: Fragment {
-                full_query: parser.full_query,
+                full_query: Arc::clone(&parser.full_query),
                 byte_range: starting_byte_idx..parser.bytes_consumed(),
             },
             modifier,
@@ -49,7 +50,7 @@ impl<'i> Item<'i> {
     }
 }
 
-impl<'i> MapToPolarsExpr for Item<'i> {
+impl MapToPolarsExpr for Item {
     fn as_pexpr(&self) -> Expr {
         use polars::prelude::*;
 
@@ -68,8 +69,8 @@ impl<'i> MapToPolarsExpr for Item<'i> {
     }
 }
 
-impl<'i> ItemInner<'i> {
-    fn parse(parser: &mut Parser<'i>) -> Option<Self> {
+impl ItemInner {
+    fn parse(parser: &mut Parser) -> Option<Self> {
         match parser.peek()?.kind {
             TokenTy::LParen => Group::parse(parser).map(Self::Group),
             _ => Filter::parse(parser).map(Self::Filter),
@@ -77,7 +78,7 @@ impl<'i> ItemInner<'i> {
     }
 }
 
-impl<'i> MapToPolarsExpr for ItemInner<'i> {
+impl MapToPolarsExpr for ItemInner {
     fn as_pexpr(&self) -> Expr {
         match self {
             ItemInner::Group(group) => group.as_pexpr(),
