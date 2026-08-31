@@ -9,8 +9,7 @@ use eframe::Frame;
 use egui::text::LayoutJob;
 use egui::{Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextEdit, TextFormat, Ui};
 use egui_extras::{Column, TableBuilder};
-use heck::ToPascalCase;
-use schemas::oshibana::{SearchViewColumn, UniqueBy};
+use schemas::oshibana::{SearchViewColumn, SortBy, UniqueBy};
 use std::borrow::Cow;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
@@ -28,7 +27,7 @@ pub fn search(scryfall_storage: Arc<ScryfallStorage>) -> View {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub enum SearchLayout {
     #[default]
     Rows,
@@ -87,36 +86,38 @@ fn search_menu(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             app.user_data_storage.mark_pending();
         }
 
-        ui.menu_button("Columns", |ui| {
-            ScrollArea::vertical().show(ui, |ui| {
-                for col in SearchViewColumn::iter() {
-                    let selected = user_data_lock.visible_search_columns.contains(&col);
-                    let text = col.into_str().to_pascal_case();
-                    if ui.selectable_label(selected, text).clicked() {
-                        if !selected {
-                            user_data_lock.visible_search_columns.push(col);
-                        } else {
-                            user_data_lock.visible_search_columns.retain(|s| s != &col);
+        if search_state.layout == SearchLayout::Rows {
+            ui.menu_button("Columns", |ui| {
+                ScrollArea::vertical().show(ui, |ui| {
+                    for col in SearchViewColumn::iter() {
+                        let selected = user_data_lock.visible_search_columns.contains(&col);
+                        let text = col.to_string();
+                        if ui.selectable_label(selected, text).clicked() {
+                            if !selected {
+                                user_data_lock.visible_search_columns.push(col);
+                            } else {
+                                user_data_lock.visible_search_columns.retain(|s| s != &col);
+                            }
+                            app.user_data_storage.mark_pending();
                         }
-                        app.user_data_storage.mark_pending();
                     }
-                }
-            })
-        })
+                })
+            });
+        }
     });
 }
 
 fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
     let search_state: &mut SearchState = app.current_view.state.downcast_mut().unwrap();
-    let user_data_guard = app.user_data_storage.loaded.lock().unwrap();
-    let search_prefix = user_data_guard.search_prefix.as_str();
+    let mut user_data_guard = app.user_data_storage.loaded.lock().unwrap();
+    let search_prefix = user_data_guard.search_prefix.clone();
 
     ui.horizontal_top(|ui| {
         let mut prefix_layout = LayoutJob::default();
 
         prefix_layout.append("Enable search prefix: ", 0.0, TextFormat::default());
         prefix_layout.append(
-            search_prefix,
+            search_prefix.as_str(),
             0.0,
             TextFormat {
                 font_id: FontId::new(14.0, FontFamily::Monospace),
@@ -130,12 +131,24 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
 
         ui.with_layout(Layout::right_to_left(Align::TOP), |ui| {
             ComboBox::from_label("Unique By")
-                .selected_text(format!("{}", search_state.unique_by))
+                .selected_text(search_state.unique_by.to_string())
                 .show_ui(ui, |ui| {
                     for option in UniqueBy::iter() {
                         ui.selectable_value(&mut search_state.unique_by, option, option.to_string());
                     }
                 });
+
+            let cb_response = ComboBox::from_label("Sort By")
+                .selected_text(user_data_guard.search_sort_by.to_string())
+                .show_ui(ui, |ui| {
+                    for option in SortBy::iter() {
+                        ui.selectable_value(&mut user_data_guard.search_sort_by, option, option.to_string());
+                    }
+                });
+
+            if cb_response.response.changed() {
+                app.user_data_storage.mark_pending();
+            }
         });
     });
 
@@ -162,7 +175,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         .map(|col| col_format::col_format(&app.scryfall_storage, *col))
         .collect::<Vec<_>>();
 
-    let query = match (search_state.enable_global_search_prefix, search_prefix) {
+    let query = match (search_state.enable_global_search_prefix, search_prefix.as_str()) {
         (false, _) | (_, "") => Cow::Borrowed(search_state.search_text.as_str()),
         (_, prefix) => Cow::Owned(format!("{prefix} {}", search_state.search_text)),
     };
@@ -171,6 +184,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         query: Arc::new(query.to_string()),
         cols: user_data_guard.visible_search_columns.clone(),
         unique_by: search_state.unique_by,
+        sort_by: user_data_guard.search_sort_by,
     });
 
     drop(user_data_guard);

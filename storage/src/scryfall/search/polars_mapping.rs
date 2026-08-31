@@ -1,7 +1,7 @@
 //! Map parsed queries to polars expressions
 
 use polars::prelude::{Expr as PExpr, UniqueKeepStrategy, LazyFrame, col, SortMultipleOptions, Selector, lit, when, format_str};
-use schemas::oshibana::{SearchViewColumn, UniqueBy};
+use schemas::oshibana::{Direction, SearchViewColumn, SortBy, UniqueBy};
 use std::ops::Deref;
 use std::sync::Arc;
 use crate::scryfall::search::query_parser::union::Union;
@@ -89,3 +89,20 @@ pub fn apply_preprocessing(cards_lf: LazyFrame) -> LazyFrame {
         ])
 }
 
+pub fn apply_sort(cards_lf: LazyFrame, sort_by: SortBy) -> LazyFrame {
+    match sort_by {
+        SortBy::Name(dir) => cards_lf.sort(
+            ["name"],
+            SortMultipleOptions::new()
+                .with_order_descending(dir == Direction::Descending)
+                .with_maintain_order(true)
+        ),
+
+        SortBy::ReleaseDate(dir) => cards_lf.sort(
+            ["released_at"],
+            SortMultipleOptions::new()
+                .with_order_descending(dir == Direction::Descending)
+                .with_maintain_order(true)
+        )
+    }
+}

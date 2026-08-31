@@ -7,7 +7,7 @@ use crate::oshibana::wishlist::WishlistItem;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use strum::{Display, EnumIter, IntoStaticStr};
+use strum::{Display, EnumIter};
 use uuid::Uuid;
 
 pub mod collection;
@@ -33,19 +33,22 @@ pub struct UserData {
     #[serde(default = "SearchViewColumn::defaults")]
     pub visible_search_columns: Vec<SearchViewColumn>,
 
+    #[serde(default)]
+    pub search_sort_by: SortBy,
+
     /// Prefix automatically placed before search queries
     #[serde(default)]
     pub search_prefix: String,
 }
 
 #[derive(
-    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, IntoStaticStr, EnumIter,
+    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, Display, EnumIter,
 )]
-#[strum(serialize_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum SearchViewColumn {
     Name,
     Type,
+    #[strum(to_string = "Mana Cost")]
     ManaCost,
 }
 
@@ -53,10 +56,6 @@ impl SearchViewColumn {
     fn defaults() -> Vec<SearchViewColumn> {
         use SearchViewColumn::*;
         vec![Name, Type]
-    }
-
-    pub fn into_str(self) -> &'static str {
-        self.into()
     }
 }
 
@@ -73,6 +72,7 @@ impl Default for UserData {
             global_oracle_tags: Default::default(),
             visible_search_columns: SearchViewColumn::defaults(),
             search_prefix: Default::default(),
+            search_sort_by: Default::default(),
         }
     }
 }
@@ -83,4 +83,38 @@ pub enum UniqueBy {
 
     #[default]
     Cards,
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, Display)]
+#[serde(rename_all = "snake_case")]
+pub enum Direction {
+    Ascending,
+    Descending,
+}
+
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, Display)]
+#[serde(rename_all = "snake_case")]
+pub enum SortBy {
+    #[strum(to_string = "Name ({0})")]
+    Name(Direction),
+
+    #[strum(to_string = "Release Date ({0})")]
+    ReleaseDate(Direction),
+}
+
+impl Default for SortBy {
+    fn default() -> Self {
+        SortBy::Name(Direction::Ascending)
+    }
+}
+
+impl SortBy {
+    pub fn iter() -> impl Iterator<Item = Self> {
+        [
+            SortBy::Name(Direction::Ascending),
+            SortBy::Name(Direction::Descending),
+            SortBy::ReleaseDate(Direction::Ascending),
+            SortBy::ReleaseDate(Direction::Descending),
+        ].into_iter()
+    }
 }

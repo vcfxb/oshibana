@@ -175,7 +175,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))
         }),
     )
-    .unwrap();
+    .expect("egui::run_native");
 
     Ok(())
 }

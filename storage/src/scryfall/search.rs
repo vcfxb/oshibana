@@ -4,7 +4,7 @@ pub mod query_parser;
 use crate::scryfall::search::query_parser::{Diagnostic, Parser};
 use crate::scryfall::ScryfallStorage;
 use polars::prelude::{DataFrame, IntoLazy};
-use schemas::oshibana::{SearchViewColumn, UniqueBy};
+use schemas::oshibana::{SearchViewColumn, SortBy, UniqueBy};
 use scopeguard::defer;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
@@ -22,7 +22,8 @@ pub struct SearchHandler {
 pub struct Query {
     pub query: Arc<String>,
     pub cols: Vec<SearchViewColumn>,
-    pub unique_by: UniqueBy
+    pub unique_by: UniqueBy,
+    pub sort_by: SortBy,
 }
 
 #[derive(Debug)]
@@ -114,7 +115,8 @@ impl ScryfallStorage {
         let processed = polars_mapping::apply_preprocessing(cards_lf);
         let filtered = polars_mapping::apply_filters(processed, &parsed_query);
         let grouped = polars_mapping::apply_grouping(filtered, query.unique_by);
-        let results_lf = polars_mapping::apply_select(grouped, query.cols);
+        let sorted_lf = polars_mapping::apply_sort(grouped, query.sort_by);
+        let results_lf = polars_mapping::apply_select(sorted_lf, query.cols);
 
         SearchResult {
             result: results_lf.collect().map_err(Into::into),
