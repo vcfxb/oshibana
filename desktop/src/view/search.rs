@@ -167,7 +167,6 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         (_, prefix) => Cow::Owned(format!("{prefix} {}", search_state.search_text)),
     };
 
-    // fixme: this search has the potential to slow down the UI
     search_state.handler.search(Query {
         query: Arc::new(query.to_string()),
         cols: user_data_guard.visible_search_columns.clone(),

@@ -1,3 +1,4 @@
+use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -22,6 +23,20 @@ impl Operator {
             TokenTy::Lt => Some(Self::Lt),
             TokenTy::Gt => Some(Self::Gt),
             _ => None,
+        }
+    }
+
+    // this could be generic but there's probably no reason for it tbh.
+    /// Get the [polars] [Expr] operation for the given operator.
+    /// Colon becomes the same as equality.
+    pub fn polars_fn(self) -> fn(Expr, Expr) -> Expr {
+        match self {
+            Operator::Eq | Operator::Colon => Expr::eq,
+            Operator::Gte => Expr::gt_eq,
+            Operator::Lte => Expr::lt_eq,
+            Operator::Gt => Expr::gt,
+            Operator::Lt => Expr::lt,
+            Operator::Neq => Expr::neq,
         }
     }
 }

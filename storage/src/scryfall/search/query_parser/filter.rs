@@ -12,10 +12,21 @@ use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
 #[derive(Debug)]
 pub enum Filter {
     Lang {
+        operator: Operator,
         value: Language,
     },
 
     Name {
+        operator: Operator,
+        value: FilterValue,
+    },
+
+    CollectorNumber {
+        operator: Operator,
+        value: FilterValue,
+    },
+
+    Set {
         operator: Operator,
         value: FilterValue,
     },
@@ -127,10 +138,14 @@ impl Filter {
                         };
 
                         match operator {
-                            Operator::Colon | Operator::Eq => Some(Filter::Lang { value: lang }),
+                            Operator::Colon | Operator::Eq | Operator::Neq => Some(Filter::Lang {
+                                operator,
+                                value: lang 
+                            }),
+                            
                             _ => {
                                 parser.diagnostics.push(Diagnostic::Warning {
-                                    message: "language filter only supports `:`, `=` operators".into(),
+                                    message: "language filter only supports `:`, `=`, `!=` operators".into(),
                                     fragment: filter_value.fragment().clone(),
                                 });
 
@@ -141,15 +156,6 @@ impl Filter {
 
                     "name" => {
                         match (operator, &filter_value) {
-                            (Operator::Gte | Operator::Lte | Operator::Gt | Operator::Lt, _) => {
-                                parser.diagnostics.push(Diagnostic::Warning {
-                                    message: "name only supports `:`, `=`, and `!=` operators".to_string(),
-                                    fragment: directive_frag.clone(),
-                                });
-
-                                None
-                            },
-
                             (_, FilterValue::Regex { .. }) if operator != Operator::Colon => {
                                 parser.diagnostics.push(Diagnostic::Warning {
                                     message: "name regex filter only supports `:` operator".into(),
@@ -160,6 +166,63 @@ impl Filter {
                             }
 
                             _ => Some(Filter::Name { operator, value: filter_value }),
+                        }
+                    },
+
+                    "cn" | "number" => match &filter_value {
+                        FilterValue::Regex { .. } => {
+                            parser.diagnostics.push(Diagnostic::Warning {
+                                message: "collector number does not support regex".into(),
+                                fragment: filter_value.fragment().clone(),
+                            });
+
+                            None
+                        },
+
+                        _ => {
+                            let str_comparison = [
+                                Operator::Eq,
+                                Operator::Neq,
+                                Operator::Colon
+                            ].contains(&operator);
+
+                            if !str_comparison &&
+                                filter_value.as_str().unwrap().contains(|c| c > '9' || c < '0') {
+                                parser.diagnostics.push(Diagnostic::Warning {
+                                    message: "ordered comparison on collector numbers requires numeric value".into(),
+                                    fragment: filter_value.fragment().clone(),
+                                });
+                            }
+
+                            Some(Filter::CollectorNumber {
+                                operator,
+                                value: filter_value,
+                            })
+                        }
+                    },
+
+                    "s" | "set" | "edition" | "e" => match (operator, &filter_value) {
+                        (_, FilterValue::Regex { .. }) => {
+                            parser.diagnostics.push(Diagnostic::Warning {
+                                message: "set/edition does not support regex".into(),
+                                fragment: directive_frag.clone(),
+                            });
+
+                            None
+                        }
+
+                        (Operator::Neq | Operator::Eq | Operator::Colon, _) => Some(Filter::Set {
+                            operator,
+                            value: filter_value,
+                        }),
+
+                        _ => {
+                            parser.diagnostics.push(Diagnostic::Warning {
+                                message: "set/edition only supports '=', '!=', ':' operators".into(),
+                                fragment: directive_frag.clone(),
+                            });
+
+                            None
                         }
                     },
 
@@ -230,11 +293,14 @@ impl MapToPolarsExpr for Filter {
         use polars::prelude::*;
 
         match self {
-            Filter::Lang { value } => {
+            Filter::Lang { operator, value } => {
                 let lang_code = <Language as Into<&'static str>>::into(*value);
-                col("lang").eq(lit(lang_code))
+                let op_fn = operator.polars_fn();
+                op_fn(col("lang"), lit(lang_code))
             }
 
+            // card names get some special handling cause they can be untagged
+            
             Filter::Untagged {
                 value: FilterValue::Regex { content, .. },
                 ..
@@ -247,7 +313,7 @@ impl MapToPolarsExpr for Filter {
             Filter::Name {
                 value: FilterValue::Regex { .. },
                 operator
-            } => panic!("regex doesn't support {operator:?}"),
+            } => panic!("name regex doesn't support {operator:?}"),
 
             Filter::Name {
                 operator: Operator::Colon,
@@ -273,17 +339,46 @@ impl MapToPolarsExpr for Filter {
                     .eq(lit(value.as_str().unwrap()).str().to_lowercase())
             }
 
-            Filter::Name {
-                operator: Operator::Neq,
-                value: value @ (FilterValue::String { .. } |  FilterValue::Text(_))
-            } => {
-                col("name")
-                    .str()
-                    .to_lowercase()
-                    .neq(lit(value.as_str().unwrap()).str().to_lowercase())
+            Filter::Name { operator, value } => {
+                let op_fn = operator.polars_fn();
+                let lhs = col("name").str().to_lowercase();
+                let rhs = lit(value.as_str().unwrap()).str().to_lowercase();
+                op_fn(lhs, rhs)
+            },
+
+            Filter::CollectorNumber { operator, value } => {
+                let op_fn = operator.polars_fn();
+
+                match operator {
+                    Operator::Colon | Operator::Neq | Operator::Eq => {
+                        let lhs = col("collector_number")
+                            .str()
+                            .to_lowercase();
+
+                        let rhs = lit(value.as_str().unwrap()).str().to_lowercase();
+
+                        op_fn(lhs, rhs)
+                    }
+
+                    _ => {
+                        let lhs = col("collector_number")
+                            .cast(DataType::Int32);
+
+                        let rhs = lit(value.as_str().unwrap()).cast(DataType::Int32);
+                        op_fn(lhs, rhs)
+                    }
+                }
             }
 
-            Filter::Name { operator, .. } => panic!("unsupported name operator: {operator:?}"),
+            Filter::Set { operator, value } => {
+                let op_fn = operator.polars_fn();
+                let value = lit(value.as_str().unwrap()).str().to_lowercase();
+
+                Expr::or(
+                    op_fn(col("set").str().to_lowercase(), value.clone()),
+                    op_fn(col("set_name").str().to_lowercase(), value),
+                )
+            }
 
             Filter::Color { .. } | Filter::ColorIdentity { .. } => todo!("color filtering"),
 
@@ -298,15 +393,6 @@ impl MapToPolarsExpr for Filter {
                 .split_regex(lit(r"\s+"), true)
                 .list()
                 .contains(lit(value.as_str().unwrap()).str().to_lowercase(), false),
-                
-            Filter::OracleText {
-                operator: Operator::Colon,
-                value: fv @ (FilterValue::String { .. } | FilterValue::Text(_))
-            } => col("oracle_text")
-                .str()
-                .to_lowercase()
-                .str()
-                .contains_literal(lit(fv.as_str().unwrap()).str().to_lowercase()),
 
             Filter::OracleText {
                 operator: Operator::Colon,
@@ -314,12 +400,19 @@ impl MapToPolarsExpr for Filter {
             } => col("oracle_text")
                 .str()
                 .contains(lit(content.as_str()), false),
+            
+            Filter::OracleText {
+                operator: Operator::Colon,
+                value
+            } => col("oracle_text")
+                .str()
+                .to_lowercase()
+                .str()
+                .contains_literal(lit(value.as_str().unwrap()).str().to_lowercase()),
 
             Filter::OracleText { operator, .. } => {
                 panic!("unsupported oracle text operator: {operator:?}")
             },
-
-
         }
     }
 }
