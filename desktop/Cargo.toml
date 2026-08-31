@@ -55,7 +55,6 @@ url.workspace = true
 
 # Formatting
 humansize.workspace = true
-heck.workspace = true
 
 # UI
 opener = { version = "0.8.5", features = ["reveal"] }
