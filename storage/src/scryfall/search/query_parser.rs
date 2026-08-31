@@ -1,37 +1,37 @@
 //! Parser for scryfall-syntax queries
 
-use std::sync::Arc;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
 use crate::scryfall::search::query_parser::union::Union;
+use std::sync::Arc;
 
 pub mod filter;
+pub mod fragment;
 pub mod group;
 pub mod intersection;
 pub mod item;
+pub mod lexer;
 pub mod operator;
 pub mod union;
-pub mod fragment;
-pub mod lexer;
 
 pub struct Parser {
     full_query: Arc<String>,
     tokens: Vec<Token>,
     idx: usize,
-    pub diagnostics: Vec<Diagnostic>
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 #[derive(Debug)]
 pub enum Diagnostic {
     Error {
         message: String,
-        fragment: Option<Fragment>
+        fragment: Option<Fragment>,
     },
 
     Warning {
         message: String,
         fragment: Fragment,
-    }
+    },
 }
 
 impl Parser {
@@ -48,8 +48,11 @@ impl Parser {
                 full_query: query_str,
                 tokens: Vec::new(),
                 idx: 0,
-                diagnostics: vec![Diagnostic::Error { message: message.into(), fragment: None }],
-            }
+                diagnostics: vec![Diagnostic::Error {
+                    message: message.into(),
+                    fragment: None,
+                }],
+            },
         }
     }
 
@@ -73,7 +76,7 @@ impl Parser {
     pub fn peek(&self) -> Option<&Token> {
         self.peek_n(0)
     }
-    
+
     /// Peek the `n`th non-whitespace token ahead (0 is the immediate next).
     pub fn peek_n(&self, mut n: usize) -> Option<&Token> {
         let mut offset = 0;
@@ -111,11 +114,11 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-    use schemas::scryfall::card::languages::Language;
+    use crate::scryfall::search::query_parser::Parser;
     use crate::scryfall::search::query_parser::filter::Filter;
     use crate::scryfall::search::query_parser::item::ItemInner;
-    use crate::scryfall::search::query_parser::Parser;
+    use schemas::scryfall::card::languages::Language;
+    use std::sync::Arc;
 
     #[test]
     fn parse_language_filter() {
@@ -127,11 +130,10 @@ mod tests {
         let ItemInner::Filter(ref filter) = item.inner else {
             panic!("is not a filter");
         };
-        let Filter::Lang { value } = filter else {
+        let Filter::Lang { value, .. } = filter else {
             panic!("is not a language filter");
         };
 
         assert_eq!(*value, Language::En);
     }
 }
-

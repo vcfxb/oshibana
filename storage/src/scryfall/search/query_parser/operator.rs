@@ -1,5 +1,5 @@
-use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::lexer::{Token, TokenTy};
+use polars::prelude::Expr;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum Operator {

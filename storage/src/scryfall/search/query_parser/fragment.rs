@@ -1,8 +1,8 @@
 use std::borrow::Borrow;
+use std::cmp;
 use std::fmt::{Debug, Formatter};
 use std::ops::Range;
 use std::sync::Arc;
-use std::cmp;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Fragment {
@@ -26,15 +26,18 @@ impl Fragment {
     pub fn full_query(&self) -> &str {
         self.full_query.as_ref()
     }
-    
+
     /// Make a new fragment that covers both of the given fragments from the same source, as well as
     /// anything in between.
     pub fn cover(lhs: &Self, rhs: &Self) -> Self {
-        assert!(Arc::ptr_eq(&lhs.full_query, &rhs.full_query), "fragments must be from same source");
-        
+        assert!(
+            Arc::ptr_eq(&lhs.full_query, &rhs.full_query),
+            "fragments must be from same source"
+        );
+
         let start = cmp::min(lhs.byte_range.start, rhs.byte_range.start);
         let end = cmp::max(lhs.byte_range.end, rhs.byte_range.end);
-        
+
         Fragment {
             full_query: Arc::clone(&lhs.full_query),
             byte_range: start..end,

@@ -1,6 +1,7 @@
 //! Handles streaming scryfall bulk card json into a dataframe that we can use.
 
 use crate::scryfall::callback_reader::{CallbackReader, ProgressCallback};
+use flate2::bufread::GzDecoder;
 use humansize::{FormatSizeOptions, format_size};
 use polars::prelude::{ParquetWriter, StructChunked};
 use schemas::scryfall::bulk_data::BulkDataItem;
@@ -13,7 +14,6 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
-use flate2::bufread::GzDecoder;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
 pub enum SyncState {

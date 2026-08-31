@@ -1,9 +1,9 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::item::Item;
-use polars::prelude::Expr;
-use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::Parser;
+use crate::scryfall::search::query_parser::fragment::Fragment;
+use crate::scryfall::search::query_parser::item::Item;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
+use polars::prelude::Expr;
 
 #[derive(Debug)]
 pub struct Intersection {
@@ -13,7 +13,7 @@ pub struct Intersection {
 impl Intersection {
     pub fn parse(parser: &mut Parser) -> Option<Self> {
         let mut items = Vec::new();
-        
+
         while let Some(item) = Item::parse(parser) {
             items.push(item);
 
@@ -27,14 +27,14 @@ impl Intersection {
                 _ => continue,
             }
         }
-        
+
         if items.is_empty() {
             None
         } else {
             Some(Self { items })
         }
     }
-    
+
     pub fn fragment(&self) -> Fragment {
         match (self.items.first(), self.items.last()) {
             (Some(first), Some(last)) => Fragment::cover(&first.cover, &last.cover),

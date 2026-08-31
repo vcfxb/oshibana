@@ -1,7 +1,7 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::{Union, Parser, Diagnostic};
-use polars::prelude::Expr;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
+use crate::scryfall::search::query_parser::{Diagnostic, Parser, Union};
+use polars::prelude::Expr;
 
 #[derive(Debug)]
 pub struct Group {
@@ -14,7 +14,7 @@ impl Group {
         let lparen = parser.next_if_is(TokenTy::LParen)?.frag.clone();
         let union = Union::parse(parser);
         let rparen = parser.next_if_is(TokenTy::RParen);
-        
+
         if rparen.is_none() {
             parser.diagnostics.push(Diagnostic::Warning {
                 message: "missing closing parentheses".to_string(),

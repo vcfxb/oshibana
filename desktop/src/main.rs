@@ -11,6 +11,7 @@ pub mod built {
 
 use crate::app::Oshibana;
 use eframe::NativeOptions;
+use egui::epaint::text::{FontInsert, FontPriority, InsertFontFamily};
 use egui::{FontData, FontFamily, IconData, Theme, ViewportBuilder};
 use image::GenericImageView;
 use log::LevelFilter;
@@ -23,7 +24,6 @@ use log4rs::config::{Appender, Root};
 use log4rs::filter::threshold::ThresholdFilter;
 use std::sync::Arc;
 use std::{fs, panic};
-use egui::epaint::text::{FontInsert, FontPriority, InsertFontFamily};
 use storage::scryfall::SCRYFALL_DATA_DIR;
 use storage::{DATA_DIR, LOGS_DIR};
 
@@ -130,46 +130,46 @@ async fn main() -> anyhow::Result<()> {
 
             cc.egui_ctx.add_font(FontInsert {
                 name: "NotoSansJP".to_string(),
-                data: FontData::from_static(include_bytes!("../assets/fonts/Noto_Sans_JP/static/NotoSansJP-Regular.ttf")),
-                families: vec![
-                    InsertFontFamily {
-                        family: FontFamily::Proportional,
-                        priority: FontPriority::Lowest,
-                    }
-                ],
+                data: FontData::from_static(include_bytes!(
+                    "../assets/fonts/Noto_Sans_JP/static/NotoSansJP-Regular.ttf"
+                )),
+                families: vec![InsertFontFamily {
+                    family: FontFamily::Proportional,
+                    priority: FontPriority::Lowest,
+                }],
             });
 
             cc.egui_ctx.add_font(FontInsert {
                 name: "NotoSansSC".to_string(),
-                data: FontData::from_static(include_bytes!("../assets/fonts/Noto_Sans_SC/static/NotoSansSC-Regular.ttf")),
-                families: vec![
-                    InsertFontFamily {
-                        family: FontFamily::Proportional,
-                        priority: FontPriority::Lowest,
-                    }
-                ],
+                data: FontData::from_static(include_bytes!(
+                    "../assets/fonts/Noto_Sans_SC/static/NotoSansSC-Regular.ttf"
+                )),
+                families: vec![InsertFontFamily {
+                    family: FontFamily::Proportional,
+                    priority: FontPriority::Lowest,
+                }],
             });
 
             cc.egui_ctx.add_font(FontInsert {
                 name: "NotoSansTC".to_string(),
-                data: FontData::from_static(include_bytes!("../assets/fonts/Noto_Sans_TC/static/NotoSansTC-Regular.ttf")),
-                families: vec![
-                    InsertFontFamily {
-                        family: FontFamily::Proportional,
-                        priority: FontPriority::Lowest,
-                    }
-                ],
+                data: FontData::from_static(include_bytes!(
+                    "../assets/fonts/Noto_Sans_TC/static/NotoSansTC-Regular.ttf"
+                )),
+                families: vec![InsertFontFamily {
+                    family: FontFamily::Proportional,
+                    priority: FontPriority::Lowest,
+                }],
             });
 
             cc.egui_ctx.add_font(FontInsert {
                 name: "NotoSansKR".to_string(),
-                data: FontData::from_static(include_bytes!("../assets/fonts/Noto_Sans_KR/static/NotoSansKR-Regular.ttf")),
-                families: vec![
-                    InsertFontFamily {
-                        family: FontFamily::Proportional,
-                        priority: FontPriority::Lowest,
-                    }
-                ],
+                data: FontData::from_static(include_bytes!(
+                    "../assets/fonts/Noto_Sans_KR/static/NotoSansKR-Regular.ttf"
+                )),
+                families: vec![InsertFontFamily {
+                    family: FontFamily::Proportional,
+                    priority: FontPriority::Lowest,
+                }],
             });
 
             Ok(Box::new(Oshibana::new(cc, icon_data_arc)?))

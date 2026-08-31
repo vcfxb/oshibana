@@ -1,11 +1,11 @@
-use std::sync::Arc;
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
+use crate::scryfall::search::query_parser::Parser;
 use crate::scryfall::search::query_parser::filter::Filter;
 use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::group::Group;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
-use crate::scryfall::search::query_parser::Parser;
 use polars::prelude::Expr;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Item {

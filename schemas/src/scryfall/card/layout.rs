@@ -46,7 +46,7 @@ pub enum Layout {
     ArtSeries,
     ReversibleCard,
     // (2026 Aug 15): Scryfall seems to have added this, not sure what for
-    FrontCard
+    FrontCard,
 }
 
 generate_enum_dt_map_and_builder_impl!(Layout => Categorical8Type);

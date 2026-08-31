@@ -48,7 +48,8 @@ pub fn make_symbol_rendering_formatter(store: &ScryfallStorage) -> ValueFormatte
                     }
                 }
             }
-        }).response
+        })
+        .response
     })
 }
 

@@ -1,9 +1,9 @@
 use crate::scryfall::search::polars_mapping::MapToPolarsExpr;
-use crate::scryfall::search::query_parser::intersection::Intersection;
-use polars::prelude::Expr;
-use crate::scryfall::search::query_parser::fragment::Fragment;
 use crate::scryfall::search::query_parser::Parser;
+use crate::scryfall::search::query_parser::fragment::Fragment;
+use crate::scryfall::search::query_parser::intersection::Intersection;
 use crate::scryfall::search::query_parser::lexer::TokenTy;
+use polars::prelude::Expr;
 
 #[derive(Debug)]
 pub struct Union {
@@ -13,10 +13,10 @@ pub struct Union {
 impl Union {
     pub fn parse(parser: &mut Parser) -> Self {
         let mut intersections = Vec::new();
-        
+
         while let Some(intersection) = Intersection::parse(parser) {
             intersections.push(intersection);
-            
+
             if let Some(token) = parser.peek() {
                 if token.kind == TokenTy::Or {
                     parser.pull(); // consume Or
@@ -26,22 +26,22 @@ impl Union {
                 } else {
                     // unexpected token? Or is this another union somehow?
                     // intersection should consume until it hits 'or' or ')'
-                    break; 
+                    break;
                 }
             } else {
                 break;
             }
         }
-        
+
         // if intersections.is_empty() {
         //     None
         // } else {
         //     Some(Self { intersections })
         // }
-        
+
         Self { intersections }
     }
-    
+
     pub fn conver_fragment(&self) -> Fragment {
         match (self.intersections.first(), self.intersections.last()) {
             (Some(first), Some(last)) => Fragment::cover(&first.fragment(), &last.fragment()),

@@ -4,19 +4,22 @@ pub mod col_format;
 pub mod indicator_bar;
 
 use crate::app::Oshibana;
-use crate::view::{logic_noop, View};
+use crate::view::{View, logic_noop};
 use eframe::Frame;
 use egui::text::LayoutJob;
-use egui::{Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextEdit, TextFormat, Ui};
+use egui::{
+    Align, Color32, ComboBox, FontFamily, FontId, Layout, ScrollArea, Stroke, TextEdit, TextFormat,
+    Ui,
+};
 use egui_extras::{Column, TableBuilder};
 use schemas::oshibana::{SearchViewColumn, SortBy, UniqueBy};
 use std::borrow::Cow;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use storage::scryfall::search::query_parser::Diagnostic;
-use strum::IntoEnumIterator;
 use storage::scryfall::ScryfallStorage;
+use storage::scryfall::search::query_parser::Diagnostic;
 use storage::scryfall::search::{Query, SearchHandler};
+use strum::IntoEnumIterator;
 
 pub fn search(scryfall_storage: Arc<ScryfallStorage>) -> View {
     View {
@@ -134,7 +137,11 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                 .selected_text(search_state.unique_by.to_string())
                 .show_ui(ui, |ui| {
                     for option in UniqueBy::iter() {
-                        ui.selectable_value(&mut search_state.unique_by, option, option.to_string());
+                        ui.selectable_value(
+                            &mut search_state.unique_by,
+                            option,
+                            option.to_string(),
+                        );
                     }
                 });
 
@@ -142,7 +149,11 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                 .selected_text(user_data_guard.search_sort_by.to_string())
                 .show_ui(ui, |ui| {
                     for option in SortBy::iter() {
-                        ui.selectable_value(&mut user_data_guard.search_sort_by, option, option.to_string());
+                        ui.selectable_value(
+                            &mut user_data_guard.search_sort_by,
+                            option,
+                            option.to_string(),
+                        );
                     }
                 });
 
@@ -162,7 +173,7 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
             indicator_bar::indicator_bar(
                 ui,
                 search_rect,
-                search_state.handler.busy.load(Ordering::Relaxed)
+                search_state.handler.busy.load(Ordering::Relaxed),
             );
 
             ui.separator();
@@ -175,7 +186,10 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
         .map(|col| col_format::col_format(&app.scryfall_storage, *col))
         .collect::<Vec<_>>();
 
-    let query = match (search_state.enable_global_search_prefix, search_prefix.as_str()) {
+    let query = match (
+        search_state.enable_global_search_prefix,
+        search_prefix.as_str(),
+    ) {
         (false, _) | (_, "") => Cow::Borrowed(search_state.search_text.as_str()),
         (_, prefix) => Cow::Owned(format!("{prefix} {}", search_state.search_text)),
     };
@@ -211,45 +225,50 @@ fn search_ui(app: &mut Oshibana, ui: &mut Ui, _: &mut Frame) {
                 .inner_margin(5)
                 .show(ui, |ui| {
                     ui.add_sized([ui.available_width(), 30.0], |ui: &mut Ui| {
-                        ui.vertical(|ui| {
-                            match diagnostic {
-                                Diagnostic::Error { message, fragment: None } => {
-                                    ui.label(message);
-                                }
-
-                                Diagnostic::Warning { message, fragment } |
-                                Diagnostic::Error { message, fragment: Some(fragment) } => {
-                                    ui.label(message);
-                                    ui.separator();
-                                    let mut lj = LayoutJob::default();
-                                    let start = fragment.byte_range.start;
-                                    let end = fragment.byte_range.end;
-                                    let lhs = &fragment.full_query[..start];
-                                    let highlight = fragment.as_str();
-                                    let rhs = &fragment.full_query[end..];
-                                    let monospace_text_format = TextFormat {
-                                        font_id: FontId::monospace(14.0),
-                                        ..TextFormat::default()
-                                    };
-
-                                    let mut highlight_format = monospace_text_format.clone();
-                                    highlight_format.background = Color32::LIGHT_YELLOW;
-                                    highlight_format.color = Color32::BLACK;
-
-                                    lj.append(lhs, 0.0, monospace_text_format.clone());
-                                    lj.append(highlight, 0.0, highlight_format);
-                                    lj.append(rhs, 0.0, monospace_text_format);
-                                    ui.label(lj);
-                                }
+                        ui.vertical(|ui| match diagnostic {
+                            Diagnostic::Error {
+                                message,
+                                fragment: None,
+                            } => {
+                                ui.label(message);
                             }
-                        }).response
+
+                            Diagnostic::Warning { message, fragment }
+                            | Diagnostic::Error {
+                                message,
+                                fragment: Some(fragment),
+                            } => {
+                                ui.label(message);
+                                ui.separator();
+                                let mut lj = LayoutJob::default();
+                                let start = fragment.byte_range.start;
+                                let end = fragment.byte_range.end;
+                                let lhs = &fragment.full_query[..start];
+                                let highlight = fragment.as_str();
+                                let rhs = &fragment.full_query[end..];
+                                let monospace_text_format = TextFormat {
+                                    font_id: FontId::monospace(14.0),
+                                    ..TextFormat::default()
+                                };
+
+                                let mut highlight_format = monospace_text_format.clone();
+                                highlight_format.background = Color32::LIGHT_YELLOW;
+                                highlight_format.color = Color32::BLACK;
+
+                                lj.append(lhs, 0.0, monospace_text_format.clone());
+                                lj.append(highlight, 0.0, highlight_format);
+                                lj.append(rhs, 0.0, monospace_text_format);
+                                ui.label(lj);
+                            }
+                        })
+                        .response
                     });
                 });
         }
     }
 
     let Ok(df) = &search_result_guard.result else {
-        return
+        return;
     };
 
     let col_count = df

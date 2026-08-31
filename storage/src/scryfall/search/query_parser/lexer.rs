@@ -1,7 +1,7 @@
+use crate::scryfall::search::query_parser::fragment::Fragment;
 use std::iter::Peekable;
 use std::str::Chars;
 use std::sync::Arc;
-use crate::scryfall::search::query_parser::fragment::Fragment;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TokenTy {
@@ -70,26 +70,20 @@ impl Lexer {
                     lexer.push_token(1, TokenTy::Neg);
                 }
 
-                '!' => {
-                    match lexer.chars().next_if_eq(&'=') {
-                        Some(_) => lexer.push_token(2, TokenTy::BangEq),
-                        None => lexer.push_token(1, TokenTy::Bang),
-                    }
-                }
+                '!' => match lexer.chars().next_if_eq(&'=') {
+                    Some(_) => lexer.push_token(2, TokenTy::BangEq),
+                    None => lexer.push_token(1, TokenTy::Bang),
+                },
 
-                '>' => {
-                    match lexer.chars().next_if_eq(&'=') {
-                        Some(_) => lexer.push_token(2, TokenTy::GtEq),
-                        None => lexer.push_token(1, TokenTy::Gt),
-                    }
-                }
+                '>' => match lexer.chars().next_if_eq(&'=') {
+                    Some(_) => lexer.push_token(2, TokenTy::GtEq),
+                    None => lexer.push_token(1, TokenTy::Gt),
+                },
 
-                '<' => {
-                    match lexer.chars().next_if_eq(&'=') {
-                        Some(_) => lexer.push_token(2, TokenTy::LtEq),
-                        None => lexer.push_token(1, TokenTy::Lt),
-                    }
-                }
+                '<' => match lexer.chars().next_if_eq(&'=') {
+                    Some(_) => lexer.push_token(2, TokenTy::LtEq),
+                    None => lexer.push_token(1, TokenTy::Lt),
+                },
 
                 '"' => {
                     lexer.delimited('"', '\\', TokenTy::String, "unclosed double quote")?;
@@ -115,17 +109,16 @@ impl Lexer {
                 }
 
                 _ => {
-                    let continue_text = |c: &char| {
-                        !"()=!<>\"\'/:-".contains(*c) && !c.is_whitespace()
-                    };
+                    let continue_text =
+                        |c: &char| !"()=!<>\"\'/:-".contains(*c) && !c.is_whitespace();
 
                     let mut consumed = 0;
                     let mut chars = lexer.chars();
                     while let Some(c) = chars.next_if(continue_text) {
                         consumed += c.len_utf8();
                     }
-                    
-                    match &lexer.input[lexer.byte_index..lexer.byte_index+consumed] {
+
+                    match &lexer.input[lexer.byte_index..lexer.byte_index + consumed] {
                         "or" | "OR" => lexer.push_token(consumed, TokenTy::Or),
                         "and" | "AND" => lexer.push_token(consumed, TokenTy::And),
                         _ => lexer.push_token(consumed, TokenTy::Text),
@@ -154,10 +147,18 @@ impl Lexer {
         });
     }
 
-    fn delimited(&mut self, delimiter: char, escape: char, kind: TokenTy, err: &'static str) -> Result<usize, &'static str> {
+    fn delimited(
+        &mut self,
+        delimiter: char,
+        escape: char,
+        kind: TokenTy,
+        err: &'static str,
+    ) -> Result<usize, &'static str> {
         // opening delimiter
         let mut chars = self.chars();
-        if chars.next_if_eq(&delimiter).is_none() { return Ok(0); }
+        if chars.next_if_eq(&delimiter).is_none() {
+            return Ok(0);
+        }
         let mut consumed = 1;
         let mut escaped = false;
 
@@ -187,9 +188,9 @@ impl Token {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use crate::scryfall::search::query_parser::fragment::Fragment;
     use crate::scryfall::search::query_parser::lexer::{Lexer, Token, TokenTy};
+    use std::sync::Arc;
 
     #[test]
     fn lex_plaintext() {
@@ -198,15 +199,13 @@ mod tests {
         let tokens = Lexer::lex(input.clone()).unwrap();
         assert_eq!(
             tokens,
-            vec![
-                Token {
-                    frag: Fragment {
-                        full_query: input,
-                        byte_range: 0.."plaintext".len()
-                    },
-                    kind: TokenTy::Text
-                }
-            ]
+            vec![Token {
+                frag: Fragment {
+                    full_query: input,
+                    byte_range: 0.."plaintext".len()
+                },
+                kind: TokenTy::Text
+            }]
         );
     }
 }

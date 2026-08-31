@@ -1,14 +1,14 @@
 pub mod polars_mapping;
 pub mod query_parser;
 
-use crate::scryfall::search::query_parser::{Diagnostic, Parser};
 use crate::scryfall::ScryfallStorage;
+use crate::scryfall::search::query_parser::{Diagnostic, Parser};
 use polars::prelude::{DataFrame, IntoLazy};
 use schemas::oshibana::{SearchViewColumn, SortBy, UniqueBy};
 use scopeguard::defer;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
 use thiserror::Error;
 
@@ -85,16 +85,17 @@ impl SearchHandler {
     }
 
     pub fn search(&self, query: Query) {
-        self.query_tx.send(query).expect("failed to send query to search worker thread");
+        self.query_tx
+            .send(query)
+            .expect("failed to send query to search worker thread");
     }
 }
-
 
 impl ScryfallStorage {
     fn search(&self, query: Query) -> SearchResult {
         let mut parser = Parser::new(query.query.clone());
         let parsed_query = parser.parse_query();
-        
+
         if parsed_query.intersections.is_empty() {
             return SearchResult {
                 result: Err(SearchError::EmptyQuery),
@@ -133,7 +134,7 @@ mod tests {
     fn test_search_by_scryfall_id() {
         use crate::scryfall::ScryfallStorage;
         use clients::scryfall::ScryfallClient;
-        use polars::prelude::{col, lit, IntoLazy};
+        use polars::prelude::{IntoLazy, col, lit};
         use std::time::Instant;
 
         let storage = ScryfallStorage::new(ScryfallClient::new());

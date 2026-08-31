@@ -41,9 +41,7 @@ pub struct UserData {
     pub search_prefix: String,
 }
 
-#[derive(
-    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, Display, EnumIter,
-)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Copy, Clone, Display, EnumIter)]
 #[serde(rename_all = "snake_case")]
 pub enum SearchViewColumn {
     Name,
@@ -115,6 +113,7 @@ impl SortBy {
             SortBy::Name(Direction::Descending),
             SortBy::ReleaseDate(Direction::Ascending),
             SortBy::ReleaseDate(Direction::Descending),
-        ].into_iter()
+        ]
+        .into_iter()
     }
 }
