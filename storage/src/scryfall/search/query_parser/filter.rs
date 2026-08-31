@@ -295,7 +295,9 @@ impl MapToPolarsExpr for Filter {
                 .str()
                 .to_lowercase()
                 .str()
-                .contains_literal(lit(value.as_str().unwrap()).str().to_lowercase()),
+                .split_regex(lit(r"\s+"), true)
+                .list()
+                .contains(lit(value.as_str().unwrap()).str().to_lowercase(), false),
                 
             Filter::OracleText {
                 operator: Operator::Colon,
