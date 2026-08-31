@@ -194,7 +194,7 @@ impl Filter {
                                 && filter_value
                                     .as_str()
                                     .unwrap()
-                                    .contains(|c| c > '9' || c < '0')
+                                    .contains(|c| !('0'..='9').contains(&c))
                             {
                                 parser.diagnostics.push(Diagnostic::Warning {
                                     message: "ordered comparison on collector numbers requires numeric value".into(),

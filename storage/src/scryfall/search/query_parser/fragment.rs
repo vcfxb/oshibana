@@ -16,7 +16,11 @@ impl Fragment {
     }
 
     pub fn len(&self) -> usize {
-        self.byte_range.end - self.byte_range.start
+        self.byte_range.end.saturating_sub(self.byte_range.start)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn range(&self) -> &Range<usize> {
