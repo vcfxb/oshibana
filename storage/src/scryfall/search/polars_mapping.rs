@@ -1,10 +1,7 @@
 //! Map parsed queries to polars expressions
 
 use crate::scryfall::search::query_parser::union::Union;
-use polars::prelude::{
-    Expr as PExpr, LazyFrame, Selector, SortMultipleOptions, UniqueKeepStrategy, col, format_str,
-    lit, when,
-};
+use polars::prelude::{Expr as PExpr, LazyFrame, Selector, SortMultipleOptions, UniqueKeepStrategy, col, format_str, lit, when, all};
 use schemas::oshibana::{Direction, SearchViewColumn, SortBy, UniqueBy};
 use std::ops::Deref;
 use std::sync::Arc;
@@ -48,10 +45,11 @@ pub trait MapToPolarsExpr {
 pub fn apply_grouping(cards_lf: LazyFrame, unique_by: UniqueBy) -> LazyFrame {
     match unique_by {
         UniqueBy::Cards => cards_lf
+            .with_column(col("border_color").eq(lit("borderless")).alias("_is_borderless"))
             .sort(
-                ["released_at", "lang"],
+                ["full_art", "_is_borderless", "released_at"],
                 SortMultipleOptions::new()
-                    .with_order_descending_multi([true, false])
+                    .with_order_descending_multi([false, false, true])
                     .with_nulls_last(true)
                     .with_maintain_order(true),
             )
@@ -61,7 +59,8 @@ pub fn apply_grouping(cards_lf: LazyFrame, unique_by: UniqueBy) -> LazyFrame {
                     strict: true,
                 }),
                 UniqueKeepStrategy::First,
-            ),
+            )
+            .select([all().exclude_cols(["_is_borderless"]).as_expr()]),
 
         UniqueBy::Printings => cards_lf,
     }
@@ -73,9 +72,24 @@ pub fn apply_filters(cards_lf: LazyFrame, query: &Union) -> LazyFrame {
 
 /// The normal card image uri will always be the last col.
 pub fn apply_select(lf: LazyFrame, cols: impl Deref<Target = [SearchViewColumn]>) -> LazyFrame {
-    let image_normal_uri_expr = col("image_uris")
-        .struct_()
-        .field_by_name("normal")
+    let image_normal_uri_expr =
+        when(
+            col("image_uris")
+                .struct_()
+                .field_by_name("normal").is_null())
+        .then(
+            col("card_faces")
+                .list()
+                .first()
+                .struct_()
+                .field_by_name("image_uris")
+                .struct_()
+                .field_by_name("normal")
+        )
+        .otherwise(
+            col("image_uris")
+                .struct_()
+                .field_by_name("normal"))
         .alias("_normal_image_uri");
 
     let mut cols = resolve_cols(cols);
